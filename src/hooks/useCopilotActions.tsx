@@ -1,13 +1,13 @@
+import { useState } from 'react';
 import { useCopilotAction, useCopilotReadable } from '@copilotkit/react-core';
 import { useAppStore } from '@/store';
 import { useEmails } from './useEmails';
 import type {
-  ComposeEmailParams,
   OpenEmailParams,
   ReplyEmailParams,
-  SearchEmailsParams,
 } from '@/types/copilot';
-import { isWithinLastDays, isWithinRange } from '@/lib/utils';
+import { isWithinRange } from '@/lib/utils';
+import type { Email, ViewType } from '@/types/email';
 
 /**
  * Hook that provides AI-readable context about the application state
@@ -36,7 +36,7 @@ export function useAppContext() {
   useCopilotReadable({
     description: 'Inbox emails summary (first 20 emails)',
     value: JSON.stringify(
-      emails.inbox.slice(0, 20).map((e) => ({
+      emails.inbox.slice(0, 20).map((e: Email) => ({
         id: e.id,
         subject: e.subject,
         from: e.from,
@@ -45,14 +45,14 @@ export function useAppContext() {
         snippet: e.snippet?.slice(0, 100),
       }))
     ),
-    available: currentView === 'inbox' ? 'available' : 'disabled',
+    available: currentView === 'inbox' ? 'enabled' : 'disabled',
   });
 
   // Provide sent emails summary
   useCopilotReadable({
     description: 'Sent emails summary (first 20 emails)',
     value: JSON.stringify(
-      emails.sent.slice(0, 20).map((e) => ({
+      emails.sent.slice(0, 20).map((e: Email) => ({
         id: e.id,
         subject: e.subject,
         to: e.to,
@@ -60,17 +60,16 @@ export function useAppContext() {
         snippet: e.snippet?.slice(0, 100),
       }))
     ),
-    available: currentView === 'sent' ? 'available' : 'disabled',
+    available: currentView === 'sent' ? 'enabled' : 'disabled',
   });
 
   // Provide selected email details
   useCopilotReadable({
     description: 'Currently selected/open email details',
     value: JSON.stringify(
-      [...emails.inbox, ...emails.sent].find((e) => e.id === selectedEmailId) ||
-        null
+      [...emails.inbox, ...emails.sent].find((e: Email) => e.id === selectedEmailId) || null
     ),
-    available: !!selectedEmailId ? 'available' : 'disabled',
+    available: !!selectedEmailId ? 'enabled' : 'disabled',
   });
 }
 
@@ -84,13 +83,13 @@ export function useCopilotEmailActions() {
     setFilters,
     clearFilters,
     emails,
-    currentView,
   } = useAppStore();
 
-  const { sendEmail, searchEmails, markAsRead } = useEmails();
+  const { sendEmail, markAsRead } = useEmails();
+  const selectedEmailId = useAppStore((state: any) => state.selectedEmailId);
 
   // Store compose state for AI to set
-  const [composeData, setComposeData] = React.useState<{
+  const [composeData, setComposeData] = useState<{
     to: string;
     subject: string;
     body: string;
@@ -116,7 +115,7 @@ export function useCopilotEmailActions() {
       },
     ],
     handler: async ({ view }) => {
-      setCurrentView(view as any);
+      setCurrentView(view as ViewType);
       return `Navigated to ${view}`;
     },
   });
@@ -151,22 +150,21 @@ export function useCopilotEmailActions() {
         required: false,
       },
     ],
-    handler: async ({ to, subject, body = '', cc }) => {
+    handler: async ({ to, subject, body = '' }) => {
       setComposeData({
         to,
         subject,
         body,
         isOpen: true,
       });
-      setCurrentView('compose');
       return `Compose form opened with recipient: ${to}, subject: ${subject}`;
     },
   });
 
-  // Send an email (with confirmation)
+  // Send an email (simple version without complex confirmation UI)
   useCopilotAction({
     name: 'sendEmail',
-    description: 'Send the currently composed email',
+    description: 'Send the currently composed email after user confirms',
     parameters: [
       {
         name: 'confirm',
@@ -175,34 +173,6 @@ export function useCopilotEmailActions() {
         required: true,
       },
     ],
-    renderAndWaitForResponse: ({ args, respond }) => {
-      // This will show a confirmation dialog in the chat
-      return (
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="font-medium text-yellow-900 mb-2">
-            Ready to send email
-          </p>
-          <p className="text-sm text-yellow-800 mb-4">
-            To: {composeData.to}<br />
-            Subject: {composeData.subject}
-          </p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => respond({ confirm: true })}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Send
-            </button>
-            <button
-              onClick={() => respond({ confirm: false })}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      );
-    },
     handler: async ({ confirm }) => {
       if (!confirm) {
         return 'Email send cancelled';
@@ -244,12 +214,6 @@ export function useCopilotEmailActions() {
         required: false,
       },
       {
-        name: 'subject',
-        type: 'string',
-        description: 'Filter by subject keywords',
-        required: false,
-      },
-      {
         name: 'dateFrom',
         type: 'string',
         description: 'Filter emails from this date (ISO format)',
@@ -274,7 +238,7 @@ export function useCopilotEmailActions() {
         required: false,
       },
     ],
-    handler: async (params: SearchEmailsParams) => {
+    handler: async (params: any) => {
       // Build filter state
       const newFilters: any = {};
 
@@ -301,10 +265,10 @@ export function useCopilotEmailActions() {
       setFilters(newFilters);
 
       // Navigate to inbox to show results
-      setCurrentView('inbox');
+      setCurrentView('inbox' as ViewType);
 
       // Count matching emails
-      const filtered = emails.inbox.filter((email) => {
+      const filtered = emails.inbox.filter((email: Email) => {
         if (newFilters.query && !email.subject.toLowerCase().includes(newFilters.query.toLowerCase()) &&
             !email.body.toLowerCase().includes(newFilters.query.toLowerCase())) {
           return false;
@@ -368,23 +332,23 @@ export function useCopilotEmailActions() {
       },
     ],
     handler: async (params: OpenEmailParams) => {
-      let emailToOpen = null;
+      let emailToOpen: Email | null = null;
 
       if (params.emailId) {
-        emailToOpen = [...emails.inbox, ...emails.sent].find((e) => e.id === params.emailId);
+        emailToOpen = [...emails.inbox, ...emails.sent].find((e: Email) => e.id === params.emailId) || null;
       } else if (params.sender) {
         const senderEmails = emails.inbox.filter(
-          (e) => e.from.email.toLowerCase().includes(params.sender!.toLowerCase()) ||
+          (e: Email) => e.from.email.toLowerCase().includes(params.sender!.toLowerCase()) ||
                  e.from.name?.toLowerCase().includes(params.sender!.toLowerCase())
         );
-        emailToOpen = senderEmails[0];
+        emailToOpen = senderEmails[0] || null;
       } else if (params.subject) {
         const subjectEmails = emails.inbox.filter(
-          (e) => e.subject.toLowerCase().includes(params.subject!.toLowerCase())
+          (e: Email) => e.subject.toLowerCase().includes(params.subject!.toLowerCase())
         );
-        emailToOpen = subjectEmails[0];
+        emailToOpen = subjectEmails[0] || null;
       } else if (params.latest) {
-        emailToOpen = emails.inbox[0];
+        emailToOpen = emails.inbox[0] || null;
       }
 
       if (!emailToOpen) {
@@ -421,7 +385,7 @@ export function useCopilotEmailActions() {
         return 'No email selected to reply to. Please open an email first.';
       }
 
-      const email = [...emails.inbox, ...emails.sent].find((e) => e.id === emailId);
+      const email = [...emails.inbox, ...emails.sent].find((e: Email) => e.id === emailId);
 
       if (!email) {
         return `Could not find email with ID: ${emailId}`;
@@ -475,6 +439,3 @@ export function useCopilotEmailActions() {
 
   return { composeData, setComposeData };
 }
-
-// Import React for useState
-import React from 'react';

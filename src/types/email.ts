@@ -76,6 +76,7 @@ export interface GmailMessagePayload {
   headers?: GmailHeader[];
   body?: GmailMessageBody;
   parts?: GmailMessagePayload[];
+  mimeType?: string;
 }
 
 export interface GmailHeader {

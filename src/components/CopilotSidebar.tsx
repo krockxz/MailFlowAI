@@ -1,5 +1,4 @@
 import { CopilotChat } from '@copilotkit/react-ui';
-import { cn } from '@/lib/utils';
 
 interface CopilotSidebarProps {
   isOpen: boolean;

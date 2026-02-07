@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useAppStore } from '@/store';
 import { createGmailService } from '@/services/gmail';
 import { getValidAccessToken } from '@/services/auth';
@@ -14,7 +14,6 @@ export function useEmails() {
     setEmails,
     isLoading,
     setIsLoading,
-    setHasNewEmails,
     setLastSyncTime,
   } = useAppStore();
 

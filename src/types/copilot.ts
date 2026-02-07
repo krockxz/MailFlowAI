@@ -33,6 +33,7 @@ export interface SearchEmailsParams {
   dateFrom?: string; // ISO date string
   dateTo?: string; // ISO date string
   isUnread?: boolean;
+  days?: number;
 }
 
 /**

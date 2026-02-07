@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Mail, MailOpen, Star } from 'lucide-react';
+import { Mail, MailOpen } from 'lucide-react';
 import { formatDate, truncate, getInitials } from '@/lib/utils';
 import type { Email } from '@/types/email';
 import { cn } from '@/lib/utils';

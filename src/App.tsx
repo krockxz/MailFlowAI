@@ -41,7 +41,7 @@ function App() {
 
   // Set up CopilotKit context and actions
   useAppContext();
-  const { composeData, setComposeData } = useCopilotEmailActions();
+  const { composeData } = useCopilotEmailActions();
 
   // Sync compose data between UI and AI
   useEffect(() => {
@@ -53,7 +53,7 @@ function App() {
       });
       setIsComposeOpen(true);
     }
-  }, [composeData]);
+  }, [composeData.to, composeData.subject, composeData.body, composeData.isOpen]);
 
   // Check auth on mount
   useEffect(() => {
