@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import { useAppStore } from '@/store';
 import { useEmails } from '@/hooks/useEmails';
+import { useRealtimeEmailSync } from '@/hooks/useRealtimeEmailSync';
 import { useAppContext, useCopilotEmailActions } from '@/hooks/useCopilotActions';
 import { Sidebar } from '@/components/Sidebar';
 import { EmailList } from '@/components/EmailList';
@@ -8,7 +9,7 @@ import { EmailDetail } from '@/components/EmailDetail';
 import { Compose } from '@/components/Compose';
 import { FilterBar } from '@/components/FilterBar';
 import { CopilotSidebar } from '@/components/CopilotSidebar';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Moon, Sun, RefreshCw } from 'lucide-react';
 import { getStoredAccessToken, isAuthenticated } from '@/services/auth';
 
 function App() {
@@ -17,6 +18,8 @@ function App() {
     selectedEmailId,
     emails,
     filters,
+    darkMode,
+    toggleDarkMode,
     setCurrentView,
     setSelectedEmailId,
     setAccessToken,
@@ -43,6 +46,12 @@ function App() {
   useAppContext();
   const { composeData } = useCopilotEmailActions();
 
+  // Set up real-time sync (polling every 30 seconds)
+  const { sync } = useRealtimeEmailSync({
+    pollingInterval: 30000,
+    enabled: isAuthenticated() || undefined,
+  });
+
   // Sync compose data between UI and AI
   useEffect(() => {
     if (composeData.isOpen) {
@@ -55,6 +64,15 @@ function App() {
     }
   }, [composeData.to, composeData.subject, composeData.body, composeData.isOpen]);
 
+  // Apply dark mode to document
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
   // Check auth on mount
   useEffect(() => {
     const checkAuth = async () => {
@@ -62,9 +80,7 @@ function App() {
         const token = getStoredAccessToken();
         if (token) {
           setAccessToken(token);
-          // Set a dummy user for now (will be fetched properly)
           setUser({ emailAddress: 'user@example.com' });
-          // Fetch emails
           await fetchInbox();
         }
       }
@@ -94,7 +110,7 @@ function App() {
   }, [currentView, emails]);
 
   // Get selected email
-  const selectedEmail = getCurrentEmails().find(e => e.id === selectedEmailId) || null;
+  const selectedEmail = getCurrentEmails().find((e: any) => e.id === selectedEmailId) || null;
 
   // Handle email select
   const handleSelectEmail = useCallback((email: any) => {
@@ -109,7 +125,7 @@ function App() {
 
   // Handle reply
   const handleReply = useCallback((emailId: string) => {
-    const email = [...emails.inbox, ...emails.sent].find(e => e.id === emailId);
+    const email = [...emails.inbox, ...emails.sent].find((e: any) => e.id === emailId);
     if (email) {
       setComposeInitialData({
         to: email.from.email,
@@ -139,7 +155,7 @@ function App() {
 
   // Handle forward
   const handleForward = useCallback((emailId: string) => {
-    const email = [...emails.inbox, ...emails.sent].find(e => e.id === emailId);
+    const email = [...emails.inbox, ...emails.sent].find((e: any) => e.id === emailId);
     if (email) {
       setComposeInitialData({
         subject: `Fwd: ${email.subject}`,
@@ -150,10 +166,13 @@ function App() {
   }, [emails]);
 
   // Get unread count
-  const unreadCount = emails.inbox.filter(e => e.isUnread).length;
+  const unreadCount = emails.inbox.filter((e: any) => e.isUnread).length;
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className={cn(
+      'flex h-screen bg-gray-100 overflow-hidden',
+      darkMode && 'dark bg-gray-900'
+    )}>
       {/* Sidebar */}
       <Sidebar
         currentView={currentView}
@@ -165,27 +184,63 @@ function App() {
       />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
-        {/* Header with filters and AI toggle */}
-        <div className="flex items-center border-b border-gray-200">
+      <div className={cn(
+        'flex-1 flex flex-col bg-white overflow-hidden relative',
+        darkMode && 'bg-gray-800'
+      )}>
+        {/* Header with filters, AI toggle, and dark mode */}
+        <div className={cn(
+          'flex items-center border-b',
+          darkMode ? 'border-gray-700' : 'border-gray-200'
+        )}>
           <div className="flex-1">
             <FilterBar
               filters={filters}
               onFiltersChange={useAppStore.getState().setFilters}
             />
           </div>
-          <button
-            onClick={() => setIsCopilotOpen(!isCopilotOpen)}
-            className={cn(
-              'm-2 p-2 rounded-lg transition-colors flex items-center gap-2',
-              isCopilotOpen
-                ? 'bg-blue-100 text-blue-700'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            )}
-          >
-            <MessageSquare className="w-5 h-5" />
-            <span className="hidden sm:inline">AI Assistant</span>
-          </button>
+          <div className="flex items-center gap-1 m-2">
+            <button
+              onClick={sync}
+              className={cn(
+                'p-2 rounded-lg transition-colors',
+                darkMode
+                  ? 'hover:bg-gray-700 text-gray-300'
+                  : 'hover:bg-gray-100 text-gray-600'
+              )}
+              title="Sync emails"
+            >
+              <RefreshCw className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setIsCopilotOpen(!isCopilotOpen)}
+              className={cn(
+                'p-2 rounded-lg transition-colors flex items-center gap-2',
+                isCopilotOpen
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                  : cn(
+                      darkMode
+                        ? 'hover:bg-gray-700 text-gray-300'
+                        : 'hover:bg-gray-100 text-gray-700'
+                    )
+              )}
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span className="hidden sm:inline">AI</span>
+            </button>
+            <button
+              onClick={toggleDarkMode}
+              className={cn(
+                'p-2 rounded-lg transition-colors',
+                darkMode
+                  ? 'hover:bg-gray-700 text-yellow-400'
+                  : 'hover:bg-gray-100 text-gray-600'
+              )}
+              title={darkMode ? 'Light mode' : 'Dark mode'}
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
 
         {/* Content area */}

@@ -27,6 +27,9 @@ export interface AppState {
   // Sync state
   lastSyncTime: Date | null;
   hasNewEmails: boolean;
+
+  // Theme
+  darkMode: boolean;
 }
 
 /**
@@ -59,6 +62,10 @@ export interface AppActions {
   // Sync actions
   setLastSyncTime: (time: Date) => void;
   setHasNewEmails: (hasNew: boolean) => void;
+
+  // Theme actions
+  toggleDarkMode: () => void;
+  setDarkMode: (dark: boolean) => void;
 }
 
 /**
