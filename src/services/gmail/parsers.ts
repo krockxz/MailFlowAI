@@ -31,10 +31,14 @@ export function parseMessage(message: GmailMessage): Email {
   // Parse from address
   let from: EmailAddress = { email: 'unknown@example.com', name: 'Unknown' };
   try {
-    from = {
-      email: extractEmailAddress(fromStr),
-      name: extractName(fromStr) || extractEmailAddress(fromStr),
-    };
+    const extractedEmail = extractEmailAddress(fromStr);
+    const extractedName = extractName(fromStr);
+    if (extractedEmail) {
+      from = {
+        email: extractedEmail,
+        name: extractedName || extractedEmail,
+      };
+    }
   } catch {
     // Keep default value
   }
@@ -80,9 +84,11 @@ export function parseMessage(message: GmailMessage): Email {
   if (message.payload?.body?.data) {
     body = base64UrlDecode(message.payload.body.data);
   } else if (message.payload?.parts) {
-    // Find text/plain or text/html part
+    // Prefer text/plain over text/html
     const textPart = message.payload.parts.find(
-      (part) => part.mimeType === 'text/plain' || part.mimeType === 'text/html'
+      (part) => part.mimeType === 'text/plain'
+    ) || message.payload.parts.find(
+      (part) => part.mimeType === 'text/html'
     );
     if (textPart?.body?.data) {
       body = base64UrlDecode(textPart.body.data);
@@ -109,16 +115,42 @@ export function parseMessage(message: GmailMessage): Email {
 
 /**
  * Extract body from nested parts
+ * Prefers text/plain over text/html
  */
 export function extractBodyFromParts(parts: GmailMessagePayload[]): string {
+  // First pass: look for text/plain
   for (const part of parts) {
-    if (part.body?.data) {
-      if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
-        return base64UrlDecode(part.body.data);
-      }
+    if (part.body?.data && part.mimeType === 'text/plain') {
+      return base64UrlDecode(part.body.data);
     }
     if (part.parts) {
       const body = extractBodyFromParts(part.parts);
+      if (body) return body;
+    }
+  }
+  // Second pass: look for text/html
+  for (const part of parts) {
+    if (part.body?.data && part.mimeType === 'text/html') {
+      return base64UrlDecode(part.body.data);
+    }
+    if (part.parts) {
+      const body = extractBodyFromPartsNestedHtml(part.parts);
+      if (body) return body;
+    }
+  }
+  return '';
+}
+
+/**
+ * Extract HTML body from nested parts (second pass helper)
+ */
+function extractBodyFromPartsNestedHtml(parts: GmailMessagePayload[]): string {
+  for (const part of parts) {
+    if (part.body?.data && part.mimeType === 'text/html') {
+      return base64UrlDecode(part.body.data);
+    }
+    if (part.parts) {
+      const body = extractBodyFromPartsNestedHtml(part.parts);
       if (body) return body;
     }
   }

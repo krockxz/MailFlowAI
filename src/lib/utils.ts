@@ -89,8 +89,10 @@ export function base64UrlEncode(str: string): string {
 
 /**
  * Extract email address from a formatted string
+ * Returns the original address if no angle brackets found
  */
 export function extractEmailAddress(address: string): string {
+  if (!address || address.trim() === '') return '';
   const match = address.match(/<(.+?)>/);
   return match ? match[1] : address;
 }
