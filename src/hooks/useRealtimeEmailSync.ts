@@ -65,9 +65,8 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
     sync();
 
     // Connect to WebSocket server
-    // Assuming the server is running on the same host but port 8080
-    // In production, this would be an environment variable
-    const socketUrl = 'http://localhost:8080';
+    // Using environment variable for WebSocket URL (configurable per environment)
+    const socketUrl = import.meta.env.VITE_WEBSOCKET_URL || 'http://localhost:8080';
 
     try {
       socketRef.current = io(socketUrl, {
