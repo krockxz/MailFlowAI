@@ -5,9 +5,11 @@ import { useEmails } from './useEmails';
 import type {
   OpenEmailParams,
   ReplyEmailParams,
+  SearchEmailsParams,
 } from '@/types/copilot';
 import { isWithinRange } from '@/lib/utils';
-import type { Email, ViewType } from '@/types/email';
+import type { Email, FilterState, ViewType } from '@/types/email';
+import type { AppStore } from '@/types/store';
 
 /**
  * Hook that provides AI-readable context about the application state
@@ -86,7 +88,7 @@ export function useCopilotEmailActions() {
   } = useAppStore();
 
   const { sendEmail, markAsRead } = useEmails();
-  const selectedEmailId = useAppStore((state: any) => state.selectedEmailId);
+  const selectedEmailId = useAppStore((state: AppStore) => state.selectedEmailId);
 
   // Store compose state for AI to set
   const [composeData, setComposeData] = useState<{
@@ -238,9 +240,9 @@ export function useCopilotEmailActions() {
         required: false,
       },
     ],
-    handler: async (params: any) => {
+    handler: async (params: SearchEmailsParams) => {
       // Build filter state
-      const newFilters: any = {};
+      const newFilters: Partial<FilterState> = {};
 
       if (params.query) {
         newFilters.query = params.query;
