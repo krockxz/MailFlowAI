@@ -1,9 +1,26 @@
 @import "tailwindcss";
 
+/* ===== Geist Typography ===== */
+/* Geist Sans - weights 400, 500, 600 */
+@import "@fontsource/geist/400.css";
+@import "@fontsource/geist/500.css";
+@import "@fontsource/geist/600.css";
+
+/* Geist Mono - weight 400 for code */
+@import "@fontsource/geist-mono/400.css";
+
 /* ===== Design System Foundation ===== */
 /* Based on .planning/DESIGN.md specification */
 
 @theme {
+  /* ===== Font Families ===== */
+  --font-sans: 'Geist', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+
+  /* ===== Line Heights ===== */
+  --line-height-body: 1.5;
+  --line-height-heading: 1.2;
+
   /* ===== Neutral Color Scale (50-950) ===== */
   --color-neutral-50: #fafafa;
   --color-neutral-100: #f4f4f5;
@@ -95,8 +112,8 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-sans);
+  line-height: var(--line-height-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
@@ -104,8 +121,7 @@ body {
 }
 
 code {
-  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', 'Lucida Console', Monaco,
-    monospace;
+  font-family: var(--font-mono);
 }
 
 /* Dark mode styles */
