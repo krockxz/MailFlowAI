@@ -33,11 +33,11 @@ export function Sidebar({
   const { login, logout } = useGoogleAuth();
 
   return (
-    <aside className="w-64 bg-zinc-900 dark:bg-black border-r border-zinc-800 dark:border-zinc-950 flex flex-col h-screen shrink-0">
+    <aside className="w-[240px] bg-neutral-50 dark:bg-neutral-950 border-r border-neutral-200 dark:border-neutral-800 flex flex-col h-screen shrink-0">
       {/* Header */}
       <div className="p-6">
         <h1 className="text-xl font-bold text-white dark:text-white tracking-tight">AI Mail</h1>
-        <p className="text-zinc-500 dark:text-zinc-500 text-xs mt-1">Intelligent email assistant</p>
+        <p className="text-neutral-500 dark:text-neutral-400 text-xs mt-1">Intelligent email assistant</p>
       </div>
 
       {/* Compose Button */}
