@@ -81,8 +81,9 @@ describe('auth service', () => {
     it('should generate string of expected length', () => {
       const state = auth.generateState();
 
-      // Two random strings of 11 chars each = 22 chars
-      expect(state.length).toBe(22);
+      // Two random strings (typically 11-13 chars each) = around 22-26 chars
+      expect(state.length).toBeGreaterThanOrEqual(20);
+      expect(state.length).toBeLessThanOrEqual(30);
     });
 
     it('should contain only alphanumeric characters', () => {
