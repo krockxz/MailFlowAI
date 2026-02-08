@@ -60,7 +60,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
   return (
     <div className="flex flex-col h-full bg-neutral-50 dark:bg-neutral-950">
       {/* Header */}
-      <header className="border-b border-neutral-200 dark:border-neutral-800 p-6 shrink-0 animate-slide-up">
+      <header className="border-b border-neutral-200 dark:border-neutral-800 px-8 py-6 shrink-0 animate-slide-up">
         <div className="flex items-center justify-between mb-5">
           <Button
             variant="ghost"
