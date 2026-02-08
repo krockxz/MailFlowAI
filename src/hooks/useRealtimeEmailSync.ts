@@ -81,7 +81,7 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
         setIsConnected(false);
       });
 
-      socketRef.current.on('email:new', (data) => {
+      socketRef.current.on('email:new', () => {
         // Show browser notification
         if (Notification.permission === 'granted') {
           new Notification('New Email Received', {
@@ -135,11 +135,12 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
  * Hook for setting up Gmail watch
  */
 export function useGmailWatch() {
-  const startWatching = useCallback(async (topicName: string) => {
+  const startWatching = useCallback(async (_topicName: string) => {
     // In a real app, this would call the backend to set up the watch
   }, []);
 
   const stopWatching = useCallback(async () => {
+    // In a real app, this would call the backend to stop watching
   }, []);
 
   return { startWatching, stopWatching };
