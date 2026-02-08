@@ -58,7 +58,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
     : [email];
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-zinc-900">
+    <div className="flex flex-col h-full bg-neutral-50 dark:bg-neutral-950">
       {/* Header */}
       <header className="border-b border-neutral-200 dark:border-neutral-800 p-6 shrink-0 animate-slide-up">
         <div className="flex items-center justify-between mb-5">
@@ -128,7 +128,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
             style={{ animationDelay: `${index * 50}ms` }}
           >
             {index !== displayEmails.length - 1 && (
-              <Separator className="mb-8 bg-zinc-100 dark:bg-zinc-800" />
+              <Separator className="mb-8 bg-neutral-100 dark:bg-neutral-800" />
             )}
 
             {/* Message Header */}
@@ -167,7 +167,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
 
       {/* Quick reply */}
       {onReply && (
-        <div className="border-t border-neutral-200 dark:border-neutral-800 bg-zinc-50 dark:bg-zinc-900/50 p-4 shrink-0">
+        <div className="border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/50 p-4 shrink-0">
           <Button
             variant="outline"
             onClick={() => onReply(displayEmails[displayEmails.length - 1].id)}
