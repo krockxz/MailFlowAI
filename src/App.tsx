@@ -14,6 +14,7 @@ import { Moon, Sun, RefreshCw, Sparkles } from 'lucide-react';
 import { getStoredAccessToken, isAuthenticated } from '@/services/auth';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Button } from '@/components/ui/button';
+import { formatReplyDate } from '@/lib/utils';
 
 function AppContent() {
   const {
@@ -136,7 +137,7 @@ function AppContent() {
         subject: email.subject.startsWith('Re:')
           ? email.subject
           : `Re: ${email.subject}`,
-        body: `\n\n----------\nOn ${email.date.toLocaleString()}, ${email.from.name || email.from.email} wrote:\n${email.body.slice(0, 200)}...`,
+        body: `\n\n----------\nOn ${formatReplyDate(email.date)}, ${email.from.name || email.from.email} wrote:\n${email.body.slice(0, 200)}...`,
       });
       setIsComposeOpen(true);
     }

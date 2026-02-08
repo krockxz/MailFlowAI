@@ -10,6 +10,22 @@ dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 
 /**
+ * DATE UTILITY PATTERN
+ *
+ * This module uses dayjs for all date formatting and comparison operations.
+ *
+ * Usage Pattern:
+ * - Use new Date() or Date.now() for creating timestamps
+ * - Use formatDate() / formatFullDate() for display formatting
+ * - Use isWithinRange() / isWithinLastDays() for date comparisons
+ *
+ * Rationale:
+ * - dayjs provides consistent, timezone-aware formatting
+ * - Native Date is sufficient and zero-cost for timestamp creation
+ * - This separation keeps bundle size optimized
+ */
+
+/**
  * Merge Tailwind CSS classes
  */
 export function cn(...inputs: ClassValue[]) {
@@ -17,7 +33,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Format email date using dayjs
+ * Format email date for display in lists (short format).
+ * Uses dayjs for consistent formatting: shows time for today,
+ * "Yesterday" for yesterday, day of week for last 7 days,
+ * otherwise "MMM D" format.
+ *
+ * @param date - The date to format (native Date object created via new Date())
+ * @returns Formatted date string for display
  */
 export function formatDate(date: Date): string {
   const d = dayjs(date);
@@ -28,7 +50,11 @@ export function formatDate(date: Date): string {
 }
 
 /**
- * Format full date using dayjs
+ * Format full date for display in email detail view.
+ * Uses dayjs for consistent "MMMM D, YYYY at h:mm A" format.
+ *
+ * @param date - The date to format (native Date object created via new Date())
+ * @returns Formatted full date string for display
  */
 export function formatFullDate(date: Date): string {
   return dayjs(date).format('MMMM D, YYYY [at] h:mm A');
@@ -94,18 +120,40 @@ export function getInitials(name: string): string {
 }
 
 /**
- * Check if date is within last N days using dayjs
+ * Check if a date is within the last N days from today.
+ * Uses dayjs diff() for accurate day calculation.
+ *
+ * @param date - The date to check (native Date object created via new Date())
+ * @param days - Number of days to look back
+ * @returns true if the date is within the specified range
  */
 export function isWithinLastDays(date: Date, days: number): boolean {
   return dayjs().diff(dayjs(date), 'day') <= days && dayjs(date).diff(dayjs(), 'day') <= 0;
 }
 
 /**
- * Check if date is within a date range using dayjs
+ * Check if a date is within a specific date range (inclusive).
+ * Uses dayjs isBefore()/isAfter() for comparison.
+ *
+ * @param date - The date to check (native Date object created via new Date())
+ * @param start - Optional start date (inclusive)
+ * @param end - Optional end date (inclusive)
+ * @returns true if the date is within the specified range
  */
 export function isWithinRange(date: Date, start?: Date, end?: Date): boolean {
   const d = dayjs(date);
   if (start && d.isBefore(dayjs(start))) return false;
   if (end && d.isAfter(dayjs(end))) return false;
   return true;
+}
+
+/**
+ * Format date for email reply quoting (e.g., "On January 1, 2025 at 10:30 AM").
+ * Uses dayjs for consistent formatting in reply/forward contexts.
+ *
+ * @param date - The date to format (native Date object created via new Date())
+ * @returns Formatted date string for reply quotes
+ */
+export function formatReplyDate(date: Date): string {
+  return dayjs(date).format('MMMM D, YYYY [at] h:mm A');
 }
