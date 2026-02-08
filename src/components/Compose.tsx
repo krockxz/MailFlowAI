@@ -1,13 +1,27 @@
-import { useState, useRef, useEffect } from 'react';
-import { X, Minus, Maximize2, Send } from 'lucide-react';
+import { useRef, useEffect, useState } from 'react';
+import { X, Minus, Maximize2, Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+
+const emailSchema = z.object({
+  to: z.string().min(1, 'Recipient is required').email('Invalid email address'),
+  subject: z.string().min(1, 'Subject is required'),
+  body: z.string(),
+  cc: z.string().email('Invalid email address').optional().or(z.literal('')),
+});
+
+type EmailForm = z.infer<typeof emailSchema>;
 
 interface ComposeProps {
   isOpen: boolean;
   onClose: () => void;
   onSend: (data: { to: string; subject: string; body: string; cc?: string }) => Promise<void>;
-  isSending?: boolean;
   initialData?: {
     to?: string;
     subject?: string;
@@ -22,28 +36,35 @@ export function Compose({
   isOpen,
   onClose,
   onSend,
-  isSending = false,
   initialData,
   isMinimized = false,
   onToggleMinimize
 }: ComposeProps) {
   const darkMode = useAppStore((state) => state.darkMode);
-  const [to, setTo] = useState(initialData?.to || '');
-  const [subject, setSubject] = useState(initialData?.subject || '');
-  const [body, setBody] = useState(initialData?.body || '');
-  const [cc, setCc] = useState(initialData?.cc || '');
   const [showCc, setShowCc] = useState(!!initialData?.cc);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<EmailForm>({
+    resolver: zodResolver(emailSchema),
+    defaultValues: {
+      to: initialData?.to || '',
+      subject: initialData?.subject || '',
+      body: initialData?.body || '',
+      cc: initialData?.cc || '',
+    },
+  });
+
   useEffect(() => {
     if (initialData) {
-      setTo(initialData.to || '');
-      setSubject(initialData.subject || '');
-      setBody(initialData.body || '');
-      setCc(initialData.cc || '');
+      reset({
+        to: initialData.to || '',
+        subject: initialData.subject || '',
+        body: initialData.body || '',
+        cc: initialData.cc || '',
+      });
       setShowCc(!!initialData.cc);
     }
-  }, [initialData]);
+  }, [initialData, reset]);
 
   useEffect(() => {
     if (isOpen && !isMinimized && bodyRef.current) {
@@ -51,33 +72,17 @@ export function Compose({
     }
   }, [isOpen, isMinimized]);
 
-  const handleSend = async () => {
-    if (!to.trim()) {
-      alert('Please enter a recipient');
-      return;
-    }
-
-    if (!subject.trim()) {
-      alert('Please enter a subject');
-      return;
-    }
-
+  const onSubmit = async (data: EmailForm) => {
     try {
       await onSend({
-        to: to.trim(),
-        subject: subject.trim(),
-        body: body.trim(),
-        cc: cc.trim() || undefined,
+        to: data.to,
+        subject: data.subject,
+        body: data.body,
+        cc: data.cc || undefined,
       });
-
-      // Reset form
-      setTo('');
-      setSubject('');
-      setBody('');
-      setCc('');
+      reset();
       onClose();
     } catch (error) {
-      alert('Failed to send email. Please try again.');
       console.error(error);
     }
   };
@@ -86,133 +91,59 @@ export function Compose({
 
   return (
     <div className={cn(
-      'fixed bottom-0 right-4 z-50 shadow-2xl transition-all duration-300 ease-out animate-scale-in',
-      darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200',
+      'fixed bottom-0 right-4 z-50 shadow-2xl transition-all duration-300 ease-out animate-scale-in border border-zinc-200 dark:border-zinc-800',
+      darkMode ? 'bg-zinc-900' : 'bg-white',
       isMinimized ? 'w-96 h-12 rounded-t-lg' : 'w-[600px] h-[540px] rounded-t-xl'
     )}>
-      {/* Header */}
       <div className={cn(
         'flex items-center justify-between px-4 py-3 rounded-t-xl',
         darkMode ? 'bg-zinc-800' : 'bg-zinc-100'
       )}>
-        <span className="font-semibold text-sm">New Message</span>
+        <span className="font-semibold text-sm text-zinc-900 dark:text-white">New Message</span>
         <div className="flex items-center gap-1">
-          <button
-            onClick={onToggleMinimize}
-            className="p-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-smooth"
-            title={isMinimized ? 'Expand' : 'Minimize'}
-          >
-            {isMinimized ? <Maximize2 className="w-4 h-4 text-zinc-500" /> : <Minus className="w-4 h-4 text-zinc-500" />}
-          </button>
-          <button
-            onClick={onClose}
-            className="p-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-smooth"
-            title="Discard"
-          >
-            <X className="w-4 h-4 text-zinc-500" />
-          </button>
+          <Button variant="ghost" size="icon" onClick={onToggleMinimize} className="h-7 w-7">
+            {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
+          </Button>
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7">
+            <X className="w-4 h-4" />
+          </Button>
         </div>
       </div>
 
       {!isMinimized && (
-        <div className="flex flex-col h-[calc(100%-52px)]">
-          {/* Form */}
-          <div className="flex-1 flex flex-col">
-            <div className={cn('border-b', darkMode ? 'border-zinc-800' : 'border-zinc-200')}>
-              <input
-                type="email"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                placeholder="To"
-                className={cn(
-                  'w-full px-4 py-3 text-sm focus:outline-none bg-transparent transition-smooth',
-                  darkMode ? 'placeholder:text-zinc-600' : 'placeholder:text-zinc-400'
-                )}
-              />
-            </div>
-
-            {showCc && (
-              <div className={cn('border-b', darkMode ? 'border-zinc-800' : 'border-zinc-200')}>
-                <input
-                  type="email"
-                  value={cc}
-                  onChange={(e) => setCc(e.target.value)}
-                  placeholder="Cc"
-                  className={cn(
-                    'w-full px-4 py-3 text-sm focus:outline-none bg-transparent transition-smooth',
-                    darkMode ? 'placeholder:text-zinc-600' : 'placeholder:text-zinc-400'
-                  )}
-                />
-              </div>
-            )}
-
-            <div className={cn('border-b', darkMode ? 'border-zinc-800' : 'border-zinc-200')}>
-              <input
-                type="text"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="Subject"
-                className={cn(
-                  'w-full px-4 py-3 text-sm focus:outline-none bg-transparent font-medium transition-smooth',
-                  darkMode ? 'placeholder:text-zinc-600' : 'placeholder:text-zinc-400'
-                )}
-              />
-            </div>
-
-            <div className="flex-1 p-4">
-              <textarea
-                ref={bodyRef}
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="Write your message..."
-                className={cn(
-                  'w-full h-full resize-none focus:outline-none text-sm leading-relaxed bg-transparent',
-                  darkMode ? 'placeholder:text-zinc-600' : 'placeholder:text-zinc-400'
-                )}
-              />
-            </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-[calc(100%-52px)]">
+          <div className="border-b border-zinc-200 dark:border-zinc-800">
+            <Input {...register('to')} type="email" placeholder="To" className="border-none rounded-none px-4 focus-visible:ring-0" />
+            {errors.to && <span className="text-red-500 text-xs px-4">{errors.to.message}</span>}
           </div>
 
-          {/* Footer */}
-          <div className={cn(
-            'flex items-center justify-between px-4 py-3 border-t',
-            darkMode ? 'border-zinc-800' : 'border-zinc-200'
-          )}>
-            <button
-              onClick={() => setShowCc(!showCc)}
-              className={cn(
-                'text-sm font-medium transition-smooth px-3 py-1.5 rounded-lg',
-                darkMode
-                  ? 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-                  : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100'
-              )}
-            >
+          {showCc && (
+            <div className="border-b border-zinc-200 dark:border-zinc-800">
+              <Input {...register('cc')} type="email" placeholder="Cc" className="border-none rounded-none px-4 focus-visible:ring-0" />
+              {errors.cc && <span className="text-red-500 text-xs px-4">{errors.cc.message}</span>}
+            </div>
+          )}
+
+          <div className="border-b border-zinc-200 dark:border-zinc-800">
+            <Input {...register('subject')} type="text" placeholder="Subject" className="border-none rounded-none px-4 font-medium focus-visible:ring-0" />
+            {errors.subject && <span className="text-red-500 text-xs px-4">{errors.subject.message}</span>}
+          </div>
+
+          <div className="flex-1 p-4">
+            <Textarea {...register('body')} ref={bodyRef} placeholder="Write your message..." className="w-full h-full resize-none border-none focus-visible:ring-0 shadow-none" />
+          </div>
+
+          <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-200 dark:border-zinc-800">
+            <Button type="button" variant="ghost" onClick={() => setShowCc(!showCc)} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400">
               {showCc ? 'Hide Cc' : 'Add Cc'}
-            </button>
+            </Button>
 
-            <button
-              onClick={handleSend}
-              disabled={isSending || !to.trim() || !subject.trim()}
-              className={cn(
-                'flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-smooth',
-                'bg-blue-500 text-white hover:bg-blue-600 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30',
-                'disabled:bg-zinc-300 disabled:shadow-none disabled:cursor-not-allowed dark:disabled:bg-zinc-800'
-              )}
-            >
-              {isSending ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  Send
-                </>
-              )}
-            </button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+              Send
+            </Button>
           </div>
-        </div>
+        </form>
       )}
     </div>
   );

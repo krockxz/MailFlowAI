@@ -1,8 +1,10 @@
 import { memo } from 'react';
 import { Mail, MailOpen } from 'lucide-react';
-import { formatDate, truncate, getInitials } from '@/lib/utils';
+import { formatDate, truncate } from '@/lib/utils';
 import type { Email } from '@/types/email';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { getInitials } from '@/lib/utils';
 
 interface EmailListProps {
   emails: Email[];
@@ -25,7 +27,7 @@ const EmailItem = memo(({
     <div
       onClick={onClick}
       className={cn(
-        'group relative p-4 border-b border-zinc-100 dark:border-zinc-800 cursor-pointer transition-smooth animate-slide-up',
+        'group relative p-4 border-b border-zinc-100 dark:border-zinc-800 cursor-pointer transition-all duration-200 animate-slide-up',
         'hover:bg-zinc-50 dark:hover:bg-zinc-800/50',
         isSelected && 'bg-blue-50/50 dark:bg-blue-900/10',
         email.isUnread ? 'bg-white dark:bg-zinc-900' : 'bg-zinc-50/30 dark:bg-zinc-900/50'
@@ -34,20 +36,24 @@ const EmailItem = memo(({
     >
       {/* Selection indicator */}
       <div className={cn(
-        'absolute left-0 top-0 bottom-0 w-1 transition-smooth',
+        'absolute left-0 top-0 bottom-0 w-1 transition-all duration-200',
         isSelected ? 'bg-blue-500' : 'bg-transparent group-hover:bg-blue-300'
       )} />
 
       <div className="flex items-start gap-4 pl-2">
         {/* Avatar */}
-        <div className={cn(
-          'w-11 h-11 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 transition-smooth',
+        <Avatar className={cn(
+          'w-11 h-11 shrink-0 transition-all duration-200',
           email.isUnread
             ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25'
             : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
         )}>
-          {getInitials(email.from.name || email.from.email)}
-        </div>
+          <AvatarFallback className={cn(
+            email.isUnread ? 'bg-transparent text-white' : undefined
+          )}>
+            {getInitials(email.from.name || email.from.email)}
+          </AvatarFallback>
+        </Avatar>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
@@ -67,7 +73,7 @@ const EmailItem = memo(({
           </div>
 
           <div className={cn(
-            'text-sm mb-1.5 truncate transition-smooth',
+            'text-sm mb-1.5 truncate transition-all duration-200',
             email.isUnread ? 'font-semibold text-zinc-900 dark:text-white' : 'text-zinc-700 dark:text-zinc-300'
           )}>
             {email.subject}

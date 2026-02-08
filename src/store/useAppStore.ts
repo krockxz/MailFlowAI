@@ -1,32 +1,37 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { AppStore } from '@/types/store';
+import { getTheme, setTheme } from '@/components/theme-provider';
 
 export const useAppStore = create<AppStore>()(
   persist(
-    (set) => ({
-      // Initial state
-      user: null,
-      isAuthenticated: false,
-      accessToken: null,
+    (set) => {
+      // Initialize dark mode from stored theme
+      const initialDarkMode = getTheme() === 'dark';
 
-      currentView: 'inbox',
-      selectedEmailId: null,
-      activeThread: null,
+      return {
+        // Initial state
+        user: null,
+        isAuthenticated: false,
+        accessToken: null,
 
-      emails: {
-        inbox: [],
-        sent: [],
-      },
-      filters: {},
+        currentView: 'inbox',
+        selectedEmailId: null,
+        activeThread: null,
 
-      isLoading: false,
-      isSending: false,
+        emails: {
+          inbox: [],
+          sent: [],
+        },
+        filters: {},
 
-      lastSyncTime: null,
-      hasNewEmails: false,
+        isLoading: false,
+        isSending: false,
 
-      darkMode: false,
+        lastSyncTime: null,
+        hasNewEmails: false,
+
+        darkMode: initialDarkMode,
 
       // Actions
       setUser: (user) => set({ user, isAuthenticated: !!user }),
@@ -85,13 +90,21 @@ export const useAppStore = create<AppStore>()(
       setLastSyncTime: (time) => set({ lastSyncTime: time }),
       setHasNewEmails: (hasNew) => set({ hasNewEmails: hasNew }),
 
-      toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
-      setDarkMode: (dark) => set({ darkMode: dark }),
-    }),
+      toggleDarkMode: () => {
+        const currentState = getTheme() === 'dark'
+        const newTheme = currentState ? 'light' : 'dark'
+        setTheme(newTheme)
+        set({ darkMode: !currentState })
+      },
+      setDarkMode: (dark) => {
+        setTheme(dark ? 'dark' : 'light')
+        set({ darkMode: dark })
+      },
+      };
+    },
     {
       name: 'ai-mail-app-storage',
       partialize: (state) => ({
-        darkMode: state.darkMode,
         user: state.user,
       }),
     }

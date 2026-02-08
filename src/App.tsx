@@ -11,8 +11,10 @@ import { FilterBar } from '@/components/FilterBar';
 import { CopilotSidebar } from '@/components/CopilotSidebar';
 import { Moon, Sun, RefreshCw, Sparkles } from 'lucide-react';
 import { getStoredAccessToken, isAuthenticated } from '@/services/auth';
+import { ThemeProvider } from '@/components/theme-provider';
+import { Button } from '@/components/ui/button';
 
-function App() {
+function AppContent() {
   const {
     currentView,
     selectedEmailId,
@@ -64,15 +66,6 @@ function App() {
     }
   }, [composeData.to, composeData.subject, composeData.body, composeData.isOpen]);
 
-  // Apply dark mode to document
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
   // Check auth on mount
   useEffect(() => {
     const checkAuth = async () => {
@@ -89,7 +82,6 @@ function App() {
             setUser({ emailAddress: profile.emailAddress });
           } catch (error) {
             console.error('Failed to fetch user profile:', error);
-            // Fallback or force logout if token is invalid
           }
 
           await fetchInbox();
@@ -179,15 +171,8 @@ function App() {
   // Get unread count
   const unreadCount = emails.inbox.filter((e: any) => e.isUnread).length;
 
-  // Dynamic classes based on dark mode
-  const bgClass = darkMode ? 'bg-zinc-950' : 'bg-zinc-50';
-  const headerBgClass = darkMode
-    ? 'bg-zinc-900/80 border-zinc-800'
-    : 'bg-white/80 border-zinc-200';
-  const textClass = darkMode ? 'text-white' : 'text-zinc-900';
-
   return (
-    <div className={`flex h-screen overflow-hidden ${bgClass}`}>
+    <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950">
       {/* Sidebar */}
       <Sidebar
         currentView={currentView}
@@ -200,13 +185,13 @@ function App() {
       />
 
       {/* Main content */}
-      <div className={`flex-1 flex flex-col overflow-hidden relative ${darkMode ? 'bg-zinc-900' : 'bg-white'}`}>
-        {/* Glass header with filters and actions */}
-        <header className={`glass-elevated border-b ${headerBgClass} transition-smooth`}>
+      <div className="flex-1 flex flex-col overflow-hidden relative bg-white dark:bg-zinc-900">
+        {/* Header with filters and actions */}
+        <header className="glass-elevated border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 transition-smooth">
           <div className="flex items-center">
             {/* Logo/Brand */}
             <div className="px-6 py-4 border-r border-zinc-200 dark:border-zinc-800">
-              <h1 className={`text-lg font-semibold ${textClass}`}>
+              <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">
                 <span className="text-blue-500">AI</span> Mail
               </h1>
             </div>
@@ -221,47 +206,39 @@ function App() {
 
             {/* Action buttons */}
             <div className="flex items-center gap-1 pr-4">
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={sync}
-                className={`p-2.5 rounded-lg transition-smooth relative group
-                  ${darkMode
-                    ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
-                    : 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900'
-                  }`}
+                className="relative group"
                 title="Sync emails"
               >
                 <RefreshCw className="w-4.5 h-4.5" />
-                <span className="absolute inset-0 rounded-lg ring-2 ring-blue-500/0 group-hover:ring-blue-500/20 transition-smooth" />
-              </button>
+                <span className="absolute inset-0 rounded-xl ring-2 ring-blue-500/0 group-hover:ring-blue-500/20 transition-smooth" />
+              </Button>
 
-              <button
+              <Button
+                variant={isCopilotOpen ? "secondary" : "ghost"}
+                size="icon"
                 onClick={() => setIsCopilotOpen(!isCopilotOpen)}
-                className={`p-2.5 rounded-lg transition-smooth relative group ${
-                  isCopilotOpen
-                    ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                    : (darkMode
-                        ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
-                        : 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900')
-                }`}
+                className="relative"
                 title="Toggle AI Assistant"
               >
                 <Sparkles className="w-4.5 h-4.5" />
                 {isCopilotOpen && (
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
                 )}
-              </button>
+              </Button>
 
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={toggleDarkMode}
-                className={`p-2.5 rounded-lg transition-smooth relative group
-                  ${darkMode
-                    ? 'hover:bg-zinc-800 text-amber-400'
-                    : 'hover:bg-zinc-100 text-zinc-500 hover:text-amber-600'
-                  }`}
+                className={darkMode ? "text-amber-400 hover:text-amber-300" : ""}
                 title={darkMode ? 'Light mode' : 'Dark mode'}
               >
                 {darkMode ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
-              </button>
+              </Button>
             </div>
           </div>
         </header>
@@ -300,6 +277,14 @@ function App() {
         initialData={composeInitialData}
       />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 

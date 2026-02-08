@@ -1,5 +1,13 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import isToday from 'dayjs/plugin/isToday';
+import isYesterday from 'dayjs/plugin/isYesterday';
+
+dayjs.extend(relativeTime);
+dayjs.extend(isToday);
+dayjs.extend(isYesterday);
 
 /**
  * Merge Tailwind CSS classes
@@ -9,53 +17,31 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Format email date
+ * Format email date using dayjs
  */
 export function formatDate(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  } else if (diffDays === 1) {
-    return 'Yesterday';
-  } else if (diffDays < 7) {
-    return date.toLocaleDateString([], { weekday: 'short' });
-  } else {
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-  }
+  const d = dayjs(date);
+  if (d.isToday()) return d.format('HH:mm');
+  if (d.isYesterday()) return 'Yesterday';
+  if (dayjs().diff(d, 'day') < 7) return d.format('ddd');
+  return d.format('MMM D');
 }
 
 /**
- * Format full date
+ * Format full date using dayjs
  */
 export function formatFullDate(date: Date): string {
-  return date.toLocaleDateString([], {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return dayjs(date).format('MMMM D, YYYY [at] h:mm A');
 }
 
 /**
- * Decode Base64URL to string
+ * Decode Base64URL to string (Gmail-specific, keep custom)
  */
 export function base64UrlDecode(str: string): string {
-  // Replace URL-safe characters
   let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-
-  // Add padding if needed
-  while (base64.length % 4) {
-    base64 += '=';
-  }
-
+  while (base64.length % 4) base64 += '=';
   try {
     const decoded = atob(base64);
-    // Handle UTF-8 encoding
     const bytes = new Uint8Array(decoded.length);
     for (let i = 0; i < decoded.length; i++) {
       bytes[i] = decoded.charCodeAt(i);
@@ -67,15 +53,12 @@ export function base64UrlDecode(str: string): string {
 }
 
 /**
- * Encode string to Base64URL
+ * Encode string to Base64URL (Gmail-specific, keep custom)
  */
 export function base64UrlEncode(str: string): string {
   const utf8Bytes = new TextEncoder().encode(str);
   const binary = Array.from(utf8Bytes, (byte) => String.fromCharCode(byte)).join('');
-  return btoa(binary)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 /**
@@ -95,11 +78,10 @@ export function extractName(address: string): string {
 }
 
 /**
- * Truncate text to a maximum length
+ * Truncate text (simple enough to keep custom - YAGNI)
  */
 export function truncate(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength) + '...';
+  return text.length <= maxLength ? text : text.slice(0, maxLength) + '...';
 }
 
 /**
@@ -107,27 +89,23 @@ export function truncate(text: string, maxLength: number): string {
  */
 export function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase();
-  }
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 /**
- * Check if date is within last N days
+ * Check if date is within last N days using dayjs
  */
 export function isWithinLastDays(date: Date, days: number): boolean {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
-  return diffDays >= 0 && diffDays <= days;
+  return dayjs().diff(dayjs(date), 'day') <= days && dayjs(date).diff(dayjs(), 'day') <= 0;
 }
 
 /**
- * Check if date is within a date range
+ * Check if date is within a date range using dayjs
  */
 export function isWithinRange(date: Date, start?: Date, end?: Date): boolean {
-  if (start && date < start) return false;
-  if (end && date > end) return false;
+  const d = dayjs(date);
+  if (start && d.isBefore(dayjs(start))) return false;
+  if (end && d.isAfter(dayjs(end))) return false;
   return true;
 }

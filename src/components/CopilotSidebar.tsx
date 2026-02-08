@@ -2,6 +2,8 @@ import { CopilotChat } from '@copilotkit/react-ui';
 import { X, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface CopilotSidebarProps {
   isOpen: boolean;
@@ -20,34 +22,29 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
   if (!isOpen) return null;
 
   return (
-    <div className={cn(
-      'fixed right-0 top-0 h-full w-96 shadow-2xl z-40 flex flex-col transition-transform duration-300 ease-out animate-slide-in-right',
-      darkMode ? 'bg-zinc-900 border-l border-zinc-800' : 'bg-white border-l border-zinc-200'
-    )}>
+    <div className="fixed right-0 top-0 h-full w-96 shadow-2xl z-40 flex flex-col transition-transform duration-300 ease-out animate-slide-in-right bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800">
       {/* Header */}
-      <div className={cn(
-        'flex items-center justify-between p-5 border-b',
-        darkMode ? 'border-zinc-800 bg-zinc-900/50' : 'border-zinc-200 bg-zinc-50'
-      )}>
+      <div className="flex items-center justify-between p-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
+          <Avatar className="w-9 h-9 shadow-lg shadow-blue-500/25 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+            <AvatarFallback className="bg-transparent text-white">
+              <Sparkles className="w-5 h-5" />
+            </AvatarFallback>
+          </Avatar>
           <div>
-            <h2 className={cn('font-semibold text-base', darkMode ? 'text-white' : 'text-zinc-900')}>AI Assistant</h2>
-            <p className={cn('text-xs', darkMode ? 'text-zinc-500' : 'text-zinc-400')}>Ask me to manage your email</p>
+            <h2 className="font-semibold text-base text-zinc-900 dark:text-white">AI Assistant</h2>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Ask me to manage your email</p>
           </div>
         </div>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onClose}
-          className={cn(
-            'p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition-smooth',
-            darkMode ? 'text-zinc-400 hover:text-white' : 'text-zinc-400 hover:text-zinc-700'
-          )}
+          className="h-8 w-8"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
-        </button>
+        </Button>
       </div>
 
       {/* Chat interface */}
@@ -64,11 +61,8 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
       </div>
 
       {/* Footer with example prompts */}
-      <div className={cn(
-        'p-4 border-t',
-        darkMode ? 'border-zinc-800 bg-zinc-900/50' : 'border-zinc-200 bg-zinc-50'
-      )}>
-        <p className={cn('text-xs font-medium mb-3 px-1', darkMode ? 'text-zinc-500' : 'text-zinc-400')}>
+      <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
+        <p className="text-xs font-medium mb-3 px-1 text-zinc-500 dark:text-zinc-400">
           Try saying:
         </p>
         <div className="space-y-1.5">
@@ -76,7 +70,7 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
             <button
               key={index}
               className={cn(
-                'w-full text-left text-sm px-3 py-2.5 rounded-xl transition-smooth flex items-center gap-2.5',
+                'w-full text-left text-sm px-3 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-2.5',
                 darkMode
                   ? 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
                   : 'text-zinc-600 hover:text-zinc-900 hover:bg-white border border-transparent hover:border-zinc-200 hover:shadow-sm'
