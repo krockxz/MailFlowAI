@@ -1,29 +1,52 @@
 import { CopilotChat } from '@copilotkit/react-ui';
+import { X, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useAppStore } from '@/store';
 
 interface CopilotSidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const examplePrompts = [
+  { text: 'Send an email to john@example.com', icon: '✉️' },
+  { text: 'Show emails from last week', icon: '📅' },
+  { text: 'Open the latest unread email', icon: '📬' },
+];
+
 export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
+  const darkMode = useAppStore((state) => state.darkMode);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed right-0 top-0 h-full w-96 bg-white border-l border-gray-200 shadow-xl z-40 flex flex-col">
+    <div className={cn(
+      'fixed right-0 top-0 h-full w-96 shadow-2xl z-40 flex flex-col transition-transform duration-300 ease-out animate-slide-in-right',
+      darkMode ? 'bg-zinc-900 border-l border-zinc-800' : 'bg-white border-l border-zinc-200'
+    )}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
-        <div>
-          <h2 className="font-semibold text-gray-900">AI Assistant</h2>
-          <p className="text-xs text-gray-500">Ask me to manage your email</p>
+      <div className={cn(
+        'flex items-center justify-between p-5 border-b',
+        darkMode ? 'border-zinc-800 bg-zinc-900/50' : 'border-zinc-200 bg-zinc-50'
+      )}>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className={cn('font-semibold text-base', darkMode ? 'text-white' : 'text-zinc-900')}>AI Assistant</h2>
+            <p className={cn('text-xs', darkMode ? 'text-zinc-500' : 'text-zinc-400')}>Ask me to manage your email</p>
+          </div>
         </div>
         <button
           onClick={onClose}
-          className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+          className={cn(
+            'p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition-smooth',
+            darkMode ? 'text-zinc-400 hover:text-white' : 'text-zinc-400 hover:text-zinc-700'
+          )}
           aria-label="Close"
         >
-          <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <X className="w-5 h-5" />
         </button>
       </div>
 
@@ -41,18 +64,28 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
       </div>
 
       {/* Footer with example prompts */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
-        <p className="text-xs text-gray-500 mb-2">Try saying:</p>
-        <div className="space-y-1">
-          <button className="w-full text-left text-sm text-blue-600 hover:text-blue-800 px-2 py-1 hover:bg-blue-50 rounded">
-            "Send an email to john@example.com"
-          </button>
-          <button className="w-full text-left text-sm text-blue-600 hover:text-blue-800 px-2 py-1 hover:bg-blue-50 rounded">
-            "Show emails from last week"
-          </button>
-          <button className="w-full text-left text-sm text-blue-600 hover:text-blue-800 px-2 py-1 hover:bg-blue-50 rounded">
-            "Open the latest email"
-          </button>
+      <div className={cn(
+        'p-4 border-t',
+        darkMode ? 'border-zinc-800 bg-zinc-900/50' : 'border-zinc-200 bg-zinc-50'
+      )}>
+        <p className={cn('text-xs font-medium mb-3 px-1', darkMode ? 'text-zinc-500' : 'text-zinc-400')}>
+          Try saying:
+        </p>
+        <div className="space-y-1.5">
+          {examplePrompts.map((prompt, index) => (
+            <button
+              key={index}
+              className={cn(
+                'w-full text-left text-sm px-3 py-2.5 rounded-xl transition-smooth flex items-center gap-2.5',
+                darkMode
+                  ? 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-white border border-transparent hover:border-zinc-200 hover:shadow-sm'
+              )}
+            >
+              <span className="text-base">{prompt.icon}</span>
+              <span className="truncate">"{prompt.text}"</span>
+            </button>
+          ))}
         </div>
       </div>
     </div>

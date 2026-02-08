@@ -34,7 +34,5 @@ dist-ssr
 !package.json
 !tsconfig*.json
 !vite.config.ts
-
-# Claude internal files (keep CLAUDE.md as it's useful docs)
-.claude/
+Claude.md
 

@@ -9,7 +9,7 @@ import { EmailDetail } from '@/components/EmailDetail';
 import { Compose } from '@/components/Compose';
 import { FilterBar } from '@/components/FilterBar';
 import { CopilotSidebar } from '@/components/CopilotSidebar';
-import { MessageSquare, Moon, Sun, RefreshCw } from 'lucide-react';
+import { Moon, Sun, RefreshCw, Sparkles } from 'lucide-react';
 import { getStoredAccessToken, isAuthenticated } from '@/services/auth';
 
 function App() {
@@ -80,7 +80,18 @@ function App() {
         const token = getStoredAccessToken();
         if (token) {
           setAccessToken(token);
-          setUser({ emailAddress: 'user@example.com' });
+
+          // Fetch user profile
+          try {
+            const { GmailService } = await import('@/services/gmail');
+            const gmail = new GmailService(token);
+            const profile = await gmail.getUserProfile();
+            setUser({ emailAddress: profile.emailAddress });
+          } catch (error) {
+            console.error('Failed to fetch user profile:', error);
+            // Fallback or force logout if token is invalid
+          }
+
           await fetchInbox();
         }
       }
@@ -168,11 +179,15 @@ function App() {
   // Get unread count
   const unreadCount = emails.inbox.filter((e: any) => e.isUnread).length;
 
+  // Dynamic classes based on dark mode
+  const bgClass = darkMode ? 'bg-zinc-950' : 'bg-zinc-50';
+  const headerBgClass = darkMode
+    ? 'bg-zinc-900/80 border-zinc-800'
+    : 'bg-white/80 border-zinc-200';
+  const textClass = darkMode ? 'text-white' : 'text-zinc-900';
+
   return (
-    <div className={cn(
-      'flex h-screen bg-gray-100 overflow-hidden',
-      darkMode && 'dark bg-gray-900'
-    )}>
+    <div className={`flex h-screen overflow-hidden ${bgClass}`}>
       {/* Sidebar */}
       <Sidebar
         currentView={currentView}
@@ -181,67 +196,75 @@ function App() {
         unreadCount={unreadCount}
         isLoading={isLoading}
         onRefresh={currentView === 'inbox' ? fetchInbox : fetchSent}
+        isAuthenticated={isAuthenticated()}
       />
 
       {/* Main content */}
-      <div className={cn(
-        'flex-1 flex flex-col bg-white overflow-hidden relative',
-        darkMode && 'bg-gray-800'
-      )}>
-        {/* Header with filters, AI toggle, and dark mode */}
-        <div className={cn(
-          'flex items-center border-b',
-          darkMode ? 'border-gray-700' : 'border-gray-200'
-        )}>
-          <div className="flex-1">
-            <FilterBar
-              filters={filters}
-              onFiltersChange={useAppStore.getState().setFilters}
-            />
+      <div className={`flex-1 flex flex-col overflow-hidden relative ${darkMode ? 'bg-zinc-900' : 'bg-white'}`}>
+        {/* Glass header with filters and actions */}
+        <header className={`glass-elevated border-b ${headerBgClass} transition-smooth`}>
+          <div className="flex items-center">
+            {/* Logo/Brand */}
+            <div className="px-6 py-4 border-r border-zinc-200 dark:border-zinc-800">
+              <h1 className={`text-lg font-semibold ${textClass}`}>
+                <span className="text-blue-500">AI</span> Mail
+              </h1>
+            </div>
+
+            {/* Filters */}
+            <div className="flex-1">
+              <FilterBar
+                filters={filters}
+                onFiltersChange={useAppStore.getState().setFilters}
+              />
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-1 pr-4">
+              <button
+                onClick={sync}
+                className={`p-2.5 rounded-lg transition-smooth relative group
+                  ${darkMode
+                    ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
+                    : 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900'
+                  }`}
+                title="Sync emails"
+              >
+                <RefreshCw className="w-4.5 h-4.5" />
+                <span className="absolute inset-0 rounded-lg ring-2 ring-blue-500/0 group-hover:ring-blue-500/20 transition-smooth" />
+              </button>
+
+              <button
+                onClick={() => setIsCopilotOpen(!isCopilotOpen)}
+                className={`p-2.5 rounded-lg transition-smooth relative group ${
+                  isCopilotOpen
+                    ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                    : (darkMode
+                        ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
+                        : 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900')
+                }`}
+                title="Toggle AI Assistant"
+              >
+                <Sparkles className="w-4.5 h-4.5" />
+                {isCopilotOpen && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                )}
+              </button>
+
+              <button
+                onClick={toggleDarkMode}
+                className={`p-2.5 rounded-lg transition-smooth relative group
+                  ${darkMode
+                    ? 'hover:bg-zinc-800 text-amber-400'
+                    : 'hover:bg-zinc-100 text-zinc-500 hover:text-amber-600'
+                  }`}
+                title={darkMode ? 'Light mode' : 'Dark mode'}
+              >
+                {darkMode ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-1 m-2">
-            <button
-              onClick={sync}
-              className={cn(
-                'p-2 rounded-lg transition-colors',
-                darkMode
-                  ? 'hover:bg-gray-700 text-gray-300'
-                  : 'hover:bg-gray-100 text-gray-600'
-              )}
-              title="Sync emails"
-            >
-              <RefreshCw className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setIsCopilotOpen(!isCopilotOpen)}
-              className={cn(
-                'p-2 rounded-lg transition-colors flex items-center gap-2',
-                isCopilotOpen
-                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                  : cn(
-                      darkMode
-                        ? 'hover:bg-gray-700 text-gray-300'
-                        : 'hover:bg-gray-100 text-gray-700'
-                    )
-              )}
-            >
-              <MessageSquare className="w-5 h-5" />
-              <span className="hidden sm:inline">AI</span>
-            </button>
-            <button
-              onClick={toggleDarkMode}
-              className={cn(
-                'p-2 rounded-lg transition-colors',
-                darkMode
-                  ? 'hover:bg-gray-700 text-yellow-400'
-                  : 'hover:bg-gray-100 text-gray-600'
-              )}
-              title={darkMode ? 'Light mode' : 'Dark mode'}
-            >
-              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
+        </header>
 
         {/* Content area */}
         <div className="flex-1 flex overflow-hidden">
@@ -279,8 +302,5 @@ function App() {
     </div>
   );
 }
-
-// Import cn utility
-import { cn } from '@/lib/utils';
 
 export default App;

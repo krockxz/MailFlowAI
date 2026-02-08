@@ -13,6 +13,8 @@
   "dependencies": {
     "@copilotkit/react-core": "^1.51.3",
     "@copilotkit/react-ui": "^1.51.3",
+    "@copilotkit/runtime": "^1.51.3",
+    "@copilotkit/shared": "^1.51.3",
     "@google-cloud/pubsub": "^5.2.2",
     "@tailwindcss/vite": "^4.1.18",
     "body-parser": "^2.2.2",
