@@ -97,7 +97,7 @@ export function Sidebar({
 
       {/* Footer */}
       <div className="p-4">
-        <Separator className="mb-2 bg-zinc-800" />
+        <Separator className="mb-2 bg-neutral-200 dark:bg-neutral-800" />
         <Button
           variant="ghost"
           className="w-full justify-start text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 mb-2"
