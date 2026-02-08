@@ -35,4 +35,4 @@ dist-ssr
 !tsconfig*.json
 !vite.config.ts
 Claude.md
-
+.planning
