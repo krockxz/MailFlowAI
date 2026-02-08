@@ -60,7 +60,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
   return (
     <div className="flex flex-col h-full bg-white dark:bg-zinc-900">
       {/* Header */}
-      <header className="border-b border-zinc-200 dark:border-zinc-800 p-6 shrink-0 animate-slide-up">
+      <header className="border-b border-neutral-200 dark:border-neutral-800 p-6 shrink-0 animate-slide-up">
         <div className="flex items-center justify-between mb-5">
           <Button
             variant="ghost"
@@ -167,7 +167,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
 
       {/* Quick reply */}
       {onReply && (
-        <div className="border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-4 shrink-0">
+        <div className="border-t border-neutral-200 dark:border-neutral-800 bg-zinc-50 dark:bg-zinc-900/50 p-4 shrink-0">
           <Button
             variant="outline"
             onClick={() => onReply(displayEmails[displayEmails.length - 1].id)}
