@@ -1,4 +1,4 @@
-import type { Email, FilterState, ViewType, UserProfile } from './email';
+import type { Email, FilterState, ViewType, UserProfile, PaginationState } from './email';
 
 /**
  * Main application state
@@ -20,6 +20,9 @@ export interface AppState {
     sent: Email[];
   };
   filters: FilterState;
+
+  // Pagination state
+  pagination: PaginationState;
 
   // Loading states
   isLoading: boolean;
@@ -68,6 +71,11 @@ export interface AppActions {
   // Theme actions
   toggleDarkMode: () => void;
   setDarkMode: (dark: boolean) => void;
+
+  // Pagination actions
+  setPagination: (type: 'inbox' | 'sent', updates: Partial<import('./email').FolderPaginationState>) => void;
+  resetPagination: (type: 'inbox' | 'sent') => void;
+  resetAllPagination: () => void;
 }
 
 /**

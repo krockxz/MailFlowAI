@@ -3,6 +3,13 @@ import { persist } from 'zustand/middleware';
 import type { AppStore } from '@/types/store';
 import { getTheme, setTheme } from '@/components/theme-provider';
 
+const createInitialPaginationState = () => ({
+  pageToken: null as string | null,
+  nextPageToken: null as string | null,
+  hasMore: true,
+  isLoading: false,
+});
+
 export const useAppStore = create<AppStore>()(
   persist(
     (set) => {
@@ -24,6 +31,11 @@ export const useAppStore = create<AppStore>()(
           sent: [],
         },
         filters: {},
+
+        pagination: {
+          inbox: createInitialPaginationState(),
+          sent: createInitialPaginationState(),
+        },
 
         isLoading: false,
         isSending: false,
@@ -100,6 +112,31 @@ export const useAppStore = create<AppStore>()(
         setTheme(dark ? 'dark' : 'light')
         set({ darkMode: dark })
       },
+
+      // Pagination actions
+      setPagination: (type, updates) =>
+        set((state) => ({
+          pagination: {
+            ...state.pagination,
+            [type]: { ...state.pagination[type], ...updates },
+          },
+        })),
+
+      resetPagination: (type) =>
+        set((state) => ({
+          pagination: {
+            ...state.pagination,
+            [type]: createInitialPaginationState(),
+          },
+        })),
+
+      resetAllPagination: () =>
+        set({
+          pagination: {
+            inbox: createInitialPaginationState(),
+            sent: createInitialPaginationState(),
+          },
+        }),
       };
     },
     {

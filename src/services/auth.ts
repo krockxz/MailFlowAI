@@ -1,4 +1,11 @@
 import { GmailService } from './gmail';
+import {
+  storeToken,
+  getToken,
+  setTimestamp,
+  getTimestamp,
+  clearAllTokens
+} from '@/lib/token-storage';
 
 /**
  * OAuth configuration
@@ -110,38 +117,38 @@ export async function handleOAuthCallback(
 }
 
 /**
- * Store tokens in localStorage
+ * Store tokens using secure storage abstraction
  */
 export function storeTokens(accessToken: string, refreshToken?: string): void {
-  localStorage.setItem('access_token', accessToken);
+  storeToken('access', accessToken);
   if (refreshToken) {
-    localStorage.setItem('refresh_token', refreshToken);
+    storeToken('refresh', refreshToken);
   }
-  localStorage.setItem('token_timestamp', Date.now().toString());
+  setTimestamp(Date.now());
 }
 
 /**
  * Get stored access token
  */
 export function getStoredAccessToken(): string | null {
-  return localStorage.getItem('access_token');
+  return getToken('access');
 }
 
 /**
  * Get stored refresh token
  */
 export function getStoredRefreshToken(): string | null {
-  return localStorage.getItem('refresh_token');
+  return getToken('refresh');
 }
 
 /**
  * Check if token is expired (tokens expire in 1 hour)
  */
 export function isTokenExpired(): boolean {
-  const timestamp = localStorage.getItem('token_timestamp');
+  const timestamp = getTimestamp();
   if (!timestamp) return true;
 
-  const age = Date.now() - parseInt(timestamp);
+  const age = Date.now() - timestamp;
   // Consider expired after 55 minutes (token is valid for 1 hour)
   return age > 55 * 60 * 1000;
 }
@@ -183,9 +190,7 @@ export async function getValidAccessToken(): Promise<string> {
  * Clear stored tokens (logout)
  */
 export function clearTokens(): void {
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('refresh_token');
-  localStorage.removeItem('token_timestamp');
+  clearAllTokens();
 }
 
 /**

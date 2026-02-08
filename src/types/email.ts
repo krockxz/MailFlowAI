@@ -88,3 +88,21 @@ export interface GmailMessageBody {
   data?: string;
   size?: number;
 }
+
+/**
+ * Pagination state for a single folder (inbox or sent)
+ */
+export interface FolderPaginationState {
+  pageToken: string | null;
+  nextPageToken: string | null;
+  hasMore: boolean;
+  isLoading: boolean;
+}
+
+/**
+ * Pagination state for both inbox and sent folders
+ */
+export interface PaginationState {
+  inbox: FolderPaginationState;
+  sent: FolderPaginationState;
+}
