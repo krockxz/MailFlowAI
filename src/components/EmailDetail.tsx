@@ -158,7 +158,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
 
             {/* Message Body */}
             <div className="pl-[3.25rem]">
-              <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+              <pre className="whitespace-pre-wrap font-sans text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
                 {msg.body}
               </pre>
             </div>
