@@ -42,8 +42,8 @@ const EmailItem = memo(({
         <Avatar className={cn(
           'w-11 h-11 shrink-0 transition-all duration-200',
           email.isUnread
-            ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25'
-            : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+            ? 'bg-gradient-to-br from-accent-500 to-accent-600 text-white shadow-lg shadow-accent-500/25'
+            : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
         )}>
           <AvatarFallback className={cn(
             email.isUnread ? 'bg-transparent text-white' : undefined
