@@ -37,7 +37,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
 
   if (isLoading && !activeThread) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-zinc-400 dark:text-zinc-600 animate-fade-in">
+      <div className="flex flex-col items-center justify-center h-full text-neutral-400 dark:text-neutral-600 animate-fade-in">
         <Loader2 className="w-8 h-8 animate-spin mb-3 text-blue-500" />
         <p className="text-sm font-medium">Loading conversation...</p>
       </div>
@@ -46,8 +46,8 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
 
   if (!email) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-zinc-400 dark:text-zinc-600 p-8 animate-fade-in">
-        <p className="text-lg font-medium text-zinc-600 dark:text-zinc-400">Select an email to read</p>
+      <div className="flex flex-col items-center justify-center h-full text-neutral-400 dark:text-neutral-600 p-8 animate-fade-in">
+        <p className="text-lg font-medium text-neutral-600 dark:text-neutral-400">Select an email to read</p>
       </div>
     );
   }
@@ -65,7 +65,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
           <Button
             variant="ghost"
             onClick={onBack}
-            className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+            className="text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
           >
             <ArrowLeft className="w-4.5 h-4.5 mr-2" />
             <span>Back</span>
@@ -105,12 +105,12 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
           </div>
         </div>
 
-        <h1 className="text-2xl font-semibold mb-2 tracking-tight text-zinc-900 dark:text-white">
+        <h1 className="text-2xl font-semibold mb-2 tracking-tight text-neutral-900 dark:text-white">
           {email.subject}
         </h1>
 
         {activeThread && activeThread.length > 1 && (
-          <span className="text-sm text-zinc-500 dark:text-zinc-400">
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">
             {activeThread.length} messages in this conversation
           </span>
         )}
@@ -142,15 +142,15 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline justify-between gap-4">
-                  <span className="font-semibold text-zinc-900 dark:text-white">
+                  <span className="font-semibold text-neutral-900 dark:text-white">
                     {msg.from.name || msg.from.email}
                   </span>
-                  <span className="text-xs shrink-0 text-zinc-400 dark:text-zinc-500">
+                  <span className="text-xs shrink-0 text-neutral-400 dark:text-neutral-500">
                     {formatFullDate(msg.date)}
                   </span>
                 </div>
 
-                <div className="text-sm mt-0.5 text-zinc-500 dark:text-zinc-400">
+                <div className="text-sm mt-0.5 text-neutral-500 dark:text-neutral-400">
                   &lt;{msg.from.email}&gt; to {msg.to.map(t => t.name || t.email).join(', ')}
                 </div>
               </div>
@@ -158,7 +158,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
 
             {/* Message Body */}
             <div className="pl-[3.25rem]">
-              <pre className="whitespace-pre-wrap font-sans text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+              <pre className="whitespace-pre-wrap font-sans text-[15px] leading-relaxed text-neutral-700 dark:text-neutral-300">
                 {msg.body}
               </pre>
             </div>
