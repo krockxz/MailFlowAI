@@ -120,9 +120,9 @@ describe('EmailList', () => {
       expect(screen.getByText('Unread Email')).toBeInTheDocument();
       expect(screen.getByText('Read Email')).toBeInTheDocument();
 
-      // The unread email should have a blue dot (via bg-blue-500 class)
-      const blueDots = container.querySelectorAll('.bg-blue-500');
-      expect(blueDots.length).toBeGreaterThan(0);
+      // The unread email should have an accent dot (via bg-accent-500 class)
+      const accentDots = container.querySelectorAll('.bg-accent-500');
+      expect(accentDots.length).toBeGreaterThan(0);
     });
   });
 
@@ -188,6 +188,25 @@ describe('EmailList', () => {
       // The selected email should have different styling
       // We can't easily test classes, but we can verify the email is rendered
       expect(screen.getByText('Test Email Subject 1')).toBeInTheDocument();
+    });
+
+    it('applies correct border-l-2 border-l-accent-500 classes to selected email', () => {
+      const emails = createMockEmails(2);
+      const { container } = render(
+        <EmailList
+          emails={emails}
+          selectedId="mock-email-1"
+          onSelectEmail={mockOnSelectEmail}
+        />
+      );
+
+      // Selected email should have border-l-accent-500 class
+      const selectedElement = container.querySelector('.border-l-accent-500');
+      expect(selectedElement).toBeInTheDocument();
+
+      // Non-selected email should not have the border-l-accent-500 class
+      const emailItems = container.querySelectorAll('.group');
+      expect(emailItems.length).toBe(2);
     });
   });
 
