@@ -192,10 +192,14 @@ export function createApiMethods(getToken: () => string | null): ApiMethods {
     }): Promise<{ id: string; threadId: string }> {
       const token = ensureAuthenticated();
 
+      // Encode subject to base64 with UTF-8 support for RFC 2047
+      const utf8Bytes = new TextEncoder().encode(options.subject);
+      const base64Subject = btoa(String.fromCharCode(...utf8Bytes));
+
       // Build raw email message in RFC 2822 format
       const emailLines = [
         `To: ${options.to.join(', ')}`,
-        `Subject: =?utf-8?B?${btoa(options.subject)}?=`,
+        `Subject: =?utf-8?B?${base64Subject}?=`,
         'Content-Type: text/plain; charset=utf-8',
         'MIME-Version: 1.0',
       ];
