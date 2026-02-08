@@ -57,13 +57,13 @@ const EmailItem = memo(({
           <div className="flex items-center justify-between gap-3 mb-1">
             <span className={cn(
               'font-medium truncate text-sm',
-              email.isUnread ? 'text-zinc-900 dark:text-white' : 'text-zinc-600 dark:text-zinc-400 font-normal'
+              email.isUnread ? 'text-neutral-900 dark:text-white' : 'text-neutral-600 dark:text-neutral-400 font-normal'
             )}>
               {email.from.name || email.from.email}
             </span>
             <span className={cn(
               'text-xs shrink-0 tabular-nums',
-              email.isUnread ? 'text-zinc-900 dark:text-white font-medium' : 'text-zinc-400 dark:text-zinc-500'
+              email.isUnread ? 'text-neutral-900 dark:text-white font-medium' : 'text-neutral-400 dark:text-neutral-500'
             )}>
               {formatDate(email.date)}
             </span>
@@ -71,12 +71,12 @@ const EmailItem = memo(({
 
           <div className={cn(
             'text-sm mb-1.5 truncate transition-all duration-200',
-            email.isUnread ? 'font-semibold text-zinc-900 dark:text-white' : 'text-zinc-700 dark:text-zinc-300'
+            email.isUnread ? 'font-semibold text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'
           )}>
             {email.subject}
           </div>
 
-          <div className="text-sm text-zinc-500 dark:text-zinc-500 truncate flex items-center gap-1.5">
+          <div className="text-sm text-neutral-500 dark:text-neutral-500 truncate flex items-center gap-1.5">
             {email.isUnread ? (
               <>
                 <MailOpen className="w-3.5 h-3.5 shrink-0 opacity-60" />
