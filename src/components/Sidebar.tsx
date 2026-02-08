@@ -66,8 +66,8 @@ export function Sidebar({
               className={cn(
                 'w-full justify-start mb-1.5',
                 isActive
-                  ? 'bg-zinc-800 text-white hover:bg-zinc-700'
-                  : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
+                  ? 'bg-neutral-800/50 dark:bg-neutral-800/50 text-neutral-900 dark:text-neutral-100 hover:bg-neutral-800/70 dark:hover:bg-neutral-800/70'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/50 dark:hover:bg-neutral-800/30 hover:text-neutral-900 dark:hover:text-neutral-100'
               )}
             >
               <Icon className="w-5 h-5 mr-3" />
@@ -87,7 +87,7 @@ export function Sidebar({
             onClick={onRefresh}
             disabled={isLoading}
             variant="ghost"
-            className="w-full justify-start mb-1.5 text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
+            className="w-full justify-start mb-1.5 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/50 dark:hover:bg-neutral-800/30 hover:text-neutral-900 dark:hover:text-neutral-100"
           >
             <RefreshCw className={cn('w-5 h-5 mr-3', isLoading && 'animate-spin')} />
             <span className="font-medium">{isLoading ? 'Syncing...' : 'Sync'}</span>
@@ -100,7 +100,7 @@ export function Sidebar({
         <Separator className="mb-2 bg-neutral-200 dark:bg-neutral-800" />
         <Button
           variant="ghost"
-          className="w-full justify-start text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 mb-2"
+          className="w-full justify-start text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-200/50 dark:hover:bg-neutral-800/30 mb-2"
         >
           <Settings className="w-5 h-5 mr-3" />
           <span className="font-medium">Settings</span>
@@ -109,7 +109,7 @@ export function Sidebar({
         {!isAuthenticated ? (
           <Button
             onClick={() => login()}
-            className="w-full bg-white text-zinc-900 hover:bg-zinc-100 dark:bg-white dark:text-zinc-900 shadow-lg"
+            className="w-full bg-white text-neutral-900 hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-100 shadow-lg"
           >
             <span>Sign in with Google</span>
           </Button>
@@ -117,7 +117,7 @@ export function Sidebar({
           <Button
             onClick={logout}
             variant="ghost"
-            className="w-full justify-start text-zinc-500 hover:text-red-400 hover:bg-zinc-800/50"
+            className="w-full justify-start text-neutral-600 dark:text-neutral-400 hover:text-red-400 dark:hover:text-red-400 hover:bg-neutral-200/50 dark:hover:bg-neutral-800/30"
           >
             <LogOut className="w-5 h-5 mr-3" />
             <span className="font-medium">Sign out</span>
