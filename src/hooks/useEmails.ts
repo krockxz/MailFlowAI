@@ -5,6 +5,8 @@ import { getValidAccessToken } from '@/services/auth';
 import type { Email } from '@/types/email';
 import type { GmailMessage } from '@/types/email';
 
+const PAGE_SIZE = 30;
+
 /**
  * Hook for fetching and managing emails
  */
@@ -15,10 +17,12 @@ export function useEmails() {
     isLoading,
     setIsLoading,
     setLastSyncTime,
+    pagination,
+    setPagination,
   } = useAppStore();
 
   /**
-   * Fetch inbox emails
+   * Fetch inbox emails with pagination support
    */
   const fetchInbox = useCallback(async () => {
     try {
@@ -26,12 +30,21 @@ export function useEmails() {
       const token = await getValidAccessToken();
       const gmail = createGmailService(token);
 
+      // Get current page token from pagination state
+      const currentPageToken = pagination.inbox.pageToken;
+
       // List messages
-      const { messages } = await gmail.listMessages(['INBOX'], 50);
+      const response = await gmail.listMessages(['INBOX'], PAGE_SIZE, currentPageToken || undefined);
+
+      // Update pagination state with next page token
+      setPagination('inbox', {
+        nextPageToken: response.nextPageToken || null,
+        hasMore: !!response.nextPageToken,
+      });
 
       // Fetch full message details
       const fullMessages = await gmail.getBatchMessages(
-        messages.slice(0, 30).map((m) => m.id)
+        response.messages.map((m) => m.id)
       );
 
       // Parse messages
@@ -39,7 +52,15 @@ export function useEmails() {
         gmail.parseMessage(msg)
       );
 
-      setEmails('inbox', parsedEmails);
+      // Append or replace emails based on whether we're paginating
+      if (currentPageToken) {
+        // Appending - add to existing emails
+        setEmails('inbox', [...emails.inbox, ...parsedEmails]);
+      } else {
+        // Initial fetch - replace emails
+        setEmails('inbox', parsedEmails);
+      }
+
       setLastSyncTime(new Date());
     } catch (error) {
       console.error('Failed to fetch inbox:', error);
@@ -47,10 +68,10 @@ export function useEmails() {
     } finally {
       setIsLoading(false);
     }
-  }, [setEmails, setIsLoading, setLastSyncTime]);
+  }, [emails.inbox, pagination.inbox.pageToken, setEmails, setIsLoading, setLastSyncTime, setPagination]);
 
   /**
-   * Fetch sent emails
+   * Fetch sent emails with pagination support
    */
   const fetchSent = useCallback(async () => {
     try {
@@ -58,12 +79,21 @@ export function useEmails() {
       const token = await getValidAccessToken();
       const gmail = createGmailService(token);
 
+      // Get current page token from pagination state
+      const currentPageToken = pagination.sent.pageToken;
+
       // List messages
-      const { messages } = await gmail.listMessages(['SENT'], 50);
+      const response = await gmail.listMessages(['SENT'], PAGE_SIZE, currentPageToken || undefined);
+
+      // Update pagination state with next page token
+      setPagination('sent', {
+        nextPageToken: response.nextPageToken || null,
+        hasMore: !!response.nextPageToken,
+      });
 
       // Fetch full message details
       const fullMessages = await gmail.getBatchMessages(
-        messages.slice(0, 30).map((m) => m.id)
+        response.messages.map((m) => m.id)
       );
 
       // Parse messages
@@ -71,7 +101,15 @@ export function useEmails() {
         gmail.parseMessage(msg)
       );
 
-      setEmails('sent', parsedEmails);
+      // Append or replace emails based on whether we're paginating
+      if (currentPageToken) {
+        // Appending - add to existing emails
+        setEmails('sent', [...emails.sent, ...parsedEmails]);
+      } else {
+        // Initial fetch - replace emails
+        setEmails('sent', parsedEmails);
+      }
+
       setLastSyncTime(new Date());
     } catch (error) {
       console.error('Failed to fetch sent:', error);
@@ -79,7 +117,61 @@ export function useEmails() {
     } finally {
       setIsLoading(false);
     }
-  }, [setEmails, setIsLoading, setLastSyncTime]);
+  }, [emails.sent, pagination.sent.pageToken, setEmails, setIsLoading, setLastSyncTime, setPagination]);
+
+  /**
+   * Load more emails for a specific folder
+   */
+  const loadMore = useCallback(async (type: 'inbox' | 'sent') => {
+    const paginationState = pagination[type];
+
+    // Don't load if already loading or no more emails
+    if (paginationState.isLoading || !paginationState.hasMore || !paginationState.nextPageToken) {
+      return;
+    }
+
+    try {
+      // Set loading state for pagination
+      setPagination(type, { isLoading: true });
+
+      // Update page token to fetch next page
+      setPagination(type, { pageToken: paginationState.nextPageToken });
+
+      const token = await getValidAccessToken();
+      const gmail = createGmailService(token);
+
+      const labelIds = type === 'inbox' ? ['INBOX'] : ['SENT'];
+      const response = await gmail.listMessages(labelIds, PAGE_SIZE, paginationState.nextPageToken);
+
+      // Fetch full message details
+      const fullMessages = await gmail.getBatchMessages(
+        response.messages.map((m) => m.id)
+      );
+
+      // Parse messages
+      const parsedEmails = fullMessages.map((msg: GmailMessage) =>
+        gmail.parseMessage(msg)
+      );
+
+      // Append to existing emails
+      setEmails(type, [...emails[type], ...parsedEmails]);
+
+      // Update pagination state
+      setPagination(type, {
+        nextPageToken: response.nextPageToken || null,
+        hasMore: !!response.nextPageToken,
+        pageToken: response.nextPageToken || null,
+        isLoading: false,
+      });
+
+      setLastSyncTime(new Date());
+    } catch (error) {
+      console.error(`Failed to load more ${type} emails:`, error);
+      // Reset loading state on error
+      setPagination(type, { isLoading: false });
+      throw error;
+    }
+  }, [pagination, emails, setEmails, setLastSyncTime, setPagination]);
 
   /**
    * Send an email
@@ -241,8 +333,10 @@ export function useEmails() {
   return {
     emails,
     isLoading,
+    pagination,
     fetchInbox,
     fetchSent,
+    loadMore,
     sendEmail,
     replyToEmail,
     markAsRead,
