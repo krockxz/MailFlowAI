@@ -285,5 +285,26 @@ describe('EmailDetail', () => {
       expect(container.querySelector('pre')).toBeInTheDocument();
       expect(container.textContent).toContain('Line 1');
     });
+
+    it('messages container has max-w-[800px] class for design spec compliance', () => {
+      const email = createMockEmail({
+        subject: 'Max Width Test',
+        body: 'Testing max-width constraint',
+      });
+
+      const { container } = render(
+        <EmailDetail
+          email={email}
+          onBack={mockOnBack}
+        />
+      );
+
+      // Find the max-width container div
+      const maxWidthContainer = container.querySelector('.max-w-\\[800px\\]');
+      expect(maxWidthContainer).toBeInTheDocument();
+
+      // Verify it also has mx-auto for centering
+      expect(maxWidthContainer).toHaveClass('mx-auto');
+    });
   });
 });
