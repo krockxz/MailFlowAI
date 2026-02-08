@@ -32,18 +32,12 @@ const EmailItem = memo(({
       className={cn(
         'group relative p-4 border-b border-neutral-200 dark:border-neutral-800 cursor-pointer transition-all duration-200 animate-slide-up',
         'hover:bg-neutral-100 dark:hover:bg-neutral-800/50',
-        isSelected && 'bg-accent-50/50 dark:bg-accent-950/30',
+        isSelected && 'bg-accent-50/50 dark:bg-accent-950/30 border-l-2 border-l-accent-500',
         email.isUnread ? 'bg-neutral-50 dark:bg-neutral-950' : 'bg-neutral-50/30 dark:bg-neutral-950/50'
       )}
       style={{ animationDelay: `${Math.min(index * 30, 200)}ms` }}
     >
-      {/* Selection indicator */}
-      <div className={cn(
-        'absolute left-0 top-0 bottom-0 w-1 transition-all duration-200',
-        isSelected ? 'bg-blue-500' : 'bg-transparent group-hover:bg-blue-300'
-      )} />
-
-      <div className="flex items-start gap-4 pl-2">
+      <div className="flex items-start gap-4">
         {/* Avatar */}
         <Avatar className={cn(
           'w-11 h-11 shrink-0 transition-all duration-200',
