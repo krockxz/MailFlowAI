@@ -90,7 +90,7 @@ const EmailItem = memo(({
 
         {/* Unread dot */}
         {email.isUnread && (
-          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0 mt-2 shadow-lg shadow-blue-500/40" />
+          <div className="w-2 h-2 rounded-full bg-accent-500 shrink-0 mt-2 shadow-lg shadow-accent-500/40" />
         )}
       </div>
     </div>
