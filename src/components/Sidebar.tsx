@@ -36,7 +36,7 @@ export function Sidebar({
     <aside className="w-[240px] bg-neutral-50 dark:bg-neutral-950 border-r border-neutral-200 dark:border-neutral-800 flex flex-col h-screen shrink-0">
       {/* Header */}
       <div className="p-6">
-        <h1 className="text-xl font-bold text-white dark:text-white tracking-tight">AI Mail</h1>
+        <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">AI Mail</h1>
         <p className="text-neutral-500 dark:text-neutral-400 text-xs mt-1">Intelligent email assistant</p>
       </div>
 
@@ -44,7 +44,7 @@ export function Sidebar({
       <div className="px-4 mb-6">
         <Button
           onClick={onCompose}
-          className="w-full bg-white hover:bg-zinc-100 text-zinc-900 dark:bg-white dark:text-zinc-900 shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30"
+          className="w-full bg-accent-500 hover:bg-accent-600 text-white shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30"
         >
           <PenTool className="w-4.5 h-4.5" />
           <span>Compose</span>
