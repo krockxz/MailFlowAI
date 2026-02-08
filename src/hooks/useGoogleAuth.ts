@@ -1,6 +1,7 @@
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAppStore } from '@/store';
 import { GmailService } from '@/services/gmail';
+import { storeToken, setTimestamp, clearAllTokens } from '@/lib/token-storage';
 
 export function useGoogleAuth() {
     const { setUser, setAccessToken } = useAppStore();
@@ -11,9 +12,9 @@ export function useGoogleAuth() {
             try {
                 const token = response.access_token;
 
-                // Store token in localStorage
-                localStorage.setItem('access_token', token);
-                localStorage.setItem('token_timestamp', Date.now().toString());
+                // Store token using secure storage abstraction (sessionStorage)
+                storeToken('access', token);
+                setTimestamp(Date.now());
 
                 // Update store
                 setAccessToken(token);
@@ -36,10 +37,8 @@ export function useGoogleAuth() {
         setUser(null);
         setAccessToken(null);
 
-        // Clear localStorage
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('token_timestamp');
+        // Clear all tokens using secure storage abstraction
+        clearAllTokens();
 
         // Reload to reset app state
         window.location.reload();
