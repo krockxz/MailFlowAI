@@ -30,7 +30,7 @@ const EmailItem = memo(({
     <div
       onClick={onClick}
       className={cn(
-        'group relative p-4 border-b border-zinc-100 dark:border-zinc-800 cursor-pointer transition-all duration-200 animate-slide-up',
+        'group relative p-4 border-b border-neutral-200 dark:border-neutral-800 cursor-pointer transition-all duration-200 animate-slide-up',
         'hover:bg-zinc-50 dark:hover:bg-zinc-800/50',
         isSelected && 'bg-blue-50/50 dark:bg-blue-900/10',
         email.isUnread ? 'bg-white dark:bg-zinc-900' : 'bg-zinc-50/30 dark:bg-zinc-900/50'
@@ -137,7 +137,7 @@ export function EmailList({ emails, selectedId, onSelectEmail, pagination, onLoa
 
       {/* Load More Button */}
       {hasMore && onLoadMore && (
-        <div className="p-4 border-t border-zinc-100 dark:border-zinc-800">
+        <div className="p-4 border-t border-neutral-200 dark:border-neutral-800">
           <button
             onClick={onLoadMore}
             disabled={isLoading}
