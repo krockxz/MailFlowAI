@@ -366,4 +366,69 @@ describe('Sidebar', () => {
       expect(screen.getByText('Sign out')).toBeInTheDocument();
     });
   });
+
+  describe('Visual regression tests', () => {
+    it('has correct width class (240px)', () => {
+      const { container } = render(
+        <Sidebar
+          currentView="inbox"
+          onViewChange={mockOnViewChange}
+          onCompose={mockOnCompose}
+          unreadCount={0}
+          isAuthenticated={true}
+        />
+      );
+
+      const sidebar = container.querySelector('aside');
+      expect(sidebar).toHaveClass('w-[240px]');
+    });
+
+    it('has neutral background classes for light and dark mode', () => {
+      const { container } = render(
+        <Sidebar
+          currentView="inbox"
+          onViewChange={mockOnViewChange}
+          onCompose={mockOnCompose}
+          unreadCount={0}
+          isAuthenticated={true}
+        />
+      );
+
+      const sidebar = container.querySelector('aside');
+      expect(sidebar).toHaveClass('bg-neutral-50');
+      expect(sidebar).toHaveClass('dark:bg-neutral-950');
+    });
+
+    it('has neutral border classes for light and dark mode', () => {
+      const { container } = render(
+        <Sidebar
+          currentView="inbox"
+          onViewChange={mockOnViewChange}
+          onCompose={mockOnCompose}
+          unreadCount={0}
+          isAuthenticated={true}
+        />
+      );
+
+      const sidebar = container.querySelector('aside');
+      expect(sidebar).toHaveClass('border-neutral-200');
+      expect(sidebar).toHaveClass('dark:border-neutral-800');
+    });
+
+    it('compose button uses accent-500 background', () => {
+      const { container } = render(
+        <Sidebar
+          currentView="inbox"
+          onViewChange={mockOnViewChange}
+          onCompose={mockOnCompose}
+          unreadCount={0}
+          isAuthenticated={true}
+        />
+      );
+
+      const composeButton = screen.getByText('Compose').closest('button');
+      expect(composeButton).toHaveClass('bg-accent-500');
+      expect(composeButton).toHaveClass('hover:bg-accent-600');
+    });
+  });
 });
