@@ -30,7 +30,7 @@ const EmailItem = memo(({
     <div
       onClick={onClick}
       className={cn(
-        'group relative p-4 border-b border-neutral-200 dark:border-neutral-800 cursor-pointer transition-all duration-200 animate-slide-up',
+        'group relative p-4 border-b border-neutral-200 dark:border-neutral-800 cursor-pointer transition-all duration-200 animate-slide-up min-h-[72px]',
         'hover:bg-neutral-100 dark:hover:bg-neutral-800/50',
         isSelected && 'bg-accent-50/50 dark:bg-accent-950/30 border-l-2 border-l-accent-500',
         email.isUnread ? 'bg-neutral-50 dark:bg-neutral-950' : 'bg-neutral-50/30 dark:bg-neutral-950/50'
