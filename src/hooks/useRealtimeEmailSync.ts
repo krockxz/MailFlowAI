@@ -45,7 +45,6 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
     }
 
     try {
-      console.log('Syncing emails...');
       await fetchInbox();
       lastSyncTime.current = new Date();
       useAppStore.getState().setLastSyncTime(lastSyncTime.current);
@@ -76,18 +75,14 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
       });
 
       socketRef.current.on('connect', () => {
-        console.log('Connected to real-time sync server');
         setIsConnected(true);
       });
 
       socketRef.current.on('disconnect', () => {
-        console.log('Disconnected from real-time sync server');
         setIsConnected(false);
       });
 
       socketRef.current.on('email:new', (data) => {
-        console.log('New email notification received:', data);
-
         // Show browser notification
         if (Notification.permission === 'granted') {
           new Notification('New Email Received', {
@@ -143,11 +138,9 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
 export function useGmailWatch() {
   const startWatching = useCallback(async (topicName: string) => {
     // In a real app, this would call the backend to set up the watch
-    console.log('Starting Gmail watch for topic:', topicName);
   }, []);
 
   const stopWatching = useCallback(async () => {
-    console.log('Stopping Gmail watch');
   }, []);
 
   return { startWatching, stopWatching };
