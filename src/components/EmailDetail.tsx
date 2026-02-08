@@ -119,8 +119,9 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
       {/* Messages List */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-8"
+        className="flex-1 overflow-y-auto px-8 py-6 space-y-8"
       >
+        <div className="max-w-[800px] mx-auto">
         {displayEmails.map((msg, index) => (
           <div
             key={msg.id}
@@ -163,6 +164,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
             </div>
           </div>
         ))}
+        </div>
       </div>
 
       {/* Quick reply */}
