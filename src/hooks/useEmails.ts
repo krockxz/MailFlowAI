@@ -19,6 +19,7 @@ export function useEmails() {
     setLastSyncTime,
     pagination,
     setPagination,
+    resetAllPagination,
   } = useAppStore();
 
   /**
@@ -337,6 +338,7 @@ export function useEmails() {
     fetchInbox,
     fetchSent,
     loadMore,
+    resetAllPagination,
     sendEmail,
     replyToEmail,
     markAsRead,

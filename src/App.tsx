@@ -35,6 +35,9 @@ function AppContent() {
     fetchSent,
     sendEmail,
     isLoading,
+    pagination,
+    loadMore,
+    resetAllPagination,
   } = useEmails();
 
   const [isComposeOpen, setIsComposeOpen] = useState(false);
@@ -98,6 +101,9 @@ function AppContent() {
     const fetchForView = async () => {
       if (!isAuthenticated()) return;
 
+      // Reset pagination when switching views
+      resetAllPagination();
+
       if (currentView === 'inbox') {
         await fetchInbox();
       } else if (currentView === 'sent') {
@@ -105,7 +111,14 @@ function AppContent() {
       }
     };
     fetchForView();
-  }, [currentView, fetchInbox, fetchSent]);
+  }, [currentView, fetchInbox, fetchSent, resetAllPagination]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    if (filters && Object.keys(filters).length > 0) {
+      resetAllPagination();
+    }
+  }, [filters, resetAllPagination]);
 
   // Get current email list based on view
   const getCurrentEmails = useCallback(() => {
@@ -113,6 +126,22 @@ function AppContent() {
     if (currentView === 'sent') return emails.sent;
     return [];
   }, [currentView, emails]);
+
+  // Get current pagination state based on view
+  const getCurrentPagination = useCallback(() => {
+    if (currentView === 'inbox') return pagination.inbox;
+    if (currentView === 'sent') return pagination.sent;
+    return undefined;
+  }, [currentView, pagination]);
+
+  // Handle load more
+  const handleLoadMore = useCallback(() => {
+    if (currentView === 'inbox') {
+      loadMore('inbox');
+    } else if (currentView === 'sent') {
+      loadMore('sent');
+    }
+  }, [currentView, loadMore]);
 
   // Get selected email
   const selectedEmail = getCurrentEmails().find((e: Email) => e.id === selectedEmailId) || null;
@@ -260,6 +289,8 @@ function AppContent() {
               emails={getCurrentEmails()}
               selectedId={selectedEmailId}
               onSelectEmail={handleSelectEmail}
+              pagination={getCurrentPagination()}
+              onLoadMore={handleLoadMore}
             />
           )}
         </div>

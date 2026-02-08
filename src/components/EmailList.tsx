@@ -1,15 +1,18 @@
 import { memo } from 'react';
-import { Mail, MailOpen } from 'lucide-react';
+import { Mail, MailOpen, ChevronDown, Loader2 } from 'lucide-react';
 import { formatDate, truncate } from '@/lib/utils';
 import type { Email } from '@/types/email';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { getInitials } from '@/lib/utils';
+import type { FolderPaginationState } from '@/types/email';
 
 interface EmailListProps {
   emails: Email[];
   selectedId: string | null;
   onSelectEmail: (email: Email) => void;
+  pagination?: FolderPaginationState;
+  onLoadMore?: () => void;
 }
 
 const EmailItem = memo(({
@@ -102,7 +105,10 @@ const EmailItem = memo(({
 
 EmailItem.displayName = 'EmailItem';
 
-export function EmailList({ emails, selectedId, onSelectEmail }: EmailListProps) {
+export function EmailList({ emails, selectedId, onSelectEmail, pagination, onLoadMore }: EmailListProps) {
+  const hasMore = pagination?.hasMore && emails.length > 0;
+  const isLoading = pagination?.isLoading ?? false;
+
   if (emails.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-zinc-400 dark:text-zinc-600 p-8 animate-fade-in">
@@ -116,16 +122,49 @@ export function EmailList({ emails, selectedId, onSelectEmail }: EmailListProps)
   }
 
   return (
-    <div className="overflow-y-auto h-full">
-      {emails.map((email, index) => (
-        <EmailItem
-          key={email.id}
-          email={email}
-          isSelected={selectedId === email.id}
-          onClick={() => onSelectEmail(email)}
-          index={index}
-        />
-      ))}
+    <div className="overflow-y-auto h-full flex flex-col">
+      <div className="flex-1">
+        {emails.map((email, index) => (
+          <EmailItem
+            key={email.id}
+            email={email}
+            isSelected={selectedId === email.id}
+            onClick={() => onSelectEmail(email)}
+            index={index}
+          />
+        ))}
+      </div>
+
+      {/* Load More Button */}
+      {hasMore && onLoadMore && (
+        <div className="p-4 border-t border-zinc-100 dark:border-zinc-800">
+          <button
+            onClick={onLoadMore}
+            disabled={isLoading}
+            className={cn(
+              'w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg',
+              'font-medium text-sm transition-all duration-200',
+              'bg-zinc-100 dark:bg-zinc-800',
+              'text-zinc-700 dark:text-zinc-300',
+              'hover:bg-zinc-200 dark:hover:bg-zinc-700',
+              'disabled:opacity-50 disabled:cursor-not-allowed',
+              'active:scale-[0.98]'
+            )}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading more emails...
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-4 h-4" />
+                Load More
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
