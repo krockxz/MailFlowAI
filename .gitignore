@@ -36,3 +36,10 @@ dist-ssr
 !vite.config.ts
 Claude.md
 .planning
+
+# Testing
+coverage
+*.timestamp-*
+test-results/
+junit.xml
+# __tests__/ and *.test.ts files no longer ignored
