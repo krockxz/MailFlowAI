@@ -69,6 +69,7 @@ class GmailService {
 ```
 
 **Benefits:**
+
 - Isolates API complexity from components
 - Easy to mock for testing
 - Single point for error handling
@@ -77,6 +78,7 @@ class GmailService {
 ### 3. State Management with Zustand
 
 Chosen over Redux/Context for:
+
 - **Minimal boilerplate** - No actions, reducers, dispatchers
 - **Built-in persistence** - Session survives refresh
 - **Type safety** - Excellent TypeScript support
@@ -109,6 +111,7 @@ export const useAppStore = create<AppStore>()(
 ### 4. Real-Time Sync Strategy
 
 **Hybrid Approach:**
+
 1. **Polling (Primary)**: 30-second intervals for reliability
 2. **WebSocket (Secondary)**: Prepared for Gmail Pub/Sub webhooks
 
@@ -130,6 +133,7 @@ socket.on('new-email', (email) => {
 ### 5. TypeScript for Type Safety
 
 Comprehensive typing enables:
+
 - Compile-time error checking
 - Better IDE autocomplete
 - Self-documenting code
@@ -162,10 +166,10 @@ sequenceDiagram
 graph TD
     Mount[Component Mount] --> Hook[useEmails Hook]
     Hook --> Check{Check Store Cache}
-    
+  
     Check -->|Fresh < 5min| Cache[Use Cache]
     Check -->|Stale/Empty| API[GmailService.getMessages]
-    
+  
     API --> Gmail[Gmail API]
     Gmail --> Parse[Parse & Transform]
     Parse --> Update[Update Zustand Store]
@@ -226,17 +230,20 @@ useCopilotAction({
 ## Security Considerations
 
 ### OAuth 2.0 Flow
+
 - Authorization code flow (not implicit)
 - Token stored in localStorage (XSS risk mitigated by httpOnly cookies in production)
 - Token refresh implemented
 - Client secret never exposed to frontend
 
 ### API Security
+
 - Gmail API scopes minimized to `gmail.modify`
 - No raw tokens in logs
 - Environment variables for credentials
 
 ### Future Improvements
+
 - Move token storage to httpOnly cookies
 - Implement PKCE for OAuth
 - Add CSRF protection
@@ -300,11 +307,13 @@ graph TD
 ## Deployment Considerations
 
 ### Frontend (Vercel/Netlify)
+
 - Static build with `npm run build`
 - Environment variables configured in platform
 - OAuth redirect URI updated to production domain
 
 ### Backend (For Pub/Sub)
+
 - Express server for Gmail webhook handling
 - Google Cloud Pub/Sub subscription
 - WebSocket server (Socket.io)
