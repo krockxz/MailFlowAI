@@ -31,9 +31,9 @@ const EmailItem = memo(({
       onClick={onClick}
       className={cn(
         'group relative p-4 border-b border-neutral-200 dark:border-neutral-800 cursor-pointer transition-all duration-200 animate-slide-up',
-        'hover:bg-zinc-50 dark:hover:bg-zinc-800/50',
-        isSelected && 'bg-blue-50/50 dark:bg-blue-900/10',
-        email.isUnread ? 'bg-white dark:bg-zinc-900' : 'bg-zinc-50/30 dark:bg-zinc-900/50'
+        'hover:bg-neutral-100 dark:hover:bg-neutral-800/50',
+        isSelected && 'bg-accent-50/50 dark:bg-accent-950/30',
+        email.isUnread ? 'bg-neutral-50 dark:bg-neutral-950' : 'bg-neutral-50/30 dark:bg-neutral-950/50'
       )}
       style={{ animationDelay: `${Math.min(index * 30, 200)}ms` }}
     >
@@ -111,11 +111,11 @@ export function EmailList({ emails, selectedId, onSelectEmail, pagination, onLoa
 
   if (emails.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-zinc-400 dark:text-zinc-600 p-8 animate-fade-in">
-        <div className="w-20 h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
+      <div className="flex flex-col items-center justify-center h-full text-neutral-400 dark:text-neutral-600 p-8 animate-fade-in">
+        <div className="w-20 h-20 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4">
           <Mail className="w-10 h-10" />
         </div>
-        <p className="text-lg font-medium text-zinc-700 dark:text-zinc-300">No emails found</p>
+        <p className="text-lg font-medium text-neutral-700 dark:text-neutral-300">No emails found</p>
         <p className="text-sm mt-1">Your inbox is empty</p>
       </div>
     );
@@ -144,9 +144,9 @@ export function EmailList({ emails, selectedId, onSelectEmail, pagination, onLoa
             className={cn(
               'w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg',
               'font-medium text-sm transition-all duration-200',
-              'bg-zinc-100 dark:bg-zinc-800',
-              'text-zinc-700 dark:text-zinc-300',
-              'hover:bg-zinc-200 dark:hover:bg-zinc-700',
+              'bg-neutral-100 dark:bg-neutral-800',
+              'text-neutral-700 dark:text-neutral-300',
+              'hover:bg-neutral-200 dark:hover:bg-neutral-700',
               'disabled:opacity-50 disabled:cursor-not-allowed',
               'active:scale-[0.98]'
             )}
