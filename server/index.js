@@ -14,18 +14,33 @@ const __dirname = dirname(__filename);
 // Load environment variables from root
 dotenv.config({ path: join(__dirname, '../.env') });
 
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') || [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
+];
+
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: '*', // Allow all origins for dev
+    origin: ALLOWED_ORIGINS,
     methods: ['GET', 'POST']
   }
 });
 
 const PORT = 8080;
 
-app.use(cors());
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+}));
 app.use(bodyParser.json());
 
 // Basic health check
