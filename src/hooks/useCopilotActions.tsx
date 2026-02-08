@@ -242,7 +242,7 @@ export function useCopilotEmailActions() {
     ],
     handler: async (params: SearchEmailsParams) => {
       // Build filter state
-      const newFilters: import('@/types/email').FilterState = {} as import('@/types/email').FilterState;
+      const newFilters: Partial<FilterState> = {};
 
       if (params.query) {
         newFilters.query = params.query;
