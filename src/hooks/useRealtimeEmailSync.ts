@@ -1,7 +1,8 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useAppStore } from '@/store';
 import { useEmails } from './useEmails';
 import { isAuthenticated } from '@/services/auth';
+import { io, Socket } from 'socket.io-client';
 
 /**
  * Options for real-time email sync
@@ -9,7 +10,7 @@ import { isAuthenticated } from '@/services/auth';
 interface RealtimeSyncOptions {
   /**
    * Polling interval in milliseconds (default: 30000 = 30 seconds)
-   * Use a shorter interval for more frequent updates
+   * used as fallback if WebSocket is not connected
    */
   pollingInterval?: number;
 
@@ -20,16 +21,8 @@ interface RealtimeSyncOptions {
 }
 
 /**
- * Hook for real-time email synchronization
- *
- * Note: True push notifications require a backend server for Gmail Pub/Sub webhooks.
- * This implementation uses polling as a client-side fallback.
- *
- * For full push notifications, you would need:
- * 1. A backend server (Node.js/Express, Cloud Functions, etc.)
- * 2. Google Cloud Pub/Sub topic
- * 3. Gmail watch API setup
- * 4. Webhook endpoint to receive push notifications
+ * Hook for real-time email synchronization using WebSockets (Socket.io)
+ * with polling fallback.
  */
 export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
   const {
@@ -38,9 +31,10 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
   } = options;
 
   const { fetchInbox } = useEmails();
+  const socketRef = useRef<Socket | null>(null);
   const intervalRef = useRef<number | null>(null);
   const lastSyncTime = useRef<Date>(new Date());
-  const previousEmailCount = useRef<number>(0);
+  const [isConnected, setIsConnected] = useState(false);
 
   /**
    * Manual sync trigger
@@ -51,28 +45,8 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
     }
 
     try {
+      console.log('Syncing emails...');
       await fetchInbox();
-
-      // Check if new emails arrived since last sync
-      const currentEmails = useAppStore.getState().emails.inbox;
-      const newCount = currentEmails.length;
-
-      if (newCount > previousEmailCount.current) {
-        // New emails detected
-        const newEmails = newCount - previousEmailCount.current;
-
-        // Show browser notification if permitted
-        if (Notification.permission === 'granted') {
-          new Notification('New Email', {
-            body: `You have ${newEmails} new email${newEmails > 1 ? 's' : ''}`,
-            icon: '/vite.svg',
-          });
-        }
-
-        useAppStore.getState().setHasNewEmails(true);
-      }
-
-      previousEmailCount.current = newCount;
       lastSyncTime.current = new Date();
       useAppStore.getState().setLastSyncTime(lastSyncTime.current);
     } catch (error) {
@@ -81,11 +55,54 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
   }, [fetchInbox]);
 
   /**
-   * Set up automatic polling
+   * Set up WebSocket connection and fallback polling
    */
   useEffect(() => {
     if (!enabled || !isAuthenticated()) {
       return;
+    }
+
+    // Initial sync
+    sync();
+
+    // Connect to WebSocket server
+    // Assuming the server is running on the same host but port 8080
+    // In production, this would be an environment variable
+    const socketUrl = 'http://localhost:8080';
+
+    try {
+      socketRef.current = io(socketUrl, {
+        reconnectionDelayMax: 10000,
+      });
+
+      socketRef.current.on('connect', () => {
+        console.log('Connected to real-time sync server');
+        setIsConnected(true);
+      });
+
+      socketRef.current.on('disconnect', () => {
+        console.log('Disconnected from real-time sync server');
+        setIsConnected(false);
+      });
+
+      socketRef.current.on('email:new', (data) => {
+        console.log('New email notification received:', data);
+
+        // Show browser notification
+        if (Notification.permission === 'granted') {
+          new Notification('New Email Received', {
+            body: 'A new email has arrived in your inbox.',
+            icon: '/vite.svg',
+          });
+        }
+
+        // Trigger sync immediately
+        sync();
+        useAppStore.getState().setHasNewEmails(true);
+      });
+
+    } catch (error) {
+      console.error('Failed to initialize Socket.io:', error);
     }
 
     // Request notification permission
@@ -93,16 +110,19 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
       Notification.requestPermission();
     }
 
-    // Initial sync
-    sync();
-
-    // Set up polling interval
+    // Set up polling interval (as backup or if socket fails)
     intervalRef.current = window.setInterval(() => {
+      // Only poll if not connected to socket, or just as a safety net every 30s
+      // Here we poll anyway to be safe, but you could make it conditional
       sync();
     }, pollingInterval);
 
     // Cleanup
     return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -110,64 +130,23 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
     };
   }, [enabled, pollingInterval, sync]);
 
-  /**
-   * Time since last sync
-   */
-  const timeSinceLastSync = useCallback(() => {
-    return Date.now() - lastSyncTime.current.getTime();
-  }, []);
-
-  /**
-   * Check if sync is stale (older than 2x polling interval)
-   */
-  const isSyncStale = useCallback(() => {
-    return timeSinceLastSync() > pollingInterval * 2;
-  }, [pollingInterval, timeSinceLastSync]);
-
   return {
     sync,
-    timeSinceLastSync,
-    isSyncStale,
+    isConnected,
     lastSyncTime: lastSyncTime.current,
   };
 }
 
 /**
- * Hook for setting up Gmail watch (requires backend)
- *
- * This is a placeholder for the full implementation.
- * To enable true push notifications:
- *
- * 1. Create a Google Cloud Pub/Sub topic
- * 2. Set up a webhook endpoint on your server
- * 3. Call this function to start watching
- *
- * Backend webhook endpoint example (Node.js/Express):
- *
- * ```javascript
- * app.post('/api/webhook/gmail', async (req, res) => {
- *   const message = req.body.message;
- *   const data = JSON.parse(Buffer.from(message.data, 'base64').toString());
- *
- *   if (message.data) {
- *     // Handle new email notification
- *     // Emit to client via WebSocket or SSE
- *   }
- *
- *   res.status(200).send('OK');
- * });
- * ```
+ * Hook for setting up Gmail watch
  */
 export function useGmailWatch() {
   const startWatching = useCallback(async (topicName: string) => {
-    // This would call your backend endpoint
-    // which then calls Gmail watch API
+    // In a real app, this would call the backend to set up the watch
     console.log('Starting Gmail watch for topic:', topicName);
   }, []);
 
   const stopWatching = useCallback(async () => {
-    // This would call your backend endpoint
-    // which then calls Gmail stop API
     console.log('Stopping Gmail watch');
   }, []);
 

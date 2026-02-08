@@ -12,6 +12,7 @@ export interface AppState {
   // UI state
   currentView: ViewType;
   selectedEmailId: string | null;
+  activeThread: Email[] | null;
 
   // Email data
   emails: {
@@ -44,6 +45,7 @@ export interface AppActions {
   // UI actions
   setCurrentView: (view: ViewType) => void;
   setSelectedEmailId: (id: string | null) => void;
+  setActiveThread: (thread: Email[] | null) => void;
 
   // Email actions
   setEmails: (type: 'inbox' | 'sent', emails: Email[]) => void;
@@ -71,4 +73,4 @@ export interface AppActions {
 /**
  * Combined store interface
  */
-export interface AppStore extends AppState, AppActions {}
+export interface AppStore extends AppState, AppActions { }

@@ -12,6 +12,7 @@ export const useAppStore = create<AppStore>()(
 
       currentView: 'inbox',
       selectedEmailId: null,
+      activeThread: null,
 
       emails: {
         inbox: [],
@@ -40,6 +41,7 @@ export const useAppStore = create<AppStore>()(
 
       setCurrentView: (view) => set({ currentView: view }),
       setSelectedEmailId: (id) => set({ selectedEmailId: id }),
+      setActiveThread: (thread) => set({ activeThread: thread }),
 
       setEmails: (type, emails) =>
         set((state) => ({

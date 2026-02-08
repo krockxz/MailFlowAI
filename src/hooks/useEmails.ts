@@ -218,6 +218,26 @@ export function useEmails() {
     }
   }, []);
 
+  /**
+   * Fetch a full thread
+   */
+  const fetchThread = useCallback(async (threadId: string): Promise<Email[]> => {
+    try {
+      const token = await getValidAccessToken();
+      const gmail = createGmailService(token);
+
+      const thread = await gmail.getThread(threadId);
+
+      // Update active thread in store
+      useAppStore.getState().setActiveThread(thread);
+
+      return thread;
+    } catch (error) {
+      console.error('Failed to fetch thread:', error);
+      throw error;
+    }
+  }, []);
+
   return {
     emails,
     isLoading,
@@ -228,5 +248,6 @@ export function useEmails() {
     markAsRead,
     searchEmails,
     fetchEmail,
+    fetchThread,
   };
 }

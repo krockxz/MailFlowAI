@@ -244,7 +244,7 @@ export class GmailService {
         email: extractEmailAddress(fromStr),
         name: extractName(fromStr) || extractEmailAddress(fromStr),
       };
-    } catch {}
+    } catch { }
 
     // Parse to addresses
     let to: EmailAddress[] = [];
@@ -256,7 +256,7 @@ export class GmailService {
           name: extractName(addr.trim()) || extractEmailAddress(addr.trim()),
         }))
         .filter((addr) => addr.email);
-    } catch {}
+    } catch { }
 
     // Parse cc addresses
     let cc: EmailAddress[] = [];
@@ -268,13 +268,13 @@ export class GmailService {
           name: extractName(addr.trim()) || extractEmailAddress(addr.trim()),
         }))
         .filter((addr) => addr.email);
-    } catch {}
+    } catch { }
 
     // Parse date
     let date = new Date();
     try {
       date = new Date(dateStr);
-    } catch {}
+    } catch { }
 
     // Extract body
     let body = '';
@@ -520,6 +520,37 @@ export class GmailService {
     if (!response.ok) {
       throw new Error(`Failed to stop watch: ${response.statusText}`);
     }
+  }
+
+  /**
+   * Get a full thread with all messages
+   */
+  async getThread(threadId: string): Promise<Email[]> {
+    if (!this.accessToken) {
+      throw new Error('No access token');
+    }
+
+    const response = await fetch(
+      `${GMAIL_API_BASE}/users/me/threads/${threadId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to get thread: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.messages) {
+      return [];
+    }
+
+    // Parse all messages in the thread
+    return data.messages.map((msg: GmailMessage) => this.parseMessage(msg));
   }
 }
 
