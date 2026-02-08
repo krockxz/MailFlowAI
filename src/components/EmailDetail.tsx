@@ -134,7 +134,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
 
             {/* Message Header */}
             <div className="flex items-start gap-4 mb-5">
-              <Avatar className="w-11 h-11 shadow-lg shadow-blue-500/25 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+              <Avatar className="w-11 h-11 shadow-lg shadow-accent-500/25 bg-gradient-to-br from-accent-500 to-accent-600 text-white">
                 <AvatarFallback className="bg-transparent text-white">
                   {getInitials(msg.from.name || msg.from.email)}
                 </AvatarFallback>
