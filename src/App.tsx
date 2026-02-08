@@ -3,6 +3,7 @@ import { useAppStore } from '@/store';
 import { useEmails } from '@/hooks/useEmails';
 import { useRealtimeEmailSync } from '@/hooks/useRealtimeEmailSync';
 import { useAppContext, useCopilotEmailActions } from '@/hooks/useCopilotActions';
+import type { Email } from '@/types/email';
 import { Sidebar } from '@/components/Sidebar';
 import { EmailList } from '@/components/EmailList';
 import { EmailDetail } from '@/components/EmailDetail';
@@ -113,10 +114,10 @@ function AppContent() {
   }, [currentView, emails]);
 
   // Get selected email
-  const selectedEmail = getCurrentEmails().find((e: any) => e.id === selectedEmailId) || null;
+  const selectedEmail = getCurrentEmails().find((e: Email) => e.id === selectedEmailId) || null;
 
   // Handle email select
-  const handleSelectEmail = useCallback((email: any) => {
+  const handleSelectEmail = useCallback((email: Email) => {
     setSelectedEmailId(email.id);
   }, [setSelectedEmailId]);
 
@@ -128,7 +129,7 @@ function AppContent() {
 
   // Handle reply
   const handleReply = useCallback((emailId: string) => {
-    const email = [...emails.inbox, ...emails.sent].find((e: any) => e.id === emailId);
+    const email = [...emails.inbox, ...emails.sent].find((e: Email) => e.id === emailId);
     if (email) {
       setComposeInitialData({
         to: email.from.email,
@@ -158,7 +159,7 @@ function AppContent() {
 
   // Handle forward
   const handleForward = useCallback((emailId: string) => {
-    const email = [...emails.inbox, ...emails.sent].find((e: any) => e.id === emailId);
+    const email = [...emails.inbox, ...emails.sent].find((e: Email) => e.id === emailId);
     if (email) {
       setComposeInitialData({
         subject: `Fwd: ${email.subject}`,
@@ -169,7 +170,7 @@ function AppContent() {
   }, [emails]);
 
   // Get unread count
-  const unreadCount = emails.inbox.filter((e: any) => e.isUnread).length;
+  const unreadCount = emails.inbox.filter((e: Email) => e.isUnread).length;
 
   return (
     <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950">
