@@ -2,6 +2,11 @@
 
 An AI-powered email application with Gmail integration and CopilotKit AI assistant for natural language control.
 
+## Demo
+
+<video src="public/demo.mp4" controls title="Demo Video" width="100%"></video>
+
+
 ## Visual Architecture
 
 ```mermaid
