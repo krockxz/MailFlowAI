@@ -52,7 +52,7 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search emails..."
-            className="pl-10 pr-10 bg-zinc-100 dark:bg-zinc-800 border-transparent focus-visible:bg-white dark:focus-visible:bg-zinc-900"
+            className="pl-10 pr-10 bg-neutral-100 dark:bg-neutral-800 border-transparent focus-visible:bg-white dark:focus-visible:bg-neutral-900"
           />
           {searchQuery && (
             <button
@@ -86,7 +86,7 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
           }}
           className={cn(
             'rounded-xl',
-            hasActiveFilters && 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-100'
+            hasActiveFilters && 'bg-accent-500 dark:bg-accent-500 text-white hover:bg-accent-600 dark:hover:bg-accent-600'
           )}
         >
           <Filter className="w-4 h-4 mr-2" />
@@ -106,7 +106,7 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
               });
             }}
             placeholder="From..."
-            className="w-40 bg-zinc-100 dark:bg-zinc-800 border-transparent"
+            className="w-40 bg-neutral-100 dark:bg-neutral-800 border-transparent"
           />
         )}
       </div>
