@@ -69,7 +69,10 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
           onClick={toggleUnread}
           variant={filters.isUnread ? "default" : "secondary"}
           size="sm"
-          className="rounded-xl"
+          className={cn(
+            'rounded-xl',
+            filters.isUnread && 'bg-accent-500 hover:bg-accent-600 shadow-lg shadow-accent-500/25'
+          )}
         >
           Unread
         </Button>
