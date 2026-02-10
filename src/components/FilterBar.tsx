@@ -45,7 +45,7 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
       <div className="flex items-center gap-3">
         {/* Search input */}
         <div className="flex-1 relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-neutral-400 group-focus-within:text-blue-500 transition-colors duration-200" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-neutral-400 group-focus-within:text-accent-500 transition-colors duration-200" />
           <Input
             ref={searchInputRef}
             type="text"
