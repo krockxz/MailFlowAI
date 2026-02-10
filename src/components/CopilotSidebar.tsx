@@ -40,10 +40,10 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
           variant="ghost"
           size="icon"
           onClick={onClose}
-          className="h-8 w-8"
+          className="h-9 w-9 min-h-[36px] min-w-[36px]"
           aria-label="Close"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </Button>
       </div>
 
@@ -70,7 +70,7 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
             <button
               key={index}
               className={cn(
-                'w-full text-left text-sm px-3 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-2.5',
+                'w-full text-left text-sm px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-2.5 min-h-[44px]',
                 darkMode
                   ? 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800'
                   : 'text-neutral-600 hover:text-neutral-900 hover:bg-white border border-transparent hover:border-neutral-200 hover:shadow-sm'

@@ -101,10 +101,10 @@ export function Compose({
       )}>
         <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">New Message</span>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={onToggleMinimize} className="h-7 w-7">
+          <Button variant="ghost" size="icon" onClick={onToggleMinimize} className="h-8 w-8 min-h-[32px] min-w-[32px]">
             {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
           </Button>
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7">
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 min-h-[32px] min-w-[32px]">
             <X className="w-4 h-4" />
           </Button>
         </div>
