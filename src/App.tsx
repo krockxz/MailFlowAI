@@ -203,7 +203,7 @@ function AppContent() {
   const unreadCount = emails.inbox.filter((e: Email) => e.isUnread).length;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex h-screen overflow-hidden bg-neutral-50 dark:bg-neutral-950">
       {/* Sidebar */}
       <Sidebar
         currentView={currentView}
@@ -216,13 +216,13 @@ function AppContent() {
       />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden relative bg-white dark:bg-zinc-900">
+      <div className="flex-1 flex flex-col overflow-hidden relative bg-white dark:bg-neutral-900">
         {/* Header with filters and actions */}
-        <header className="glass-elevated border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 transition-smooth">
+        <header className="glass-elevated border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/80 transition-smooth">
           <div className="flex items-center">
             {/* Logo/Brand */}
-            <div className="px-6 py-4 border-r border-zinc-200 dark:border-zinc-800">
-              <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">
+            <div className="px-6 py-4 border-r border-neutral-200 dark:border-neutral-800">
+              <h1 className="text-lg font-semibold text-neutral-900 dark:text-white">
                 <span className="text-blue-500">AI</span> Mail
               </h1>
             </div>
