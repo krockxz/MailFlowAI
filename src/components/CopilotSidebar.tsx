@@ -1,7 +1,5 @@
 import { CopilotChat } from '@copilotkit/react-ui';
-import { X, Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useAppStore } from '@/store';
+import { X, Sparkles, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
@@ -10,15 +8,9 @@ interface CopilotSidebarProps {
   onClose: () => void;
 }
 
-const examplePrompts = [
-  { text: 'Send an email to john@example.com', icon: '✉️' },
-  { text: 'Show emails from last week', icon: '📅' },
-  { text: 'Open the latest unread email', icon: '📬' },
-];
+const isCopilotConfigured = !!import.meta.env.VITE_COPILOT_API_KEY;
 
 export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
-  const darkMode = useAppStore((state) => state.darkMode);
-
   if (!isOpen) return null;
 
   return (
@@ -49,38 +41,33 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
 
       {/* Chat interface */}
       <div className="flex-1 overflow-hidden">
-        <CopilotChat
-          className="h-full"
-          instructions="You are an AI email assistant. Help users compose, search, and manage their emails. Always confirm before sending. When composing or searching, actually perform the action through the available tools."
-          labels={{
-            title: 'AI Mail Assistant',
-            initial: 'How can I help you with your email today?',
-            placeholder: 'Ask me to compose, search, or manage emails...',
-          }}
-        />
-      </div>
-
-      {/* Footer with example prompts */}
-      <div className="p-4 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50">
-        <p className="text-xs font-medium mb-3 px-1 text-neutral-500 dark:text-neutral-400">
-          Try saying:
-        </p>
-        <div className="space-y-1.5">
-          {examplePrompts.map((prompt, index) => (
-            <button
-              key={index}
-              className={cn(
-                'w-full text-left text-sm px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-2.5 min-h-[44px]',
-                darkMode
-                  ? 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800'
-                  : 'text-neutral-600 hover:text-neutral-900 hover:bg-white border border-transparent hover:border-neutral-200 hover:shadow-sm'
-              )}
+        {isCopilotConfigured ? (
+          <CopilotChat
+            className="h-full"
+            instructions="You are an AI email assistant. Help users compose, search, and manage their emails. Always confirm before sending. When composing or searching, actually perform the action through the available tools."
+            labels={{
+              title: 'AI Mail Assistant',
+              initial: 'How can I help you with your email today?',
+              placeholder: 'Ask me to compose, search, or manage emails...',
+            }}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+            <AlertCircle className="w-12 h-12 text-warning mb-4" />
+            <h3 className="font-semibold text-neutral-900 dark:text-white mb-2">AI Assistant Not Configured</h3>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+              Add <code className="px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800">VITE_COPILOT_API_KEY</code> to your .env file to enable AI features.
+            </p>
+            <a
+              href="https://cloud.copilotkit.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-accent-500 hover:text-accent-600 underline"
             >
-              <span className="text-base">{prompt.icon}</span>
-              <span className="truncate">"{prompt.text}"</span>
-            </button>
-          ))}
-        </div>
+              Get your free API key
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );
