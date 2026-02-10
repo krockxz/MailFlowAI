@@ -349,4 +349,94 @@ describe('Compose', () => {
       expect(sendButton).toBeInTheDocument();
     });
   });
+
+  describe('Design system compliance', () => {
+    it('has shadow-xl elevation', () => {
+      const { container } = render(
+        <Compose
+          isOpen={true}
+          onClose={mockOnClose}
+          onSend={mockOnSend}
+        />
+      );
+
+      const modal = container.firstChild as HTMLElement;
+      expect(modal).toHaveClass('shadow-xl');
+    });
+
+    it('uses neutral color tokens for backgrounds', () => {
+      const { container } = render(
+        <Compose
+          isOpen={true}
+          onClose={mockOnClose}
+          onSend={mockOnSend}
+        />
+      );
+
+      const modal = container.firstChild as HTMLElement;
+      // Should have neutral-200 border in light mode
+      expect(modal.className).toContain('border-neutral-200');
+      // Should have neutral-800 border in dark mode
+      expect(modal.className).toContain('dark:border-neutral-800');
+    });
+
+    it('Send button uses accent-500 for primary CTA', () => {
+      const { container } = render(
+        <Compose
+          isOpen={true}
+          onClose={mockOnClose}
+          onSend={mockOnSend}
+        />
+      );
+
+      const sendButton = screen.getByText('Send').closest('button');
+      expect(sendButton).toHaveClass('bg-accent-500');
+    });
+
+    it('has correct dimensions in expanded state', () => {
+      const { container } = render(
+        <Compose
+          isOpen={true}
+          onClose={mockOnClose}
+          onSend={mockOnSend}
+          isMinimized={false}
+        />
+      );
+
+      const modal = container.firstChild as HTMLElement;
+      expect(modal.className).toContain('w-[600px]');
+      expect(modal.className).toContain('h-[540px]');
+    });
+
+    it('has correct dimensions in minimized state', () => {
+      const { container } = render(
+        <Compose
+          isOpen={true}
+          onClose={mockOnClose}
+          onSend={mockOnSend}
+          isMinimized={true}
+          onToggleMinimize={mockOnToggleMinimize}
+        />
+      );
+
+      const modal = container.firstChild as HTMLElement;
+      expect(modal.className).toContain('w-96');
+      expect(modal.className).toContain('h-12');
+    });
+
+    it('has smooth transition classes', () => {
+      const { container } = render(
+        <Compose
+          isOpen={true}
+          onClose={mockOnClose}
+          onSend={mockOnSend}
+        />
+      );
+
+      const modal = container.firstChild as HTMLElement;
+      expect(modal.className).toContain('transition-all');
+      expect(modal.className).toContain('duration-300');
+      expect(modal.className).toContain('ease-out');
+    });
+  });
 });
