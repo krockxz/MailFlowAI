@@ -112,19 +112,19 @@ export function Compose({
 
       {!isMinimized && (
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-[calc(100%-52px)]">
-          <div className="border-b border-zinc-200 dark:border-zinc-800">
+          <div className="border-b border-neutral-200 dark:border-neutral-800">
             <Input {...register('to')} type="email" placeholder="To" className="border-none rounded-none px-4 focus-visible:ring-0" />
             {errors.to && <span className="text-red-500 text-xs px-4">{errors.to.message}</span>}
           </div>
 
           {showCc && (
-            <div className="border-b border-zinc-200 dark:border-zinc-800">
+            <div className="border-b border-neutral-200 dark:border-neutral-800">
               <Input {...register('cc')} type="email" placeholder="Cc" className="border-none rounded-none px-4 focus-visible:ring-0" />
               {errors.cc && <span className="text-red-500 text-xs px-4">{errors.cc.message}</span>}
             </div>
           )}
 
-          <div className="border-b border-zinc-200 dark:border-zinc-800">
+          <div className="border-b border-neutral-200 dark:border-neutral-800">
             <Input {...register('subject')} type="text" placeholder="Subject" className="border-none rounded-none px-4 font-medium focus-visible:ring-0" />
             {errors.subject && <span className="text-red-500 text-xs px-4">{errors.subject.message}</span>}
           </div>
@@ -133,7 +133,7 @@ export function Compose({
             <Textarea {...register('body')} ref={bodyRef} placeholder="Write your message..." className="w-full h-full resize-none border-none focus-visible:ring-0 shadow-none" />
           </div>
 
-          <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-200 dark:border-neutral-800">
             <Button type="button" variant="ghost" onClick={() => setShowCc(!showCc)} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400">
               {showCc ? 'Hide Cc' : 'Add Cc'}
             </Button>
