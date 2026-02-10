@@ -265,3 +265,51 @@ code {
   font-family: inherit !important;
   resize: none !important;
 }
+
+/* Ensure CopilotKit components have proper z-index */
+.copilot-chat-container,
+[class*="copilot"] {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Hide CopilotKit's default header icons that might contain emojis */
+.copilot-header-icon {
+  display: none !important;
+}
+
+/* Ensure proper message layout */
+.copilot-messages-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+}
+
+/* User message styling */
+.copilot-user-message {
+  align-self: flex-end !important;
+  max-width: 85% !important;
+}
+
+/* AI message styling */
+.copilot-ai-message {
+  align-self: flex-start !important;
+  max-width: 85% !important;
+}
+
+/* Remove emoji classes from CopilotKit if present */
+.emoji {
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+}
+
+/* Fix input area positioning */
+.copilot-input-container {
+  position: sticky !important;
+  bottom: 0 !important;
+  background: inherit !important;
+  border-top: 1px solid var(--color-neutral-200) !important;
+}
+
+.dark .copilot-input-container {
+  border-top-color: var(--color-neutral-800) !important;
+}
