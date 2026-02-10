@@ -12,8 +12,6 @@ vi.mock('lucide-react', () => ({
   ArrowLeft: ({ className }: { className: string }) => <div data-testid="arrow-left-icon" className={className} />,
   Reply: ({ className }: { className: string }) => <div data-testid="reply-icon" className={className} />,
   Forward: ({ className }: { className: string }) => <div data-testid="forward-icon" className={className} />,
-  Star: ({ className }: { className: string }) => <div data-testid="star-icon" className={className} />,
-  MoreVertical: ({ className }: { className: string }) => <div data-testid="more-vertical-icon" className={className} />,
   Loader2: ({ className }: { className: string }) => <div data-testid="loader-icon" className={className} />,
 }));
 
@@ -229,8 +227,6 @@ describe('EmailDetail', () => {
       // Use getAllByTestId for reply-icon since there are two (header + quick reply)
       expect(screen.getAllByTestId('reply-icon')).toHaveLength(2);
       expect(screen.getByTestId('forward-icon')).toBeInTheDocument();
-      expect(screen.getByTestId('star-icon')).toBeInTheDocument();
-      expect(screen.getByTestId('more-vertical-icon')).toBeInTheDocument();
     });
 
     it('shows quick reply button when onReply is provided', () => {

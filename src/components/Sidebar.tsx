@@ -35,13 +35,13 @@ export function Sidebar({
   return (
     <aside className="w-[240px] bg-neutral-50 dark:bg-neutral-950 border-r border-neutral-200 dark:border-neutral-800 flex flex-col h-screen shrink-0">
       {/* Header */}
-      <div className="p-6">
+      <div className="p-5">
         <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">AI Mail</h1>
         <p className="text-neutral-500 dark:text-neutral-400 text-xs mt-1">Intelligent email assistant</p>
       </div>
 
       {/* Compose Button */}
-      <div className="px-4 mb-6">
+      <div className="px-4 mb-5">
         <Button
           onClick={onCompose}
           className="w-full bg-accent-500 hover:bg-accent-600 text-white shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30"

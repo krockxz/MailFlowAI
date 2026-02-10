@@ -219,14 +219,7 @@ function AppContent() {
       <div className="flex-1 flex flex-col overflow-hidden relative bg-white dark:bg-neutral-900">
         {/* Header with filters and actions */}
         <header className="glass-elevated border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/80 transition-smooth">
-          <div className="flex items-center">
-            {/* Logo/Brand */}
-            <div className="px-6 py-4 border-r border-neutral-200 dark:border-neutral-800">
-              <h1 className="text-lg font-semibold text-neutral-900 dark:text-white">
-                <span className="text-blue-500">AI</span> Mail
-              </h1>
-            </div>
-
+          <div className="flex items-center px-4">
             {/* Filters */}
             <div className="flex-1">
               <FilterBar
@@ -241,11 +234,9 @@ function AppContent() {
                 variant="ghost"
                 size="icon"
                 onClick={sync}
-                className="relative group"
                 title="Sync emails"
               >
                 <RefreshCw className="w-4.5 h-4.5" />
-                <span className="absolute inset-0 rounded-xl ring-2 ring-blue-500/0 group-hover:ring-blue-500/20 transition-smooth" />
               </Button>
 
               <Button

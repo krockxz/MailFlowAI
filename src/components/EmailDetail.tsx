@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ArrowLeft, Reply, Forward, Star, MoreVertical, Loader2 } from 'lucide-react';
+import { ArrowLeft, Reply, Forward, Loader2 } from 'lucide-react';
 import { formatFullDate, getInitials } from '@/lib/utils';
 import type { Email } from '@/types/email';
 import { useEmails } from '@/hooks/useEmails';
@@ -60,7 +60,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
   return (
     <div className="flex flex-col h-full bg-neutral-50 dark:bg-neutral-950">
       {/* Header */}
-      <header className="border-b border-neutral-200 dark:border-neutral-800 px-8 py-6 shrink-0 animate-slide-up">
+      <header className="border-b border-neutral-200 dark:border-neutral-800 px-6 py-4 shrink-0 animate-slide-up">
         <div className="flex items-center justify-between mb-5">
           <Button
             variant="ghost"
@@ -88,20 +88,6 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
             >
               <Forward className="w-4.5 h-4.5" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              title="Star"
-            >
-              <Star className="w-4.5 h-4.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              title="More"
-            >
-              <MoreVertical className="w-4.5 h-4.5" />
-            </Button>
           </div>
         </div>
 
@@ -119,7 +105,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
       {/* Messages List */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-8 py-6 space-y-8"
+        className="flex-1 overflow-y-auto px-6 py-4 space-y-6"
       >
         <div className="max-w-[800px] mx-auto">
         {displayEmails.map((msg, index) => (
@@ -129,7 +115,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
             style={{ animationDelay: `${index * 50}ms` }}
           >
             {index !== displayEmails.length - 1 && (
-              <Separator className="mb-8 bg-neutral-100 dark:bg-neutral-800" />
+              <Separator className="mb-6 bg-neutral-100 dark:bg-neutral-800" />
             )}
 
             {/* Message Header */}
