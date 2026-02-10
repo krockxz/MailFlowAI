@@ -99,7 +99,7 @@ export function Compose({
         'flex items-center justify-between px-4 py-3 rounded-t-xl',
         darkMode ? 'bg-neutral-800' : 'bg-neutral-100'
       )}>
-        <span className="font-semibold text-sm text-zinc-900 dark:text-white">New Message</span>
+        <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">New Message</span>
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" onClick={onToggleMinimize} className="h-7 w-7">
             {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
@@ -134,7 +134,7 @@ export function Compose({
           </div>
 
           <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-200 dark:border-neutral-800">
-            <Button type="button" variant="ghost" onClick={() => setShowCc(!showCc)} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400">
+            <Button type="button" variant="ghost" onClick={() => setShowCc(!showCc)} className="text-neutral-500 hover:text-neutral-900 dark:text-neutral-400">
               {showCc ? 'Hide Cc' : 'Add Cc'}
             </Button>
 
