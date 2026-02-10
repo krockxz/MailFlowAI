@@ -91,8 +91,8 @@ export function Compose({
 
   return (
     <div className={cn(
-      'fixed bottom-0 right-4 z-50 shadow-2xl transition-all duration-300 ease-out animate-scale-in border border-zinc-200 dark:border-zinc-800',
-      darkMode ? 'bg-zinc-900' : 'bg-white',
+      'fixed bottom-0 right-4 z-50 shadow-xl transition-all duration-300 ease-out animate-scale-in border border-neutral-200 dark:border-neutral-800',
+      darkMode ? 'bg-neutral-900' : 'bg-white',
       isMinimized ? 'w-96 h-12 rounded-t-lg' : 'w-[600px] h-[540px] rounded-t-xl'
     )}>
       <div className={cn(
