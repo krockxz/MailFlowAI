@@ -16,6 +16,7 @@ export function useEmails() {
     setEmails,
     isLoading,
     setIsLoading,
+    setIsSending,
     setLastSyncTime,
     pagination,
     setPagination,
@@ -186,6 +187,9 @@ export function useEmails() {
       bcc?: string[];
     }) => {
       try {
+        // Set sending state
+        setIsSending(true);
+
         const token = await getValidAccessToken();
         const gmail = createGmailService(token);
 
@@ -198,9 +202,11 @@ export function useEmails() {
       } catch (error) {
         console.error('Failed to send email:', error);
         throw error;
+      } finally {
+        setIsSending(false);
       }
     },
-    [fetchSent]
+    [fetchSent, setIsSending]
   );
 
   /**

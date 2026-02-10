@@ -133,10 +133,33 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
             <div className="h-full flex flex-col">
               <CopilotChat
                 className="h-full flex-1"
-                instructions="You are an AI email assistant. Help users compose, search, and manage their emails. Always confirm before sending. When composing or searching, actually perform the action through the available tools. Be concise and helpful. Strictly do not use emojis in your responses."
+                instructions={`You are an AI email assistant integrated into a mail client. Help users manage emails through natural language.
+
+AVAILABLE ACTIONS (always use these to actually perform actions, don't just describe them):
+1. composeEmail(to, subject, body, cc) - Opens compose form and fills it visibly
+2. sendEmail(confirm) - Sends the composed email (ONLY if confirm=true, always ask user first)
+3. searchEmails(query, sender, days, isUnread) - Searches emails and updates the UI
+4. openEmail(latest, sender, subject) - Opens a specific email in detail view
+5. replyToEmail(emailId, body) - Opens reply form with the message
+6. navigateToView(view) - Switches between 'inbox', 'sent'
+7. clearFilters() - Removes all active filters
+
+CONTEXT AWARENESS:
+- You can see which email is currently open
+- You can see the current view (inbox/sent)
+- You can see all inbox and sent emails (first 20)
+
+IMPORTANT BEHAVIORS:
+- ALWAYS actually perform actions through tools, don't just describe what would happen
+- When composing, the user will see the form fill in real-time
+- When searching, the main email list updates to show filtered results
+- When asked to reply without specifying which email, use the currently open one
+- Always confirm before sending (require explicit user confirmation)
+- Be concise and helpful
+- Never use emojis in responses`}
                 labels={{
                   title: '',
-                  initial: 'How can I help with your email today?',
+                  initial: 'How can I help with your email today?\n\nTry asking me to:\n- "Send an email to john@example.com"\n- "Show emails from Sarah"\n- "Find emails about the project"\n- "Reply to this email saying I\'ll be there"',
                   placeholder: 'Ask to compose, search, or manage emails...',
                   error: 'An error occurred. Please try again.',
                   stopGenerating: 'Stop generating',

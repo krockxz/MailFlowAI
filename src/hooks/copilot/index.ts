@@ -36,11 +36,12 @@ import { useSearchActions } from './useSearchActions';
 function useComposeActionsWithReply() {
   const { sendEmail } = useEmails();
 
-  const [composeData, setComposeData] = useState<ComposeData>({
+  const [composeData, setComposeData] = useState<ComposeData & { isSending?: boolean }>({
     to: '',
     subject: '',
     body: '',
     isOpen: false,
+    isSending: false,
   });
 
   // Compose an email
@@ -79,6 +80,7 @@ function useComposeActionsWithReply() {
         subject,
         body,
         isOpen: true,
+        isSending: false,
       });
       return `Compose form opened with recipient: ${to}, subject: ${subject}`;
     },
@@ -106,14 +108,21 @@ function useComposeActionsWithReply() {
       }
 
       try {
+        // Show sending state in the UI
+        setComposeData(prev => ({ ...prev, isSending: true }));
+
         await sendEmail({
           to: [composeData.to],
           subject: composeData.subject,
           body: composeData.body,
         });
-        setComposeData({ to: '', subject: '', body: '', isOpen: false });
+
+        // Clear compose data after successful send
+        setComposeData({ to: '', subject: '', body: '', isOpen: false, isSending: false });
         return 'Email sent successfully!';
       } catch (error) {
+        // Clear sending state on error
+        setComposeData(prev => ({ ...prev, isSending: false }));
         return `Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`;
       }
     },
@@ -148,30 +157,30 @@ export function useCopilotEmailActions() {
   // Open a specific email
   useCopilotAction({
     name: 'openEmail',
-    description: 'Open a specific email in detail view',
+    description: 'Open and display a specific email in the detail view. You can find by sender name/email, subject keywords, or open the latest email.',
     parameters: [
       {
         name: 'emailId',
         type: 'string',
-        description: 'The ID of the email to open',
+        description: 'The exact ID of the email to open',
         required: false,
       },
       {
         name: 'sender',
         type: 'string',
-        description: 'Open the latest email from this sender',
+        description: 'Open the most recent email from this sender (name or email address)',
         required: false,
       },
       {
         name: 'subject',
         type: 'string',
-        description: 'Open an email with this subject keyword',
+        description: 'Open the most recent email containing this keyword in the subject',
         required: false,
       },
       {
         name: 'latest',
         type: 'boolean',
-        description: 'Open the latest email',
+        description: 'Open the most recent email in the inbox',
         required: false,
       },
     ],
@@ -207,18 +216,18 @@ export function useCopilotEmailActions() {
   // Reply to an email
   useCopilotAction({
     name: 'replyToEmail',
-    description: 'Reply to an email (uses currently open email if no ID provided)',
+    description: 'Reply to an email. Uses the currently open email if no ID is provided. The reply form will open with the recipient and subject pre-filled.',
     parameters: [
       {
         name: 'emailId',
         type: 'string',
-        description: 'The email ID to reply to (optional, uses current email if not provided)',
+        description: 'The email ID to reply to (optional - uses the currently open email)',
         required: false,
       },
       {
         name: 'body',
         type: 'string',
-        description: 'The reply message body',
+        description: 'The reply message content',
         required: true,
       },
     ],
@@ -226,7 +235,7 @@ export function useCopilotEmailActions() {
       const emailId = params.emailId || selectedEmailId;
 
       if (!emailId) {
-        return 'No email selected to reply to. Please open an email first.';
+        return 'No email is currently open. Please open an email first by clicking on it or asking me to find and open a specific email.';
       }
 
       const email = [...emails.inbox, ...emails.sent].find((e: Email) => e.id === emailId);
@@ -234,6 +243,8 @@ export function useCopilotEmailActions() {
       if (!email) {
         return `Could not find email with ID: ${emailId}`;
       }
+
+      const senderName = email.from.name || email.from.email;
 
       // Open compose with reply details
       setComposeData({
@@ -243,7 +254,7 @@ export function useCopilotEmailActions() {
         isOpen: true,
       });
 
-      return `Composed reply to ${email.from.name || email.from.email}`;
+      return `Reply form opened to ${senderName} with subject "${email.subject}". Your reply is ready to send.`;
     },
   });
 

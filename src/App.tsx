@@ -95,10 +95,11 @@ function AppContent() {
         to: composeData.to,
         subject: composeData.subject,
         body: composeData.body,
+        isSending: composeData.isSending,
       });
       setIsComposeOpen(true);
     }
-  }, [composeData.to, composeData.subject, composeData.body, composeData.isOpen]);
+  }, [composeData.to, composeData.subject, composeData.body, composeData.isOpen, composeData.isSending]);
 
   // Check auth on mount and fetch user data
   useEffect(() => {
