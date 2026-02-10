@@ -22,18 +22,18 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed right-0 top-0 h-full w-96 shadow-2xl z-40 flex flex-col transition-transform duration-300 ease-out animate-slide-in-right bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800">
+    <div className="fixed right-0 top-0 h-full w-[320px] shadow-2xl z-40 flex flex-col transition-transform duration-300 ease-out animate-slide-in-right bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800">
       {/* Header */}
-      <div className="flex items-center justify-between p-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
+      <div className="flex items-center justify-between p-5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50">
         <div className="flex items-center gap-3">
-          <Avatar className="w-9 h-9 shadow-lg shadow-blue-500/25 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+          <Avatar className="w-9 h-9 shadow-lg shadow-accent-500/25 bg-gradient-to-br from-accent-500 to-accent-600 text-white">
             <AvatarFallback className="bg-transparent text-white">
               <Sparkles className="w-5 h-5" />
             </AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="font-semibold text-base text-zinc-900 dark:text-white">AI Assistant</h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">Ask me to manage your email</p>
+            <h2 className="font-semibold text-base text-neutral-900 dark:text-white">AI Assistant</h2>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">Ask me to manage your email</p>
           </div>
         </div>
         <Button
@@ -61,8 +61,8 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
       </div>
 
       {/* Footer with example prompts */}
-      <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
-        <p className="text-xs font-medium mb-3 px-1 text-zinc-500 dark:text-zinc-400">
+      <div className="p-4 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50">
+        <p className="text-xs font-medium mb-3 px-1 text-neutral-500 dark:text-neutral-400">
           Try saying:
         </p>
         <div className="space-y-1.5">
@@ -72,8 +72,8 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
               className={cn(
                 'w-full text-left text-sm px-3 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-2.5',
                 darkMode
-                  ? 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-white border border-transparent hover:border-zinc-200 hover:shadow-sm'
+                  ? 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800'
+                  : 'text-neutral-600 hover:text-neutral-900 hover:bg-white border border-transparent hover:border-neutral-200 hover:shadow-sm'
               )}
             >
               <span className="text-base">{prompt.icon}</span>
