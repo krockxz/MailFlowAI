@@ -11,7 +11,7 @@ interface CopilotSidebarProps {
 
 const MIN_WIDTH = 280;
 const MAX_WIDTH = 600;
-const DEFAULT_WIDTH = 320;
+const DEFAULT_WIDTH = 340;
 
 const isCopilotConfigured = !!import.meta.env.VITE_COPILOT_API_KEY;
 
@@ -63,25 +63,25 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
     <>
       {/* Backdrop overlay for mobile */}
       <div
-        className="fixed inset-0 bg-black/20 z-40 lg:hidden"
+        className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40 lg:hidden animate-fade-in"
         onClick={onClose}
       />
 
       {/* Sidebar */}
       <div
-        className="fixed right-0 top-0 h-full shadow-2xl z-50 flex flex-col bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800"
+        className="fixed right-0 top-0 h-full shadow-2xl z-50 flex flex-col glass-elevated border-l border-neutral-200/60 dark:border-neutral-800/60 animate-slide-in-right"
         style={{
           width,
           minWidth: MIN_WIDTH,
           maxWidth: MAX_WIDTH,
-          transition: isResizing ? 'none' : 'width 0.2s ease-out',
+          transition: isResizing ? 'none' : 'width 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
         {/* Resize handle */}
         <div
           ref={resizeHandleRef}
           onMouseDown={handleMouseDown}
-          className={`absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-accent-500/30 active:bg-accent-500/50 transition-colors z-10 group ${isResizing ? 'bg-accent-500/50' : ''
+          className={`absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize hover:bg-accent-500/20 active:bg-accent-500/30 transition-all duration-200 z-10 group ${isResizing ? 'bg-accent-500/30' : ''
             }`}
         >
           <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -89,17 +89,20 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
           </div>
         </div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 shrink-0">
+        {/* Header with gradient */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-200/50 dark:border-neutral-800/50 bg-gradient-to-r from-accent-50/50 to-transparent dark:from-accent-950/30 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <Avatar className="w-8 h-8 shadow-lg shadow-accent-500/25 bg-gradient-to-br from-accent-500 to-accent-600 text-white shrink-0">
-              <AvatarFallback className="bg-transparent text-white">
-                <Sparkles className="w-4 h-4" />
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="w-10 h-10 shadow-lg bg-gradient-to-br from-accent-500 to-accent-600 text-white ring-2 ring-accent-500/20">
+                <AvatarFallback className="bg-transparent text-white">
+                  <Sparkles className="w-5 h-5" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-gradient-to-br from-green-400 to-green-500 rounded-full border-2 border-white dark:border-neutral-900" />
+            </div>
             <div className="min-w-0">
               <h2 className="font-semibold text-sm text-neutral-900 dark:text-white truncate">AI Assistant</h2>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">Manage your email with AI</p>
+
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0 ml-2">
@@ -107,7 +110,7 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="h-8 w-8 min-h-[32px] min-w-[32px]"
+              className="h-8 w-8 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-all duration-200"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
@@ -147,7 +150,7 @@ IMPORTANT BEHAVIORS:
 - Never use emojis in responses`}
                 labels={{
                   title: '',
-                  initial: 'How can I help with your email today?\n\nTry asking me to:\n- "Send an email to john@example.com"\n- "Show emails from Sarah"\n- "Find emails about the project"\n- "Reply to this email saying I\'ll be there"',
+                  initial: 'How can I help with your email today?\n\nTry asking me to:\n• "Send an email to john@example.com"\n• "Show emails from Sarah"\n• "Find emails about the project"\n• "Reply to this email saying I\'ll be there"',
                   placeholder: 'Ask to compose, search, or manage emails...',
                   error: 'An error occurred. Please try again.',
                   stopGenerating: 'Stop generating',
@@ -176,16 +179,18 @@ IMPORTANT BEHAVIORS:
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-              <AlertCircle className="w-12 h-12 text-warning mb-4" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-950/50 dark:to-orange-950/50 flex items-center justify-center mb-4">
+                <AlertCircle className="w-8 h-8 text-amber-500" />
+              </div>
               <h3 className="font-semibold text-neutral-900 dark:text-white mb-2">AI Assistant Not Configured</h3>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                Add <code className="px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800">VITE_COPILOT_API_KEY</code> to your .env file to enable AI features.
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4 max-w-xs">
+                Add <code className="px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-xs">VITE_COPILOT_API_KEY</code> to your .env file to enable AI features.
               </p>
               <a
                 href="https://cloud.copilotkit.ai"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-accent-500 hover:text-accent-600 underline"
+                className="text-sm text-accent-600 hover:text-accent-500 dark:text-accent-400 dark:hover:text-accent-300 underline font-medium transition-colors"
               >
                 Get your free API key
               </a>

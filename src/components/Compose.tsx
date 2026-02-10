@@ -95,42 +95,73 @@ export function Compose({
 
   return (
     <div className={cn(
-      'fixed bottom-0 right-4 z-50 shadow-xl transition-all duration-300 ease-out animate-scale-in border border-neutral-200 dark:border-neutral-800',
-      darkMode ? 'bg-neutral-900' : 'bg-white',
-      isMinimized ? 'w-96 h-12 rounded-t-lg' : 'w-[600px] h-[540px] rounded-t-xl'
+      'fixed bottom-0 right-4 z-50 shadow-2xl transition-all duration-300 ease-out animate-scale-in border border-neutral-200/60 dark:border-neutral-800/60',
+      'glass-elevated',
+      isMinimized ? 'w-96 h-14 rounded-t-xl' : 'w-[620px] h-[560px] rounded-t-2xl'
     )}>
+      {/* Header with gradient accent */}
       <div className={cn(
-        'flex items-center justify-between px-4 py-3 rounded-t-xl',
-        darkMode ? 'bg-neutral-800' : 'bg-neutral-100'
+        'flex items-center justify-between px-5 py-3.5 rounded-t-2xl border-b border-neutral-200/50 dark:border-neutral-800/50',
+        'bg-gradient-to-r from-accent-50 to-transparent dark:from-accent-950/30'
       )}>
-        <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">New Message</span>
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shadow-md shadow-accent-500/20">
+            <Send className="w-3.5 h-3.5 text-white" />
+          </div>
+          <span className="font-semibold text-sm text-neutral-900 dark:text-white">New Message</span>
+        </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={onToggleMinimize} className="h-8 w-8 min-h-[32px] min-w-[32px]">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleMinimize}
+            className="h-8 w-8 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-all duration-200"
+          >
             {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
           </Button>
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 min-h-[32px] min-w-[32px]">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="h-8 w-8 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-all duration-200"
+          >
             <X className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
       {!isMinimized && (
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-[calc(100%-52px)]">
-          <div className="border-b border-neutral-200 dark:border-neutral-800">
-            <Input {...register('to')} type="email" placeholder="To" className="border-none rounded-none px-4 py-3 focus-visible:ring-0 bg-transparent" />
-            {errors.to && <span className="text-red-500 text-xs px-4">{errors.to.message}</span>}
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-[calc(100%-60px)]">
+          <div className="border-b border-neutral-200/50 dark:border-neutral-800/50">
+            <Input
+              {...register('to')}
+              type="email"
+              placeholder="To"
+              className="border-none rounded-none px-5 py-3 focus-visible:ring-0 bg-transparent text-sm"
+            />
+            {errors.to && <span className="text-red-500 text-xs px-5">{errors.to.message}</span>}
           </div>
 
           {showCc && (
-            <div className="border-b border-neutral-200 dark:border-neutral-800">
-              <Input {...register('cc')} type="email" placeholder="Cc" className="border-none rounded-none px-4 py-3 focus-visible:ring-0 bg-transparent" />
-              {errors.cc && <span className="text-red-500 text-xs px-4">{errors.cc.message}</span>}
+            <div className="border-b border-neutral-200/50 dark:border-neutral-800/50">
+              <Input
+                {...register('cc')}
+                type="email"
+                placeholder="Cc"
+                className="border-none rounded-none px-5 py-3 focus-visible:ring-0 bg-transparent text-sm"
+              />
+              {errors.cc && <span className="text-red-500 text-xs px-5">{errors.cc.message}</span>}
             </div>
           )}
 
-          <div className="border-b border-neutral-200 dark:border-neutral-800">
-            <Input {...register('subject')} type="text" placeholder="Subject" className="border-none rounded-none px-4 py-3 font-medium focus-visible:ring-0 bg-transparent" />
-            {errors.subject && <span className="text-red-500 text-xs px-4">{errors.subject.message}</span>}
+          <div className="border-b border-neutral-200/50 dark:border-neutral-800/50">
+            <Input
+              {...register('subject')}
+              type="text"
+              placeholder="Subject"
+              className="border-none rounded-none px-5 py-3 font-medium focus-visible:ring-0 bg-transparent text-sm"
+            />
+            {errors.subject && <span className="text-red-500 text-xs px-5">{errors.subject.message}</span>}
           </div>
 
           <div className="flex-1 min-h-0 p-0">
@@ -138,28 +169,40 @@ export function Compose({
               {...register('body')}
               ref={bodyRef}
               placeholder="Write your message..."
-              className="w-full h-full resize-none border-none focus-visible:ring-0 shadow-none bg-transparent px-4 py-4"
+              className="w-full h-full resize-none border-none focus-visible:ring-0 shadow-none bg-transparent px-5 py-4 text-sm"
             />
           </div>
 
-          <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-200 dark:border-neutral-800 shrink-0">
-            <Button type="button" variant="ghost" onClick={() => setShowCc(!showCc)} className="text-neutral-500 hover:text-neutral-900 dark:text-neutral-400">
+          <div className="flex items-center justify-between px-5 py-3.5 border-t border-neutral-200/50 dark:border-neutral-800/50 shrink-0">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowCc(!showCc)}
+              className="text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800/50 rounded-lg h-9 px-3 transition-all duration-200"
+            >
               {showCc ? 'Hide Cc' : 'Add Cc'}
             </Button>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {(isSubmitting || externalIsSending) && (
-                <span className="text-xs text-neutral-500 dark:text-neutral-400 animate-pulse">
+                <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5">
+                  <Loader2 className="w-3 h-3 animate-spin" />
                   Sending...
                 </span>
               )}
               <Button
                 type="submit"
                 disabled={isSubmitting || externalIsSending}
-                className="bg-accent-500 text-white shadow-lg shadow-accent-500/25 hover:bg-accent-600 hover:shadow-xl hover:shadow-accent-500/30 focus-visible:ring-accent-500 min-w-[100px]"
+                className="btn-accent-gradient text-white rounded-xl h-9 px-5 font-medium shadow-lg shadow-accent-500/25 hover:shadow-accent-500/30 min-w-[100px] transition-all duration-300"
               >
-                {(isSubmitting || externalIsSending) ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                Send
+                {(isSubmitting || externalIsSending) ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Send
+                  </>
+                )}
               </Button>
             </div>
           </div>

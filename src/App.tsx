@@ -279,7 +279,7 @@ function AppContent() {
   const unreadCount = emails.inbox.filter((e: Email) => e.isUnread).length;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-neutral-50 dark:bg-neutral-950">
+    <div className="flex h-screen overflow-hidden mesh-gradient">
       {/* Sidebar */}
       <Sidebar
         currentView={currentView}
@@ -292,10 +292,10 @@ function AppContent() {
       />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden relative bg-white dark:bg-neutral-900">
+      <div className="flex-1 flex flex-col overflow-hidden relative bg-white/40 dark:bg-neutral-900/40 backdrop-blur-sm">
         {/* Header with filters and actions */}
-        <header className="glass-elevated border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/80 transition-smooth">
-          <div className="flex items-center px-4">
+        <header className="glass-elevated border-b border-neutral-200/50 dark:border-neutral-800/50 bg-white/70 dark:bg-neutral-900/70 transition-smooth">
+          <div className="flex items-center px-5 py-3">
             {/* Filters */}
             <div className="flex-1">
               <FilterBar
@@ -305,33 +305,33 @@ function AppContent() {
             </div>
 
             {/* Action buttons */}
-            <div className="flex items-center gap-1.5 pr-4">
+            <div className="flex items-center gap-2 pr-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={sync}
                 title="Sync emails"
-                className="h-9 w-9"
+                className="h-9 w-9 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-all duration-300"
               >
                 <RefreshCw className="w-4.5 h-4.5" />
               </Button>
 
               <Button
-                variant={isCopilotOpen ? "secondary" : "ghost"}
+                variant="ghost"
                 size="icon"
                 onClick={() => setIsCopilotOpen(!isCopilotOpen)}
-                className={`h-9 w-9 relative transition-all duration-200 ${
+                className={`h-9 w-9 rounded-xl relative transition-all duration-300 ${
                   isCopilotOpen
-                    ? 'bg-accent-50 text-accent-600 dark:bg-accent-950 dark:text-accent-400 shadow-sm ring-1 ring-accent-200 dark:ring-accent-800'
-                    : 'hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                    ? 'bg-gradient-to-br from-accent-500 to-accent-600 text-white shadow-lg shadow-accent-500/30'
+                    : 'hover:bg-neutral-100 dark:hover:bg-neutral-800/50'
                 }`}
                 title={isCopilotOpen ? 'Close AI Assistant' : 'Open AI Assistant'}
               >
-                <Sparkles className={`w-4.5 h-4.5 ${isCopilotOpen ? 'fill-accent-200 dark:fill-accent-900' : ''}`} />
+                <Sparkles className={`w-4.5 h-4.5 ${isCopilotOpen ? 'text-white' : ''}`} />
                 {isCopilotOpen && (
                   <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
                   </span>
                 )}
               </Button>
@@ -340,7 +340,7 @@ function AppContent() {
                 variant="ghost"
                 size="icon"
                 onClick={toggleDarkMode}
-                className={`h-9 w-9 ${darkMode ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-950/30' : ''}`}
+                className={`h-9 w-9 rounded-xl ${darkMode ? 'text-amber-400 hover:bg-amber-950/30' : ''} hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-all duration-300`}
                 title={darkMode ? 'Light mode' : 'Dark mode'}
               >
                 {darkMode ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
