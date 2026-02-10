@@ -242,7 +242,7 @@ describe('CopilotSidebar', () => {
       expect(sidebar).toBeInTheDocument();
     });
 
-    it('has correct width class', () => {
+    it('has correct width class (320px per design spec)', () => {
       const { container } = render(
         <CopilotSidebar
           isOpen={true}
@@ -250,7 +250,7 @@ describe('CopilotSidebar', () => {
         />
       );
 
-      const sidebar = container.querySelector('.w-96');
+      const sidebar = container.querySelector('.w-\\[320px\\]');
       expect(sidebar).toBeInTheDocument();
     });
 
@@ -264,6 +264,130 @@ describe('CopilotSidebar', () => {
 
       const sidebar = container.querySelector('.h-full');
       expect(sidebar).toBeInTheDocument();
+    });
+  });
+
+  describe('Visual regression tests', () => {
+    it('has neutral background classes for light and dark mode', () => {
+      const { container } = render(
+        <CopilotSidebar
+          isOpen={true}
+          onClose={mockOnClose}
+        />
+      );
+
+      const sidebar = container.querySelector('.fixed');
+      expect(sidebar).toHaveClass('bg-white');
+      expect(sidebar).toHaveClass('dark:bg-neutral-900');
+    });
+
+    it('has neutral border classes for light and dark mode', () => {
+      const { container } = render(
+        <CopilotSidebar
+          isOpen={true}
+          onClose={mockOnClose}
+        />
+      );
+
+      const sidebar = container.querySelector('.fixed');
+      expect(sidebar).toHaveClass('border-neutral-200');
+      expect(sidebar).toHaveClass('dark:border-neutral-800');
+    });
+
+    it('header has neutral background and border classes', () => {
+      const { container } = render(
+        <CopilotSidebar
+          isOpen={true}
+          onClose={mockOnClose}
+        />
+      );
+
+      const header = container.querySelector('.border-b');
+      expect(header).toHaveClass('bg-neutral-50');
+      expect(header).toHaveClass('border-neutral-200');
+      expect(header).toHaveClass('dark:border-neutral-800');
+      // Check that dark mode bg class is present (with opacity)
+      expect(header?.className).toContain('dark:bg-neutral-900');
+    });
+
+    it('avatar uses accent-500 to accent-600 gradient', () => {
+      const { container } = render(
+        <CopilotSidebar
+          isOpen={true}
+          onClose={mockOnClose}
+        />
+      );
+
+      const avatar = container.querySelector('.shadow-accent-500\\/25');
+      expect(avatar).toBeInTheDocument();
+      expect(avatar).toHaveClass('from-accent-500');
+      expect(avatar).toHaveClass('to-accent-600');
+    });
+
+    it('header text uses neutral colors', () => {
+      const { container } = render(
+        <CopilotSidebar
+          isOpen={true}
+          onClose={mockOnClose}
+        />
+      );
+
+      const title = container.querySelector('.font-semibold');
+      expect(title).toHaveClass('text-neutral-900');
+      expect(title).toHaveClass('dark:text-white');
+
+      const subtitle = container.querySelector('.text-xs');
+      expect(subtitle).toHaveClass('text-neutral-500');
+      expect(subtitle).toHaveClass('dark:text-neutral-400');
+    });
+
+    it('footer has neutral background and border classes', () => {
+      const { container } = render(
+        <CopilotSidebar
+          isOpen={true}
+          onClose={mockOnClose}
+        />
+      );
+
+      const footer = container.querySelector('.border-t');
+      expect(footer).toHaveClass('bg-neutral-50');
+      expect(footer).toHaveClass('border-neutral-200');
+      expect(footer).toHaveClass('dark:border-neutral-800');
+      // Check that dark mode bg class is present (with opacity)
+      expect(footer?.className).toContain('dark:bg-neutral-900');
+    });
+
+    it('example prompt buttons use neutral colors in light mode', () => {
+      const { container } = render(
+        <CopilotSidebar
+          isOpen={true}
+          onClose={mockOnClose}
+        />
+      );
+
+      const buttons = container.querySelectorAll('button');
+      const exampleButton = Array.from(buttons).find(btn =>
+        btn.textContent?.includes('Send an email to')
+      );
+      expect(exampleButton).toHaveClass('text-neutral-600');
+      expect(exampleButton).toHaveClass('hover:text-neutral-900');
+      expect(exampleButton).toHaveClass('hover:bg-white');
+      expect(exampleButton).toHaveClass('hover:border-neutral-200');
+    });
+
+    it('sidebar does not contain any zinc color classes', () => {
+      const { container } = render(
+        <CopilotSidebar
+          isOpen={true}
+          onClose={mockOnClose}
+        />
+      );
+
+      const sidebarHtml = container.innerHTML;
+      expect(sidebarHtml).not.toMatch(/bg-zinc-/);
+      expect(sidebarHtml).not.toMatch(/text-zinc-/);
+      expect(sidebarHtml).not.toMatch(/border-zinc-/);
+      expect(sidebarHtml).not.toMatch(/hover:bg-zinc-/);
     });
   });
 
