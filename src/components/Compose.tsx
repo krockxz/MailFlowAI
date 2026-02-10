@@ -138,7 +138,7 @@ export function Compose({
               {showCc ? 'Hide Cc' : 'Add Cc'}
             </Button>
 
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="bg-accent-500 text-white shadow-lg shadow-accent-500/25 hover:bg-accent-600 hover:shadow-xl hover:shadow-accent-500/30 focus-visible:ring-accent-500">
               {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
               Send
             </Button>
