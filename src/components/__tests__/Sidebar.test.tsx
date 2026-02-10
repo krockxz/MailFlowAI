@@ -5,16 +5,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Sidebar } from '../Sidebar';
-import type { ViewType } from '@/types/email';
+
 
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
   Inbox: ({ className }: { className: string }) => <div data-testid="inbox-icon" className={className} />,
   Send: ({ className }: { className: string }) => <div data-testid="send-icon" className={className} />,
-  PenTool: ({ className }: { className: string }) => <div data-testid="pen-icon" className={className} />,
+
   RefreshCw: ({ className }: { className: string }) => <div data-testid="refresh-icon" className={className} />,
   LogOut: ({ className }: { className: string }) => <div data-testid="logout-icon" className={className} />,
-  Settings: ({ className }: { className: string }) => <div data-testid="settings-icon" className={className} />,
+
 }));
 
 // Mock useGoogleAuth hook
@@ -123,7 +123,7 @@ describe('Sidebar', () => {
       );
 
       expect(screen.getByText('Compose')).toBeInTheDocument();
-      expect(screen.getByTestId('pen-icon')).toBeInTheDocument();
+
     });
 
     it('calls onCompose when compose button clicked', () => {
@@ -286,22 +286,7 @@ describe('Sidebar', () => {
     });
   });
 
-  describe('Settings button', () => {
-    it('renders settings button', () => {
-      render(
-        <Sidebar
-          currentView="inbox"
-          onViewChange={mockOnViewChange}
-          onCompose={mockOnCompose}
-          unreadCount={0}
-          isAuthenticated={true}
-        />
-      );
 
-      expect(screen.getByText('Settings')).toBeInTheDocument();
-      expect(screen.getByTestId('settings-icon')).toBeInTheDocument();
-    });
-  });
 
   describe('Header', () => {
     it('renders app title', () => {
@@ -359,8 +344,7 @@ describe('Sidebar', () => {
       // Refresh
       expect(screen.getByText('Sync')).toBeInTheDocument();
 
-      // Settings
-      expect(screen.getByText('Settings')).toBeInTheDocument();
+
 
       // Logout (authenticated)
       expect(screen.getByText('Sign out')).toBeInTheDocument();
@@ -416,7 +400,7 @@ describe('Sidebar', () => {
     });
 
     it('compose button uses accent-500 background', () => {
-      const { container } = render(
+      render(
         <Sidebar
           currentView="inbox"
           onViewChange={mockOnViewChange}

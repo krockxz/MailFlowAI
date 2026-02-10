@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { CopilotChat } from '@copilotkit/react-ui';
-import { X, Sparkles, AlertCircle, ChevronLeft, ChevronRight, GripVertical, Send, Loader2 } from 'lucide-react';
+import { X, Sparkles, AlertCircle, GripVertical, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
@@ -18,7 +18,6 @@ const isCopilotConfigured = !!import.meta.env.VITE_COPILOT_API_KEY;
 export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
   const [width, setWidth] = useState(DEFAULT_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const resizeHandleRef = useRef<HTMLDivElement>(null);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -72,25 +71,23 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
       <div
         className="fixed right-0 top-0 h-full shadow-2xl z-50 flex flex-col bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800"
         style={{
-          width: isCollapsed ? 0 : width,
-          minWidth: isCollapsed ? 0 : MIN_WIDTH,
+          width,
+          minWidth: MIN_WIDTH,
           maxWidth: MAX_WIDTH,
           transition: isResizing ? 'none' : 'width 0.2s ease-out',
         }}
       >
         {/* Resize handle */}
-        {!isCollapsed && (
-          <div
-            ref={resizeHandleRef}
-            onMouseDown={handleMouseDown}
-            className={`absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-accent-500/30 active:bg-accent-500/50 transition-colors z-10 group ${isResizing ? 'bg-accent-500/50' : ''
-              }`}
-          >
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <GripVertical className="w-4 h-4 text-neutral-400" />
-            </div>
+        <div
+          ref={resizeHandleRef}
+          onMouseDown={handleMouseDown}
+          className={`absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-accent-500/30 active:bg-accent-500/50 transition-colors z-10 group ${isResizing ? 'bg-accent-500/50' : ''
+            }`}
+        >
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <GripVertical className="w-4 h-4 text-neutral-400" />
           </div>
-        )}
+        </div>
 
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 shrink-0">
@@ -106,15 +103,6 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0 ml-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="h-8 w-8 min-h-[32px] min-w-[32px]"
-              aria-label={isCollapsed ? 'Expand' : 'Collapse'}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -171,8 +159,8 @@ IMPORTANT BEHAVIORS:
                 }}
                 icons={{
                   sendIcon: <Send className="w-4 h-4" />,
-                  activityIcon: <Loader2 className="w-4 h-4 animate-spin" />,
-                  spinnerIcon: <Loader2 className="w-4 h-4 animate-spin" />,
+                  activityIcon: null,
+                  spinnerIcon: null,
                   stopIcon: <X className="w-4 h-4" />,
                   openIcon: <Sparkles className="w-4 h-4" />,
                   closeIcon: <X className="w-4 h-4" />,
@@ -205,18 +193,6 @@ IMPORTANT BEHAVIORS:
           )}
         </div>
       </div>
-
-      {/* Collapsed state trigger */}
-      {isCollapsed && isOpen && (
-        <div
-          className="fixed right-0 top-1/2 -translate-y-1/2 bg-white dark:bg-neutral-900 border-l border-y border-neutral-200 dark:border-neutral-800 rounded-l-lg shadow-lg z-50 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
-          onClick={() => setIsCollapsed(false)}
-        >
-          <div className="p-2">
-            <ChevronLeft className="w-4 h-4 text-neutral-500" />
-          </div>
-        </div>
-      )}
     </>
   );
 }

@@ -305,12 +305,13 @@ function AppContent() {
             </div>
 
             {/* Action buttons */}
-            <div className="flex items-center gap-1 pr-4">
+            <div className="flex items-center gap-1.5 pr-4">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={sync}
                 title="Sync emails"
+                className="h-9 w-9"
               >
                 <RefreshCw className="w-4.5 h-4.5" />
               </Button>
@@ -319,12 +320,19 @@ function AppContent() {
                 variant={isCopilotOpen ? "secondary" : "ghost"}
                 size="icon"
                 onClick={() => setIsCopilotOpen(!isCopilotOpen)}
-                className="relative"
-                title="Toggle AI Assistant"
+                className={`h-9 w-9 relative transition-all duration-200 ${
+                  isCopilotOpen
+                    ? 'bg-accent-50 text-accent-600 dark:bg-accent-950 dark:text-accent-400 shadow-sm ring-1 ring-accent-200 dark:ring-accent-800'
+                    : 'hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                }`}
+                title={isCopilotOpen ? 'Close AI Assistant' : 'Open AI Assistant'}
               >
-                <Sparkles className="w-4.5 h-4.5" />
+                <Sparkles className={`w-4.5 h-4.5 ${isCopilotOpen ? 'fill-accent-200 dark:fill-accent-900' : ''}`} />
                 {isCopilotOpen && (
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                  <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent-500"></span>
+                  </span>
                 )}
               </Button>
 
@@ -332,7 +340,7 @@ function AppContent() {
                 variant="ghost"
                 size="icon"
                 onClick={toggleDarkMode}
-                className={darkMode ? "text-amber-400 hover:text-amber-300" : ""}
+                className={`h-9 w-9 ${darkMode ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-950/30' : ''}`}
                 title={darkMode ? 'Light mode' : 'Dark mode'}
               >
                 {darkMode ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}

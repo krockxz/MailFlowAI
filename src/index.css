@@ -7,14 +7,15 @@
 /* Dark mode is controlled via 'dark' class on document element */
 /* The theme-provider.tsx manages adding/removing this class */
 
-/* ===== Geist Typography ===== */
-/* Geist Sans - weights 400, 500, 600 */
-@import "@fontsource/geist/400.css";
-@import "@fontsource/geist/500.css";
-@import "@fontsource/geist/600.css";
+/* ===== Typography - Distinctive Font Pairing ===== */
+/* Instrument Sans - Modern geometric sans with character */
+@import "@fontsource/instrument-sans/400.css";
+@import "@fontsource/instrument-sans/500.css";
+@import "@fontsource/instrument-sans/600.css";
+@import "@fontsource/instrument-sans/700.css";
 
-/* Geist Mono - weight 400 for code */
-@import "@fontsource/geist-mono/400.css";
+/* JetBrains Mono - Distinctive monospace for code */
+@import "@fontsource/jetbrains-mono/400.css";
 
 /* ===== Design System Foundation ===== */
 /* Based on .planning/DESIGN.md specification */
