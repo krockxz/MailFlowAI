@@ -16,6 +16,35 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Button } from '@/components/ui/button';
 import { formatReplyDate } from '@/lib/utils';
 
+/*
+ * RESPONSIVE DESIGN STRATEGY
+ * ==========================
+ *
+ * Breakpoint Strategy (Tailwind CSS v4):
+ * - Mobile: < 640px (no breakpoint prefix) - Single column, stacked layout
+ * - Tablet: 640px - 1023px (sm:, md:, lg:) - Condensed layout
+ * - Desktop: >= 1024px (xl:) - Full 3-column layout
+ *
+ * Current Layout Structure:
+ * 1. Sidebar (240px fixed) - Navigation and compose
+ * 2. Main content (flex-1) - Email list/detail and filters
+ * 3. CopilotSidebar (320px fixed, toggleable) - AI assistant panel
+ *
+ * Responsive Behaviors:
+ * - All containers use h-screen + overflow-hidden for app-like feel
+ * - Flex layout allows proper shrinking/expansion
+ * - Components have responsive variants (e.g., FilterBar hides "Filter" text on mobile)
+ *
+ * Known Limitations:
+ * - Sidebar is always visible (future: mobile drawer)
+ * - CopilotSidebar is fixed 320px (future: collapsible on tablet)
+ * - EmailDetail doesn't use full-screen on mobile (future: modal overlay)
+ *
+ * Touch Targets:
+ * - All buttons meet 44x44px minimum (Button component h-10 + padding)
+ * - Email list items: min-h-[72px]
+ * - Icon buttons: h-10 w-10 (40px, meets guidelines with visual expansion)
+ */
 function AppContent() {
   const {
     currentView,
