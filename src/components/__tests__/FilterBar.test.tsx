@@ -294,4 +294,68 @@ describe('FilterBar', () => {
       expect(screen.getByText('Filter')).toBeInTheDocument();
     });
   });
+
+  describe('Visual regression tests', () => {
+    it('search input uses neutral-100/neutral-800 backgrounds', () => {
+      const { container } = render(
+        <FilterBar
+          filters={createMockFilterState()}
+          onFiltersChange={mockOnFiltersChange}
+        />
+      );
+
+      const searchInput = screen.getByPlaceholderText('Search emails...');
+      expect(searchInput).toHaveClass('bg-neutral-100');
+      expect(searchInput).toHaveClass('dark:bg-neutral-800');
+    });
+
+    it('Unread button uses accent-500 when active', () => {
+      const { container } = render(
+        <FilterBar
+          filters={createMockFilterState({ isUnread: true })}
+          onFiltersChange={mockOnFiltersChange}
+        />
+      );
+
+      const unreadButton = screen.getByText('Unread').closest('button');
+      expect(unreadButton).toHaveClass('bg-accent-500');
+      expect(unreadButton).toHaveClass('hover:bg-accent-600');
+    });
+
+    it('Filter button uses accent-500 when hasActiveFilters is true', () => {
+      const { container } = render(
+        <FilterBar
+          filters={createMockFilterState({
+            query: 'test query',
+            isUnread: true,
+          })}
+          onFiltersChange={mockOnFiltersChange}
+        />
+      );
+
+      const filterButton = screen.getByText('Filter').closest('button');
+      expect(filterButton).toHaveClass('bg-accent-500');
+    });
+
+    it('clear button appears only when searchQuery has content', () => {
+      const { rerender } = render(
+        <FilterBar
+          filters={createMockFilterState({ query: '' })}
+          onFiltersChange={mockOnFiltersChange}
+        />
+      );
+
+      // Clear button should not appear when search is empty
+      expect(screen.queryByTestId('x-icon')).not.toBeInTheDocument();
+
+      // Clear button should appear when search has content
+      rerender(
+        <FilterBar
+          filters={createMockFilterState({ query: 'test search' })}
+          onFiltersChange={mockOnFiltersChange}
+        />
+      );
+      expect(screen.getByTestId('x-icon')).toBeInTheDocument();
+    });
+  });
 });
