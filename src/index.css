@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* ===== Dark Mode Configuration ===== */
+/* Override dark variant to use class-based strategy instead of media query */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Dark mode is controlled via 'dark' class on document element */
+/* The theme-provider.tsx manages adding/removing this class */
+
 /* ===== Geist Typography ===== */
 /* Geist Sans - weights 400, 500, 600 */
 @import "@fontsource/geist/400.css";

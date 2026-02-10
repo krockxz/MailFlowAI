@@ -14,7 +14,7 @@ import { Moon, Sun, RefreshCw, Sparkles } from 'lucide-react';
 import { getStoredAccessToken, isAuthenticated } from '@/services/auth';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Button } from '@/components/ui/button';
-import { formatReplyDate } from '@/lib/utils';
+import { formatReplyDate, isWithinRange } from '@/lib/utils';
 
 /*
  * RESPONSIVE DESIGN STRATEGY
@@ -100,7 +100,7 @@ function AppContent() {
     }
   }, [composeData.to, composeData.subject, composeData.body, composeData.isOpen]);
 
-  // Check auth on mount
+  // Check auth on mount and fetch user data
   useEffect(() => {
     const checkAuth = async () => {
       if (isAuthenticated()) {
@@ -118,12 +118,16 @@ function AppContent() {
             console.error('Failed to fetch user profile:', error);
           }
 
-          await fetchInbox();
+          // Only fetch inbox if it's empty (avoid duplicate fetches)
+          if (emails.inbox.length === 0) {
+            await fetchInbox();
+          }
         }
       }
     };
     checkAuth();
-  }, [fetchInbox, setAccessToken, setUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount only
 
   // Refresh emails when view changes
   useEffect(() => {
@@ -149,12 +153,54 @@ function AppContent() {
     }
   }, [filters, resetAllPagination]);
 
-  // Get current email list based on view
+  // Get current email list based on view with filters applied
   const getCurrentEmails = useCallback(() => {
-    if (currentView === 'inbox') return emails.inbox;
-    if (currentView === 'sent') return emails.sent;
-    return [];
-  }, [currentView, emails]);
+    const emailList = currentView === 'inbox' ? emails.inbox :
+                      currentView === 'sent' ? emails.sent : [];
+
+    // Apply filters if any are set
+    if (!filters || Object.keys(filters).length === 0) {
+      return emailList;
+    }
+
+    return emailList.filter((email: Email) => {
+      // Filter by query (searches subject and body)
+      if (filters.query) {
+        const query = filters.query.toLowerCase();
+        const subjectMatch = email.subject.toLowerCase().includes(query);
+        const bodyMatch = email.body.toLowerCase().includes(query);
+        const fromMatch = email.from.email.toLowerCase().includes(query) ||
+                         (email.from.name && email.from.name.toLowerCase().includes(query));
+        if (!subjectMatch && !bodyMatch && !fromMatch) {
+          return false;
+        }
+      }
+
+      // Filter by sender
+      if (filters.sender) {
+        const sender = filters.sender.toLowerCase();
+        const matchesEmail = email.from.email.toLowerCase().includes(sender);
+        const matchesName = email.from.name && email.from.name.toLowerCase().includes(sender);
+        if (!matchesEmail && !matchesName) {
+          return false;
+        }
+      }
+
+      // Filter by unread status
+      if (filters.isUnread !== undefined && email.isUnread !== filters.isUnread) {
+        return false;
+      }
+
+      // Filter by date range
+      if (filters.dateFrom || filters.dateTo) {
+        if (!isWithinRange(email.date, filters.dateFrom, filters.dateTo)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [currentView, emails, filters]);
 
   // Get current pagination state based on view
   const getCurrentPagination = useCallback(() => {

@@ -4,7 +4,7 @@ import { GmailService } from '@/services/gmail';
 import { storeToken, setTimestamp, clearAllTokens } from '@/lib/token-storage';
 
 export function useGoogleAuth() {
-    const { setUser, setAccessToken } = useAppStore();
+    const { setUser, setAccessToken, setEmails } = useAppStore();
 
     const login = useGoogleLogin({
         scope: 'https://www.googleapis.com/auth/gmail.modify',
@@ -23,8 +23,16 @@ export function useGoogleAuth() {
                 const gmail = new GmailService(token);
                 const profile = await gmail.getUserProfile();
                 setUser({ emailAddress: profile.emailAddress });
+
+                // Fetch initial inbox emails after successful login
+                const messagesResponse = await gmail.listMessages(['INBOX'], 50);
+                const fullMessages = await gmail.getBatchMessages(
+                    messagesResponse.messages.map((m) => m.id)
+                );
+                const parsedEmails = fullMessages.map((msg) => gmail.parseMessage(msg));
+                setEmails('inbox', parsedEmails);
             } catch (error) {
-                console.error('Failed to fetch user profile:', error);
+                console.error('Failed to fetch user profile or emails:', error);
             }
         },
         onError: (error) => {

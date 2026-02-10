@@ -105,7 +105,7 @@ export function EmailList({ emails, selectedId, onSelectEmail, pagination, onLoa
 
   if (emails.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-neutral-400 dark:text-neutral-600 p-8 animate-fade-in">
+      <div className="w-full flex flex-col items-center justify-center h-full text-neutral-400 dark:text-neutral-600 p-8 animate-fade-in">
         <div className="w-20 h-20 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4">
           <Mail className="w-10 h-10" />
         </div>

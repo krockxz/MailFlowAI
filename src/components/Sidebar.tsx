@@ -1,4 +1,4 @@
-import { Inbox, Send, PenTool, RefreshCw, LogOut, Settings } from 'lucide-react';
+import { Inbox, Send, RefreshCw, LogOut, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import type { ViewType } from '@/types/email';
@@ -46,7 +46,7 @@ export function Sidebar({
           onClick={onCompose}
           className="w-full bg-accent-500 hover:bg-accent-600 text-white shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30"
         >
-          <PenTool className="w-4.5 h-4.5" />
+
           <span>Compose</span>
         </Button>
       </div>

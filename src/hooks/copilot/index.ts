@@ -24,6 +24,8 @@ import { useEmails } from '../useEmails';
 import type { ReplyEmailParams } from '@/types/copilot';
 import type { Email } from '@/types/email';
 import type { ComposeData } from './useComposeActions';
+import { useNavigationActions } from './useNavigationActions';
+import { useSearchActions } from './useSearchActions';
 
 /**
  * Combined Compose Actions hook with reply support
@@ -137,9 +139,6 @@ export function useCopilotEmailActions() {
   const selectedEmailId = useAppStore((state) => state.selectedEmailId);
 
   // Import and call domain-specific action hooks
-  const { useNavigationActions } = require('./useNavigationActions');
-  const { useSearchActions } = require('./useSearchActions');
-
   useNavigationActions();
   useSearchActions();
 
@@ -184,7 +183,7 @@ export function useCopilotEmailActions() {
       } else if (params.sender) {
         const senderEmails = emails.inbox.filter(
           (e: Email) => e.from.email.toLowerCase().includes(params.sender!.toLowerCase()) ||
-                 e.from.name?.toLowerCase().includes(params.sender!.toLowerCase())
+            e.from.name?.toLowerCase().includes(params.sender!.toLowerCase())
         );
         emailToOpen = senderEmails[0] || null;
       } else if (params.subject) {

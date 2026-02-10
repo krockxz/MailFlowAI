@@ -107,10 +107,20 @@ export const useAppStore = create<AppStore>()(
         const newTheme = currentState ? 'light' : 'dark'
         setTheme(newTheme)
         set({ darkMode: !currentState })
+
+        // Immediately apply theme class to document
+        const root = document.documentElement
+        root.classList.remove('light', 'dark')
+        root.classList.add(newTheme)
       },
       setDarkMode: (dark) => {
         setTheme(dark ? 'dark' : 'light')
         set({ darkMode: dark })
+
+        // Immediately apply theme class to document
+        const root = document.documentElement
+        root.classList.remove('light', 'dark')
+        root.classList.add(dark ? 'dark' : 'light')
       },
 
       // Pagination actions
