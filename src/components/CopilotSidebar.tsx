@@ -3,6 +3,7 @@ import { CopilotChat } from '@copilotkit/react-ui';
 import { X, Sparkles, AlertCircle, GripVertical, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useAppStore } from '@/store';
 
 interface CopilotSidebarProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ const DEFAULT_WIDTH = 340;
 const isCopilotConfigured = !!import.meta.env.VITE_COPILOT_API_KEY;
 
 export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
+  const isAuthenticated = useAppStore((state) => state.isAuthenticated);
   const [width, setWidth] = useState(DEFAULT_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
   const resizeHandleRef = useRef<HTMLDivElement>(null);
@@ -120,7 +122,17 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
 
         {/* Chat interface */}
         <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-          {isCopilotConfigured ? (
+          {!isAuthenticated ? (
+            <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-950/50 dark:to-indigo-950/50 flex items-center justify-center mb-4">
+                <AlertCircle className="w-8 h-8 text-blue-500" />
+              </div>
+              <h3 className="font-semibold text-neutral-900 dark:text-white mb-2">Authentication Required</h3>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4 max-w-xs">
+                Please sign in with your Google account to access the AI assistant.
+              </p>
+            </div>
+          ) : isCopilotConfigured ? (
             <div className="h-full flex flex-col">
               <CopilotChat
                 className="h-full flex-1"
