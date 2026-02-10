@@ -97,7 +97,7 @@ export function Compose({
     )}>
       <div className={cn(
         'flex items-center justify-between px-4 py-3 rounded-t-xl',
-        darkMode ? 'bg-zinc-800' : 'bg-zinc-100'
+        darkMode ? 'bg-neutral-800' : 'bg-neutral-100'
       )}>
         <span className="font-semibold text-sm text-zinc-900 dark:text-white">New Message</span>
         <div className="flex items-center gap-1">
