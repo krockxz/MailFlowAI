@@ -4,7 +4,7 @@ import type { Email } from '@/types/email';
 import { useComposeActions } from './useComposeActions';
 import { useNavigationActions } from './useNavigationActions';
 import { useSearchActions } from './useSearchActions';
-import { useEmails } from '../useEmails';
+import { useEmailActions } from './useEmailActions';
 
 // Re-export individual hooks
 export { useAppContext } from './useAppContext';
@@ -22,7 +22,6 @@ export { useEmailActions } from './useEmailActions';
  * Follows DRY: doesn't duplicate composeEmail, only adds replyToEmail
  */
 function useAdditionalActions() {
-  const { markAsRead } = useEmails();
   const { compose, setCompose } = useAppStore();
   const { emails, selectedEmailId } = useAppStore();
 
@@ -74,40 +73,6 @@ function useAdditionalActions() {
       return `Reply form opened to ${senderName} with subject "${email.subject}". Your reply is ready to send.`;
     },
   });
-
-  // Mark as read/unread
-  useCopilotAction({
-    name: 'markEmailStatus',
-    description: 'Mark an email as read or unread',
-    parameters: [
-      {
-        name: 'emailId',
-        type: 'string',
-        description: 'The email ID (uses current email if not provided)',
-        required: false,
-      },
-      {
-        name: 'isRead',
-        type: 'boolean',
-        description: 'True to mark as read, false to mark as unread',
-        required: true,
-      },
-    ],
-    handler: async ({ emailId, isRead }) => {
-      const targetId = emailId || selectedEmailId;
-
-      if (!targetId) {
-        return 'No email selected';
-      }
-
-      try {
-        await markAsRead(targetId, !isRead);
-        return `Email marked as ${isRead ? 'read' : 'unread'}`;
-      } catch (error) {
-        return `Failed to mark email: ${error instanceof Error ? error.message : 'Unknown error'}`;
-      }
-    },
-  });
 }
 
 /**
@@ -121,6 +86,7 @@ export function useCopilotEmailActions() {
   useNavigationActions();
   useSearchActions();
   useAdditionalActions();
+  useEmailActions();
 
   // Export compose state from useComposeActions
   const { compose } = useComposeActions();

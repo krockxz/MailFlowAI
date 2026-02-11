@@ -67,6 +67,7 @@ function AppContent() {
     fetchInbox,
     fetchSent,
     sendEmail,
+    markAsRead,
     isLoading,
     pagination,
     loadMore,
@@ -74,7 +75,6 @@ function AppContent() {
   } = useEmails();
 
   const [isCopilotOpen, setIsCopilotOpen] = useState(true);
-  const [isMinimized, setIsMinimized] = useState(false);
 
   // Send confirmation dialog state
   const [showSendConfirm, setShowSendConfirm] = useState(false);
@@ -106,11 +106,6 @@ function AppContent() {
 
       // Reset isSending flag in store so dialog handles it
       setCompose({ ...aiCompose, isSending: false });
-    }
-
-    // Sync compose modal open state
-    if (compose.isOpen !== isMinimized) {
-      setIsMinimized(false);
     }
   }, [compose.isOpen, aiCompose.isSending, aiCompose.to, aiCompose.subject, aiCompose.body, aiCompose.cc, aiCompose.bcc, showSendConfirm, setCompose]);
 
@@ -235,10 +230,14 @@ function AppContent() {
   // Get selected email
   const selectedEmail = getCurrentEmails().find((e: Email) => e.id === selectedEmailId) || null;
 
-  // Handle email select
-  const handleSelectEmail = useCallback((email: Email) => {
+  // Handle email select - auto-mark as read
+  const handleSelectEmail = useCallback(async (email: Email) => {
     setSelectedEmailId(email.id);
-  }, [setSelectedEmailId]);
+    // Auto-mark as read when opening an email
+    if (email.isUnread) {
+      await markAsRead(email.id, true);
+    }
+  }, [setSelectedEmailId, markAsRead]);
 
   // Handle compose (manual - from sidebar button)
   const handleCompose = useCallback(() => {
@@ -345,11 +344,6 @@ function AppContent() {
   const handleCloseCompose = useCallback(() => {
     setCompose({ ...compose, isOpen: false });
   }, [compose, setCompose]);
-
-  // Handle toggle minimize
-  const handleToggleMinimize = useCallback(() => {
-    setCompose({ ...compose, isOpen: !isMinimized });
-  }, [compose, setCompose, isMinimized]);
 
   // Get unread count
   const unreadCount = emails.inbox.filter((e: Email) => e.isUnread).length;
@@ -467,8 +461,6 @@ function AppContent() {
           isSending: compose.isSending,
           isAIComposed: compose.isAIComposed,
         }}
-        isMinimized={!compose.isOpen}
-        onToggleMinimize={handleToggleMinimize}
       />
 
       {/* Send Confirmation Dialog */}

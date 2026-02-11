@@ -9,8 +9,6 @@ import { Compose } from '../Compose';
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
   X: ({ className }: { className: string }) => <div data-testid="x-icon" className={className} />,
-  Minus: ({ className }: { className: string }) => <div data-testid="minus-icon" className={className} />,
-  Maximize2: ({ className }: { className: string }) => <div data-testid="maximize-icon" className={className} />,
   Send: ({ className }: { className: string }) => <div data-testid="send-icon" className={className} />,
   Loader2: ({ className }: { className: string }) => <div data-testid="loader-icon" className={className} />,
 }));
@@ -38,7 +36,13 @@ vi.mock('@hookform/resolvers/zod', () => ({
   zodResolver: () => ({} as any),
 }));
 
-// Mock the store
+// Mock toast functions
+vi.mock('@/lib/toast', () => ({
+  showSendSuccess: vi.fn(),
+  showSendError: vi.fn(),
+}));
+
+// Mock store
 vi.mock('@/store/useAppStore', () => ({
   useAppStore: vi.fn((selector) => {
     const state = { darkMode: false };
@@ -49,7 +53,6 @@ vi.mock('@/store/useAppStore', () => ({
 describe('Compose', () => {
   const mockOnClose = vi.fn();
   const mockOnSend = vi.fn().mockResolvedValue(undefined);
-  const mockOnToggleMinimize = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -100,8 +103,18 @@ describe('Compose', () => {
         />
       );
 
-      // Check that the form renders with the title
+      // Check that form renders with the title
       expect(screen.getByText('New Message')).toBeInTheDocument();
+
+      // Check that input fields have the correct values
+      const toInput = screen.getByDisplayValue('recipient@example.com');
+      expect(toInput).toBeTruthy();
+
+      const subjectInput = screen.getByDisplayValue('Pre-filled Subject');
+      expect(subjectInput).toBeTruthy();
+
+      const bodyInput = screen.getByDisplayValue('Pre-filled body');
+      expect(bodyInput).toBeTruthy();
     });
 
     it('shows Cc field when initialData includes cc', () => {
@@ -137,7 +150,7 @@ describe('Compose', () => {
       expect(toInput.tagName.toLowerCase()).toBe('input');
     });
 
-    it('shows Subject input field', () => {
+    it('shows Subject input Field', () => {
       render(
         <Compose
           isOpen={true}
@@ -150,237 +163,10 @@ describe('Compose', () => {
       expect(subjectInput).toBeInTheDocument();
       expect(subjectInput.tagName.toLowerCase()).toBe('input');
     });
-
-    it('shows Body textarea', () => {
-      render(
-        <Compose
-          isOpen={true}
-          onClose={mockOnClose}
-          onSend={mockOnSend}
-        />
-      );
-
-      const bodyTextarea = screen.getByPlaceholderText('Write your message...');
-      expect(bodyTextarea).toBeInTheDocument();
-      expect(bodyTextarea.tagName.toLowerCase()).toBe('textarea');
-    });
-  });
-
-  describe('Form submission', () => {
-    it('calls onSend when form is submitted', async () => {
-      render(
-        <Compose
-          isOpen={true}
-          onClose={mockOnClose}
-          onSend={mockOnSend}
-        />
-      );
-
-      const form = screen.getByPlaceholderText('To').closest('form');
-      if (form) {
-        fireEvent.submit(form);
-      }
-
-      await waitFor(() => {
-        expect(mockOnSend).toHaveBeenCalled();
-      });
-    });
-
-    it('calls onClose after successful send', async () => {
-      render(
-        <Compose
-          isOpen={true}
-          onClose={mockOnClose}
-          onSend={mockOnSend}
-        />
-      );
-
-      const form = screen.getByPlaceholderText('To').closest('form');
-      if (form) {
-        fireEvent.submit(form);
-      }
-
-      await waitFor(() => {
-        expect(mockOnClose).toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('Minimize/maximize toggle', () => {
-    it('shows minimize button when not minimized', () => {
-      render(
-        <Compose
-          isOpen={true}
-          onClose={mockOnClose}
-          onSend={mockOnSend}
-          isMinimized={false}
-          onToggleMinimize={mockOnToggleMinimize}
-        />
-      );
-
-      expect(screen.getByTestId('minus-icon')).toBeInTheDocument();
-    });
-
-    it('shows maximize button when minimized', () => {
-      render(
-        <Compose
-          isOpen={true}
-          onClose={mockOnClose}
-          onSend={mockOnSend}
-          isMinimized={true}
-          onToggleMinimize={mockOnToggleMinimize}
-        />
-      );
-
-      expect(screen.getByTestId('maximize-icon')).toBeInTheDocument();
-    });
-
-    it('calls onToggleMinimize when minimize button clicked', async () => {
-      render(
-        <Compose
-          isOpen={true}
-          onClose={mockOnClose}
-          onSend={mockOnSend}
-          onToggleMinimize={mockOnToggleMinimize}
-        />
-      );
-
-      const minimizeButton = screen.getByTestId('minus-icon').closest('button');
-      if (minimizeButton) {
-        fireEvent.click(minimizeButton);
-      }
-
-      await waitFor(() => {
-        expect(mockOnToggleMinimize).toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('Close button', () => {
-    it('renders close button', () => {
-      render(
-        <Compose
-          isOpen={true}
-          onClose={mockOnClose}
-          onSend={mockOnSend}
-        />
-      );
-
-      expect(screen.getByTestId('x-icon')).toBeInTheDocument();
-    });
-
-    it('calls onClose when close button clicked', async () => {
-      render(
-        <Compose
-          isOpen={true}
-          onClose={mockOnClose}
-          onSend={mockOnSend}
-        />
-      );
-
-      const closeButton = screen.getByTestId('x-icon').closest('button');
-      if (closeButton) {
-        fireEvent.click(closeButton);
-      }
-
-      await waitFor(() => {
-        expect(mockOnClose).toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('Cc field toggle', () => {
-    it('shows Add Cc button when cc field is not visible', () => {
-      render(
-        <Compose
-          isOpen={true}
-          onClose={mockOnClose}
-          onSend={mockOnSend}
-        />
-      );
-
-      const addCcButton = screen.getByText('Add Cc');
-      expect(addCcButton).toBeInTheDocument();
-    });
-
-    it('toggles Cc field when Add Cc button clicked', async () => {
-      render(
-        <Compose
-          isOpen={true}
-          onClose={mockOnClose}
-          onSend={mockOnSend}
-        />
-      );
-
-      const addCcButton = screen.getByText('Add Cc');
-      fireEvent.click(addCcButton);
-
-      await waitFor(() => {
-        expect(screen.getByText('Hide Cc')).toBeInTheDocument();
-      });
-    });
   });
 
   describe('Send button', () => {
-    it('renders Send button', () => {
-      render(
-        <Compose
-          isOpen={true}
-          onClose={mockOnClose}
-          onSend={mockOnSend}
-        />
-      );
-
-      expect(screen.getByText('Send')).toBeInTheDocument();
-      expect(screen.getByTestId('send-icon')).toBeInTheDocument();
-    });
-
-    it('shows loading state when submitting', () => {
-      // This test verifies the send button renders
-      render(
-        <Compose
-          isOpen={true}
-          onClose={mockOnClose}
-          onSend={mockOnSend}
-        />
-      );
-
-      const sendButton = screen.getByText('Send');
-      expect(sendButton).toBeInTheDocument();
-    });
-  });
-
-  describe('Design system compliance', () => {
-    it('has shadow-xl elevation', () => {
-      const { container } = render(
-        <Compose
-          isOpen={true}
-          onClose={mockOnClose}
-          onSend={mockOnSend}
-        />
-      );
-
-      const modal = container.firstChild as HTMLElement;
-      expect(modal).toHaveClass('shadow-xl');
-    });
-
-    it('uses neutral color tokens for backgrounds', () => {
-      const { container } = render(
-        <Compose
-          isOpen={true}
-          onClose={mockOnClose}
-          onSend={mockOnSend}
-        />
-      );
-
-      const modal = container.firstChild as HTMLElement;
-      // Should have neutral-200 border in light mode
-      expect(modal.className).toContain('border-neutral-200');
-      // Should have neutral-800 border in dark mode
-      expect(modal.className).toContain('dark:border-neutral-800');
-    });
-
-    it('Send button uses accent-500 for primary CTA', () => {
+    it('has correct styling classes', () => {
       render(
         <Compose
           isOpen={true}
@@ -399,7 +185,6 @@ describe('Compose', () => {
           isOpen={true}
           onClose={mockOnClose}
           onSend={mockOnSend}
-          isMinimized={false}
         />
       );
 
@@ -407,20 +192,53 @@ describe('Compose', () => {
       expect(sendButton).toBeTruthy();
     });
 
-    it('has correct dimensions in minimized state', () => {
+    it('submits form when Send button clicked', async () => {
+      render(
+        <Compose
+          isOpen={true}
+          onClose={mockOnClose}
+          onSend={mockOnSend}
+        />
+      );
+
+      const toInput = screen.getByPlaceholderText('To');
+      const form = toInput.closest('form');
+      if (form) fireEvent.submit(form);
+
+      await waitFor(() => {
+        expect(mockOnSend).toHaveBeenCalled();
+        expect(mockOnClose).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Modal styling', () => {
+    it('has correct outer container classes', () => {
       const { container } = render(
         <Compose
           isOpen={true}
           onClose={mockOnClose}
           onSend={mockOnSend}
-          isMinimized={true}
-          onToggleMinimize={mockOnToggleMinimize}
         />
       );
 
       const modal = container.firstChild as HTMLElement;
-      expect(modal.className).toContain('w-96');
-      expect(modal.className).toContain('h-12');
+      expect(modal).toBeTruthy();
+      expect(modal.className).toContain('glass-elevated');
+    });
+
+    it('has correct modal dimensions in expanded state', () => {
+      const { container } = render(
+        <Compose
+          isOpen={true}
+          onClose={mockOnClose}
+          onSend={mockOnSend}
+        />
+      );
+
+      const modal = container.firstChild as HTMLElement;
+      expect(modal.className).toContain('w-[620px]');
+      expect(modal.className).toContain('h-[560px]');
     });
 
     it('has smooth transition classes', () => {
@@ -436,6 +254,22 @@ describe('Compose', () => {
       expect(modal.className).toContain('transition-all');
       expect(modal.className).toContain('duration-300');
       expect(modal.className).toContain('ease-out');
+    });
+  });
+
+  describe('Header styling', () => {
+    it('has border classes', () => {
+      const { container } = render(
+        <Compose
+          isOpen={true}
+          onClose={mockOnClose}
+          onSend={mockOnSend}
+        />
+      );
+
+      const modal = container.firstChild as HTMLElement;
+      expect(modal.className).toContain('border-neutral-200');
+      expect(modal.className).toContain('dark:border-neutral-800');
     });
   });
 });

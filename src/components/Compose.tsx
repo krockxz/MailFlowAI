@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { X, Minus, Maximize2, Send, Loader2, Sparkles } from 'lucide-react';
+import { X, Send, Loader2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,8 +32,6 @@ interface ComposeProps {
     isSending?: boolean;
     isAIComposed?: boolean;
   };
-  isMinimized?: boolean;
-  onToggleMinimize?: () => void;
 }
 
 const MAX_BODY_LENGTH = 50000; // Gmail limit
@@ -42,9 +40,7 @@ export function Compose({
   isOpen,
   onClose,
   onSend,
-  initialData,
-  isMinimized = false,
-  onToggleMinimize
+  initialData
 }: ComposeProps) {
   const [showCc, setShowCc] = useState(false);
   const [showBcc, setShowBcc] = useState(false);
@@ -86,10 +82,10 @@ export function Compose({
   }, [initialData, reset, userHasEdited]);
 
   useEffect(() => {
-    if (isOpen && !isMinimized && bodyRef.current) {
+    if (isOpen && bodyRef.current) {
       bodyRef.current.focus();
     }
-  }, [isOpen, isMinimized]);
+  }, [isOpen]);
 
   // Mark user as having edited when they type in ANY field
   useEffect(() => {
@@ -161,7 +157,7 @@ export function Compose({
     <div className={cn(
       'fixed bottom-0 right-4 z-50 shadow-2xl transition-all duration-300 ease-out animate-scale-in border border-neutral-200/60 dark:border-neutral-800/60',
       'glass-elevated',
-      isMinimized ? 'w-96 h-14 rounded-t-xl' : 'w-[620px] h-[560px] rounded-t-2xl'
+      'w-[620px] h-[560px] rounded-t-2xl'
     )}>
       {/* Header with gradient accent */}
       <div className={cn(
@@ -184,24 +180,16 @@ export function Compose({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onToggleMinimize}
-            className="h-8 w-8 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-all duration-200"
-          >
-            {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
             onClick={onClose}
             className="h-8 w-8 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-all duration-200"
+            title="Close (Esc)"
           >
             <X className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      {!isMinimized && (
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-[calc(100%-60px)]">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-[calc(100%-60px)]">
           <div className="border-b border-neutral-200/50 dark:border-neutral-800/50">
             <Input
               {...register('to')}
@@ -305,7 +293,6 @@ export function Compose({
             </div>
           </div>
         </form>
-      )}
     </div>
   );
 }
