@@ -8,7 +8,8 @@ export function useGoogleAuth() {
 
     const login = useGoogleLogin({
         scope: 'https://www.googleapis.com/auth/gmail.modify',
-        ux_mode: 'popup',
+        // Explicitly use implicit flow (popup mode is default)
+        flow: 'implicit',
         // No 'flow' parameter = uses implicit flow (popup) by default
         onSuccess: async (tokenResponse) => {
             try {
