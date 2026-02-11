@@ -2,7 +2,6 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useAppStore } from '@/store';
 import { useEmails } from './useEmails';
 import { isAuthenticated } from '@/services/auth';
-import { io, Socket } from 'socket.io-client';
 
 /**
  * Options for real-time email sync
@@ -10,7 +9,7 @@ import { io, Socket } from 'socket.io-client';
 interface RealtimeSyncOptions {
   /**
    * Polling interval in milliseconds (default: 30000 = 30 seconds)
-   * used as fallback if WebSocket is not connected
+   * used as fallback if SSE is not connected
    */
   pollingInterval?: number;
 
@@ -21,8 +20,29 @@ interface RealtimeSyncOptions {
 }
 
 /**
- * Hook for real-time email synchronization using WebSockets (Socket.io)
- * with polling fallback.
+ * Reconnection configuration with exponential backoff
+ */
+const RECONNECT_CONFIG = {
+  initialDelay: 1000,      // Start with 1 second
+  maxDelay: 30000,         // Max 30 seconds
+  backoffMultiplier: 1.5,  // Multiply delay by 1.5 each retry
+  maxAttempts: Infinity,   // Keep trying forever
+};
+
+/**
+ * Calculate next reconnection delay with exponential backoff
+ */
+function calculateReconnectDelay(attemptNumber: number): number {
+  const delay = Math.min(
+    RECONNECT_CONFIG.initialDelay * Math.pow(RECONNECT_CONFIG.backoffMultiplier, attemptNumber),
+    RECONNECT_CONFIG.maxDelay
+  );
+  return delay;
+}
+
+/**
+ * Hook for real-time email synchronization using Server-Sent Events (EventSource)
+ * with polling fallback and exponential backoff reconnection.
  */
 export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
   const {
@@ -31,8 +51,10 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
   } = options;
 
   const { fetchInbox } = useEmails();
-  const socketRef = useRef<Socket | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
   const intervalRef = useRef<number | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
+  const reconnectAttemptsRef = useRef(0);
   const lastSyncTime = useRef<Date>(new Date());
   const [isConnected, setIsConnected] = useState(false);
 
@@ -54,34 +76,35 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
   }, [fetchInbox]);
 
   /**
-   * Set up WebSocket connection and fallback polling
+   * Connect to SSE endpoint with reconnection logic
    */
-  useEffect(() => {
-    if (!enabled || !isAuthenticated()) {
+  const connect = useCallback(() => {
+    if (!isAuthenticated()) {
       return;
     }
 
-    // Initial sync
-    sync();
+    // Clean up existing connection
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
 
-    // Connect to WebSocket server
-    // Using environment variable for WebSocket URL (configurable per environment)
-    const socketUrl = import.meta.env.VITE_WEBSOCKET_URL || 'http://localhost:8080';
+    // Build SSE URL - use the Gmail events endpoint which polls webhook
+    const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
+    const sseUrl = `${baseUrl}/api/sse/gmail-events`;
 
     try {
-      socketRef.current = io(socketUrl, {
-        reconnectionDelayMax: 10000,
-      });
+      const eventSource = new EventSource(sseUrl);
+      eventSourceRef.current = eventSource;
 
-      socketRef.current.on('connect', () => {
+      // Connection opened
+      eventSource.onopen = () => {
+        console.log('SSE connection established');
         setIsConnected(true);
-      });
+        reconnectAttemptsRef.current = 0; // Reset reconnect counter on successful connection
+      };
 
-      socketRef.current.on('disconnect', () => {
-        setIsConnected(false);
-      });
-
-      socketRef.current.on('email:new', () => {
+      // Handle new email events
+      eventSource.addEventListener('email:new', () => {
         // Show browser notification
         if (Notification.permission === 'granted') {
           new Notification('New Email Received', {
@@ -95,34 +118,85 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
         useAppStore.getState().setHasNewEmails(true);
       });
 
+      // Handle connection errors
+      eventSource.onerror = (error) => {
+        console.error('SSE connection error:', error);
+        setIsConnected(false);
+
+        // EventSource will automatically attempt to reconnect, but we implement
+        // additional exponential backoff logic for better control
+        const eventSourceInstance = eventSourceRef.current;
+
+        if (eventSourceInstance && eventSourceInstance.readyState === EventSource.CLOSED) {
+          // Connection is closed, schedule reconnection with exponential backoff
+          const delay = calculateReconnectDelay(reconnectAttemptsRef.current);
+          console.log(`SSE connection closed. Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1})`);
+
+          reconnectTimeoutRef.current = window.setTimeout(() => {
+            reconnectAttemptsRef.current++;
+            connect();
+          }, delay);
+        }
+      };
+
     } catch (error) {
-      console.error('Failed to initialize Socket.io:', error);
+      console.error('Failed to initialize EventSource:', error);
+
+      // If initialization fails, schedule reconnection attempt
+      const delay = calculateReconnectDelay(reconnectAttemptsRef.current);
+      reconnectTimeoutRef.current = window.setTimeout(() => {
+        reconnectAttemptsRef.current++;
+        connect();
+      }, delay);
     }
+  }, [sync]);
+
+  /**
+   * Set up SSE connection and fallback polling
+   */
+  useEffect(() => {
+    if (!enabled || !isAuthenticated()) {
+      return;
+    }
+
+    // Initial sync
+    sync();
+
+    // Connect to SSE endpoint
+    connect();
 
     // Request notification permission
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
 
-    // Set up polling interval (as backup or if socket fails)
+    // Set up polling interval (as backup or if SSE fails)
+    // This provides robustness by ensuring we sync even if SSE is down
     intervalRef.current = window.setInterval(() => {
-      // Only poll if not connected to socket, or just as a safety net every 30s
-      // Here we poll anyway to be safe, but you could make it conditional
       sync();
     }, pollingInterval);
 
     // Cleanup
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
+      // Close SSE connection
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
       }
+
+      // Clear reconnection timeout
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+
+      // Clear polling interval
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
     };
-  }, [enabled, pollingInterval, sync]);
+  }, [enabled, pollingInterval, sync, connect]);
 
   return {
     sync,

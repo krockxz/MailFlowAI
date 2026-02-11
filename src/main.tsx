@@ -2,7 +2,6 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { CopilotKit } from '@copilotkit/react-core'
 import { GoogleOAuthProvider } from '@react-oauth/google'
-import '@copilotkit/react-ui/styles.css'
 import './index.css'
 import App from './App.tsx'
 
@@ -17,6 +16,8 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GMAIL_CLIENT_ID
 console.log('[main.tsx] Environment check:', {
   'VITE_GMAIL_CLIENT_ID': GOOGLE_CLIENT_ID ? 'SET' : 'UNSET',
   'VITE_GMAIL_CLIENT_ID length': GOOGLE_CLIENT_ID?.length,
+  'VITE_COPILOT_API_KEY': COPILOT_API_KEY ? 'SET' : 'UNSET',
+  'VITE_COPILOT_API_KEY length': COPILOT_API_KEY?.length,
 });
 
 // Warn if CopilotKit is not configured
