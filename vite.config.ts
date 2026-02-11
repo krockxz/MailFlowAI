@@ -14,6 +14,10 @@ export default defineConfig({
   server: {
     port: 3000,
     cors: true,
+    headers: {
+      // Allow popup windows for OAuth flow (fixes COOP error)
+      'Cross-Origin-Opener-Policy': 'unsafe-none',
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
