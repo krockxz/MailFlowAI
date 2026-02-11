@@ -300,6 +300,7 @@ function AppContent() {
         subject: pendingEmail.subject,
         body: pendingEmail.body,
         cc: pendingEmail.cc ? [pendingEmail.cc] : undefined,
+        bcc: pendingEmail.bcc ? [pendingEmail.bcc] : undefined,
       });
 
       // Success: close dialog and reset compose
@@ -307,10 +308,8 @@ function AppContent() {
       resetCompose();
       setPendingEmail(null);
     } catch (error) {
-      // Error: keep dialog open for retry
+      // Error: keep dialog open for retry, reset sending flag
       setCompose({ ...compose, isSending: false });
-      // Re-throw for error handling in dialog
-      throw error;
     }
   }, [pendingEmail, compose, sendEmail, resetCompose, setCompose]);
 
@@ -319,7 +318,7 @@ function AppContent() {
     setShowSendConfirm(false);
     setPendingEmail(null);
     setCompose({ ...compose, isSending: false });
-  }, [compose, setCompose]);
+  }, [showSendConfirm, pendingEmail, compose, setCompose]);
 
   // Handle forward
   const handleForward = useCallback((emailId: string) => {

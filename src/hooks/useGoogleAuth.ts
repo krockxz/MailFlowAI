@@ -8,16 +8,14 @@ export function useGoogleAuth() {
 
     const login = useGoogleLogin({
         scope: 'https://www.googleapis.com/auth/gmail.modify',
-        flow: 'redirect', // Use redirect instead of popup to avoid COOP issues
-        onSuccess: async (response) => {
+        // No 'flow' parameter = uses implicit flow (popup) by default
+        onSuccess: async (tokenResponse) => {
             try {
-                const token = response.access_token;
+                const token = tokenResponse.access_token;
 
-                // Store token using secure storage abstraction (sessionStorage)
+                // Store token
                 storeToken('access', token);
                 setTimestamp(Date.now());
-
-                // Update store
                 setAccessToken(token);
 
                 // Fetch user profile
@@ -25,7 +23,7 @@ export function useGoogleAuth() {
                 const profile = await gmail.getUserProfile();
                 setUser({ emailAddress: profile.emailAddress });
 
-                // Fetch initial inbox emails after successful login
+                // Fetch initial inbox emails
                 const messagesResponse = await gmail.listMessages(['INBOX'], 50);
                 const fullMessages = await gmail.getBatchMessages(
                     messagesResponse.messages.map((m) => m.id)
@@ -42,14 +40,9 @@ export function useGoogleAuth() {
     });
 
     const logout = () => {
-        // Clear store
         setUser(null);
         setAccessToken(null);
-
-        // Clear all tokens using secure storage abstraction
         clearAllTokens();
-
-        // Reload to reset app state
         window.location.reload();
     };
 

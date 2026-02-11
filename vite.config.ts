@@ -14,10 +14,6 @@ export default defineConfig({
   server: {
     port: 3000,
     cors: true,
-    headers: {
-      // Allow popup windows for OAuth flow
-      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
-    },
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
