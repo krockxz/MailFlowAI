@@ -120,7 +120,10 @@ export function Sidebar({
 
         {!isAuthenticated ? (
           <Button
-            onClick={() => login()}
+            onClick={() => {
+              console.log('[Sidebar] Sign in button clicked, calling login()...');
+              login();
+            }}
             className="w-full bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-xl h-11 font-medium border border-neutral-200/60 dark:border-neutral-700/60 transition-all duration-300"
           >
             <span>Sign in with Google</span>

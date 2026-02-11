@@ -1,6 +1,5 @@
 import { useCopilotAction } from '@copilotkit/react-core';
 import { useAppStore } from '@/store';
-import { useEmails } from '../useEmails';
 
 /**
  * Hook that registers compose-related AI actions
@@ -42,19 +41,26 @@ export function useComposeActions() {
         description: 'CC recipients (comma-separated email addresses)',
         required: false,
       },
+      {
+        name: 'bcc',
+        type: 'string',
+        description: 'BCC recipients (comma-separated email addresses)',
+        required: false,
+      },
     ],
-    handler: async ({ to, subject, body = '', cc = '' }) => {
+    handler: async ({ to, subject, body = '', cc = '', bcc = '' }) => {
       setCompose({
         ...compose,
         to,
         subject,
         body,
         cc,
+        bcc,
         isOpen: true,
         isSending: false,
         isAIComposed: true,
       });
-      return `Compose form opened with recipient: ${to}, subject: ${subject}${cc ? `, CC: ${cc}` : ''}`;
+      return `Compose form opened with recipient: ${to}, subject: ${subject}${cc ? `, CC: ${cc}` : ''}${bcc ? `, BCC: ${bcc}` : ''}`;
     },
   });
 
@@ -86,6 +92,7 @@ export interface ComposeData {
   subject: string;
   body: string;
   cc?: string;
+  bcc?: string;
   isOpen: boolean;
   isSending?: boolean;
   isAIComposed?: boolean;

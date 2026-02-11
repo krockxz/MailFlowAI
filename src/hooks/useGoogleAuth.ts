@@ -35,7 +35,16 @@ export function useGoogleAuth() {
             }
         },
         onError: (error) => {
-            console.error('Login failed:', error);
+            console.error('[useGoogleAuth] OAuth error:', error);
+        },
+        onNonOAuthError: (error) => {
+            // Handle popup blocked/closed scenarios
+            console.error('[useGoogleAuth] Non-OAuth error:', error);
+            if (error.type === 'popup_failed_to_open') {
+                alert('Popup was blocked. Please allow popups for this site and try again.');
+            } else if (error.type === 'popup_closed') {
+                console.log('User closed the Google sign-in popup');
+            }
         },
     });
 

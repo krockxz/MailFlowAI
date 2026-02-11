@@ -1,7 +1,7 @@
 import { useCopilotAction } from '@copilotkit/react-core';
 import { useAppStore } from '@/store';
 import type { Email } from '@/types/email';
-import type { ComposeData } from './useComposeActions';
+import { useComposeActions } from './useComposeActions';
 import { useNavigationActions } from './useNavigationActions';
 import { useSearchActions } from './useSearchActions';
 import { useEmails } from '../useEmails';
@@ -22,12 +22,9 @@ export { useEmailActions } from './useEmailActions';
  * Follows DRY: doesn't duplicate composeEmail, only adds replyToEmail
  */
 function useAdditionalActions() {
-  const { sendEmail } = useEmails();
+  const { markAsRead } = useEmails();
   const { compose, setCompose } = useAppStore();
   const { emails, selectedEmailId } = useAppStore();
-
-  // Get markAsRead from useEmails hook
-  const { markAsRead } = useEmails();
 
   // Reply to an email
   useCopilotAction({

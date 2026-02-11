@@ -91,6 +91,7 @@ export interface AppActions {
     subject: string;
     body: string;
     cc?: string;
+    bcc?: string;
     isSending: boolean;
     isAIComposed: boolean;
   }) => void;

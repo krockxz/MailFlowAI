@@ -47,6 +47,7 @@ export const useAppStore = create<AppStore>()(
           subject: '',
           body: '',
           cc: '',
+          bcc: '',
           isSending: false,
           isAIComposed: false,
         },

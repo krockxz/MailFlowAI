@@ -14,6 +14,11 @@ const COPILOT_ENDPOINT = import.meta.env.VITE_COPILOT_ENDPOINT
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GMAIL_CLIENT_ID
 
+console.log('[main.tsx] Environment check:', {
+  'VITE_GMAIL_CLIENT_ID': GOOGLE_CLIENT_ID ? 'SET' : 'UNSET',
+  'VITE_GMAIL_CLIENT_ID length': GOOGLE_CLIENT_ID?.length,
+});
+
 // Warn if CopilotKit is not configured
 if (!COPILOT_API_KEY) {
   console.warn(

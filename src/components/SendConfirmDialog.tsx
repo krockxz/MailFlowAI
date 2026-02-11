@@ -17,6 +17,7 @@ export interface EmailConfirmData {
   subject: string;
   body: string;
   cc?: string;
+  bcc?: string;
 }
 
 interface SendConfirmDialogProps {
@@ -83,6 +84,21 @@ export function SendConfirmDialog({
                   </p>
                   <p className="text-sm font-medium text-neutral-900 dark:text-white break-all">
                     {emailData.cc}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* BCC */}
+            {emailData.bcc && (
+              <div className="flex items-start gap-3">
+                <User className="w-4 h-4 text-neutral-500 mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">
+                    Bcc
+                  </p>
+                  <p className="text-sm font-medium text-neutral-900 dark:text-white break-all">
+                    {emailData.bcc}
                   </p>
                 </div>
               </div>

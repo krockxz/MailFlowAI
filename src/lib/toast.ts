@@ -25,7 +25,7 @@ export function showSuccess(message: string): void {
 /**
  * Show success toast after email is sent with action button
  */
-export function showSendSuccess(recipient: string): void {
+export function showSendSuccess(_recipient: string): void {
   showToast('Email sent successfully!', 'success', {
     duration: 4000,
     action: {
@@ -106,12 +106,12 @@ function showToast(
   toast.appendChild(msg);
 
   // Action button
-  if (options && options.action) {
+  if (options?.action) {
     const btn = document.createElement('button');
     btn.textContent = options.action.label;
     btn.className = 'ml-auto bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-xs font-medium transition-colors';
     btn.onclick = () => {
-      options.action.onClick();
+      options.action!.onClick();
       container.remove();
     };
     toast.appendChild(btn);

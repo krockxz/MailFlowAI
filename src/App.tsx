@@ -100,6 +100,7 @@ function AppContent() {
         subject: aiCompose.subject,
         body: aiCompose.body,
         cc: aiCompose.cc,
+        bcc: aiCompose.bcc,
       });
       setShowSendConfirm(true);
 
@@ -111,7 +112,7 @@ function AppContent() {
     if (compose.isOpen !== isMinimized) {
       setIsMinimized(false);
     }
-  }, [compose.isOpen, aiCompose.isSending, aiCompose.to, aiCompose.subject, aiCompose.body, aiCompose.cc, showSendConfirm, setCompose]);
+  }, [compose.isOpen, aiCompose.isSending, aiCompose.to, aiCompose.subject, aiCompose.body, aiCompose.cc, aiCompose.bcc, showSendConfirm, setCompose]);
 
   // Check auth on mount and fetch user data
   useEffect(() => {
@@ -303,6 +304,10 @@ function AppContent() {
         bcc: pendingEmail.bcc ? [pendingEmail.bcc] : undefined,
       });
 
+      // Show success toast
+      const { showSendSuccess } = await import('@/lib/toast');
+      showSendSuccess(pendingEmail.to);
+
       // Success: close dialog and reset compose
       setShowSendConfirm(false);
       resetCompose();
@@ -458,6 +463,7 @@ function AppContent() {
           subject: compose.subject,
           body: compose.body,
           cc: compose.cc,
+          bcc: compose.bcc,
           isSending: compose.isSending,
           isAIComposed: compose.isAIComposed,
         }}

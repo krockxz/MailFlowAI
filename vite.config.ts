@@ -15,8 +15,9 @@ export default defineConfig({
     port: 3000,
     cors: true,
     headers: {
-      // Allow popup windows for OAuth flow (fixes COOP error)
-      'Cross-Origin-Opener-Policy': 'unsafe-none',
+      // Allow popup windows for OAuth flow - REQUIRED by @react-oauth/google
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+      'Cross-Origin-Resource-Policy': 'cross-origin',
     },
     proxy: {
       '/api': {

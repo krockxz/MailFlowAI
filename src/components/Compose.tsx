@@ -68,8 +68,8 @@ export function Compose({
     },
   });
 
-  // Track user edits
-  const bodyValue = watch('body');
+  // Track user edits - monitor ALL form fields
+  const watchedValues = watch();
 
   useEffect(() => {
     if (initialData && !userHasEdited) {
@@ -91,12 +91,21 @@ export function Compose({
     }
   }, [isOpen, isMinimized]);
 
-  // Mark user as having edited when they type
+  // Mark user as having edited when they type in ANY field
   useEffect(() => {
-    if (bodyValue && initialData?.isAIComposed && !userHasEdited) {
-      setUserHasEdited(true);
+    if (initialData?.isAIComposed && !userHasEdited) {
+      const hasUserEdited = (
+        watchedValues.to !== initialData.to ||
+        watchedValues.subject !== initialData.subject ||
+        watchedValues.body !== initialData.body ||
+        watchedValues.cc !== (initialData.cc || '') ||
+        watchedValues.bcc !== (initialData.bcc || '')
+      );
+      if (hasUserEdited) {
+        setUserHasEdited(true);
+      }
     }
-  }, [bodyValue, initialData?.isAIComposed, userHasEdited]);
+  }, [watchedValues, initialData, userHasEdited]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -146,7 +155,7 @@ export function Compose({
 
   if (!isOpen) return null;
 
-  const bodyLength = bodyValue?.length || 0;
+  const bodyLength = watchedValues.body?.length || 0;
 
   return (
     <div className={cn(
