@@ -9,12 +9,13 @@ import { EmailList } from '@/components/EmailList';
 import { EmailDetail } from '@/components/EmailDetail';
 import { Compose } from '@/components/Compose';
 import { FilterBar } from '@/components/FilterBar';
-import { CopilotSidebar } from '@/components/CopilotSidebar';
 import { Moon, Sun, RefreshCw, Sparkles } from 'lucide-react';
 import { getStoredAccessToken, isAuthenticated } from '@/services/auth';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Button } from '@/components/ui/button';
 import { formatReplyDate, isWithinRange } from '@/lib/utils';
+import { SendConfirmDialog, type EmailConfirmData } from '@/components/SendConfirmDialog';
+import { CopilotSidebar } from '@/components/CopilotSidebar';
 
 /*
  * RESPONSIVE DESIGN STRATEGY
@@ -57,6 +58,9 @@ function AppContent() {
     setSelectedEmailId,
     setAccessToken,
     setUser,
+    compose,
+    setCompose,
+    resetCompose,
   } = useAppStore();
 
   const {
@@ -69,18 +73,16 @@ function AppContent() {
     resetAllPagination,
   } = useEmails();
 
-  const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(true);
-  const [composeInitialData, setComposeInitialData] = useState<{
-    to?: string;
-    subject?: string;
-    body?: string;
-    cc?: string;
-  }>({});
+  const [isMinimized, setIsMinimized] = useState(false);
+
+  // Send confirmation dialog state
+  const [showSendConfirm, setShowSendConfirm] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<EmailConfirmData | null>(null);
 
   // Set up CopilotKit context and actions
   useAppContext();
-  const { composeData } = useCopilotEmailActions();
+  const { compose: aiCompose } = useCopilotEmailActions();
 
   // Set up real-time sync (polling every 30 seconds)
   const { sync } = useRealtimeEmailSync({
@@ -88,18 +90,28 @@ function AppContent() {
     enabled: isAuthenticated() || undefined,
   });
 
-  // Sync compose data between UI and AI
+  // Sync compose state: use store directly (single source of truth)
+  // When AI triggers send, show confirmation dialog
   useEffect(() => {
-    if (composeData.isOpen) {
-      setComposeInitialData({
-        to: composeData.to,
-        subject: composeData.subject,
-        body: composeData.body,
-        cc: composeData.cc,
+    // AI wants to send - show confirmation
+    if (aiCompose.isSending && aiCompose.to && !showSendConfirm) {
+      setPendingEmail({
+        to: aiCompose.to,
+        subject: aiCompose.subject,
+        body: aiCompose.body,
+        cc: aiCompose.cc,
       });
-      setIsComposeOpen(true);
+      setShowSendConfirm(true);
+
+      // Reset isSending flag in store so dialog handles it
+      setCompose({ ...aiCompose, isSending: false });
     }
-  }, [composeData.to, composeData.subject, composeData.body, composeData.isOpen, composeData.isSending]);
+
+    // Sync compose modal open state
+    if (compose.isOpen !== isMinimized) {
+      setIsMinimized(false);
+    }
+  }, [compose.isOpen, aiCompose.isSending, aiCompose.to, aiCompose.subject, aiCompose.body, aiCompose.cc, showSendConfirm, setCompose]);
 
   // Check auth on mount and fetch user data
   useEffect(() => {
@@ -227,33 +239,45 @@ function AppContent() {
     setSelectedEmailId(email.id);
   }, [setSelectedEmailId]);
 
-  // Handle compose
+  // Handle compose (manual - from sidebar button)
   const handleCompose = useCallback(() => {
-    setComposeInitialData({});
-    setIsComposeOpen(true);
-  }, []);
+    // Reset compose for manual compose (not AI composed)
+    setCompose({
+      isOpen: true,
+      to: '',
+      subject: '',
+      body: '',
+      cc: '',
+      isSending: false,
+      isAIComposed: false,
+    });
+  }, [setCompose]);
 
-  // Handle reply
+  // Handle reply (from EmailDetail)
   const handleReply = useCallback((emailId: string) => {
     const email = [...emails.inbox, ...emails.sent].find((e: Email) => e.id === emailId);
     if (email) {
-      setComposeInitialData({
+      setCompose({
+        isOpen: true,
         to: email.from.email,
         subject: email.subject.startsWith('Re:')
           ? email.subject
           : `Re: ${email.subject}`,
         body: `\n\n----------\nOn ${formatReplyDate(email.date)}, ${email.from.name || email.from.email} wrote:\n${email.body.slice(0, 200)}...`,
+        cc: '',
+        isSending: false,
+        isAIComposed: false,
       });
-      setIsComposeOpen(true);
     }
-  }, [emails]);
+  }, [emails, setCompose]);
 
-  // Handle send email
+  // Handle send email (from Compose or confirmation dialog)
   const handleSendEmail = useCallback(async (data: {
     to: string;
     subject: string;
     body: string;
     cc?: string;
+    bcc?: string;
   }) => {
     await sendEmail({
       to: [data.to],
@@ -263,17 +287,65 @@ function AppContent() {
     });
   }, [sendEmail]);
 
+  // Handle confirm send from dialog
+  const handleConfirmSend = useCallback(async () => {
+    if (!pendingEmail) return;
+
+    try {
+      // Show sending state
+      setCompose({ ...compose, isSending: true });
+
+      await sendEmail({
+        to: [pendingEmail.to],
+        subject: pendingEmail.subject,
+        body: pendingEmail.body,
+        cc: pendingEmail.cc ? [pendingEmail.cc] : undefined,
+      });
+
+      // Success: close dialog and reset compose
+      setShowSendConfirm(false);
+      resetCompose();
+      setPendingEmail(null);
+    } catch (error) {
+      // Error: keep dialog open for retry
+      setCompose({ ...compose, isSending: false });
+      // Re-throw for error handling in dialog
+      throw error;
+    }
+  }, [pendingEmail, compose, sendEmail, resetCompose, setCompose]);
+
+  // Handle cancel send
+  const handleCancelSend = useCallback(() => {
+    setShowSendConfirm(false);
+    setPendingEmail(null);
+    setCompose({ ...compose, isSending: false });
+  }, [compose, setCompose]);
+
   // Handle forward
   const handleForward = useCallback((emailId: string) => {
     const email = [...emails.inbox, ...emails.sent].find((e: Email) => e.id === emailId);
     if (email) {
-      setComposeInitialData({
+      setCompose({
+        isOpen: true,
         subject: `Fwd: ${email.subject}`,
         body: `\n\n----------\nForwarded message:\nFrom: ${email.from.name || email.from.email}\nSubject: ${email.subject}\n\n${email.body}`,
+        to: '',
+        cc: '',
+        isSending: false,
+        isAIComposed: false,
       });
-      setIsComposeOpen(true);
     }
-  }, [emails]);
+  }, [emails, setCompose]);
+
+  // Handle close compose
+  const handleCloseCompose = useCallback(() => {
+    setCompose({ ...compose, isOpen: false });
+  }, [compose, setCompose]);
+
+  // Handle toggle minimize
+  const handleToggleMinimize = useCallback(() => {
+    setCompose({ ...compose, isOpen: !isMinimized });
+  }, [compose, setCompose, isMinimized]);
 
   // Get unread count
   const unreadCount = emails.inbox.filter((e: Email) => e.isUnread).length;
@@ -377,12 +449,30 @@ function AppContent() {
         onClose={() => setIsCopilotOpen(false)}
       />
 
-      {/* Compose modal */}
+      {/* Compose modal - uses store state */}
       <Compose
-        isOpen={isComposeOpen}
-        onClose={() => setIsComposeOpen(false)}
+        isOpen={compose.isOpen}
+        onClose={handleCloseCompose}
         onSend={handleSendEmail}
-        initialData={composeInitialData}
+        initialData={{
+          to: compose.to,
+          subject: compose.subject,
+          body: compose.body,
+          cc: compose.cc,
+          isSending: compose.isSending,
+          isAIComposed: compose.isAIComposed,
+        }}
+        isMinimized={!compose.isOpen}
+        onToggleMinimize={handleToggleMinimize}
+      />
+
+      {/* Send Confirmation Dialog */}
+      <SendConfirmDialog
+        isOpen={showSendConfirm}
+        emailData={pendingEmail || { to: '', subject: '', body: '' }}
+        onConfirm={handleConfirmSend}
+        onCancel={handleCancelSend}
+        isSending={compose.isSending}
       />
     </div>
   );

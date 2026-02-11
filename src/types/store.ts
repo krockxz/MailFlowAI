@@ -34,6 +34,17 @@ export interface AppState {
 
   // Theme
   darkMode: boolean;
+
+  // Compose state (single source of truth)
+  compose: {
+    isOpen: boolean;
+    to: string;
+    subject: string;
+    body: string;
+    cc?: string;
+    isSending: boolean;
+    isAIComposed: boolean;
+  };
 }
 
 /**
@@ -71,6 +82,18 @@ export interface AppActions {
   // Theme actions
   toggleDarkMode: () => void;
   setDarkMode: (dark: boolean) => void;
+
+  // Compose actions (single source of truth)
+  setCompose: (compose: {
+    isOpen: boolean;
+    to: string;
+    subject: string;
+    body: string;
+    cc?: string;
+    isSending: boolean;
+    isAIComposed: boolean;
+  }) => void;
+  resetCompose: () => void;
 
   // Pagination actions
   setPagination: (type: 'inbox' | 'sent', updates: Partial<import('./email').FolderPaginationState>) => void;

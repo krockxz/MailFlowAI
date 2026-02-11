@@ -40,6 +40,17 @@ export const useAppStore = create<AppStore>()(
         isLoading: false,
         isSending: false,
 
+        // Compose state (single source of truth)
+        compose: {
+          isOpen: false,
+          to: '',
+          subject: '',
+          body: '',
+          cc: '',
+          isSending: false,
+          isAIComposed: false,
+        },
+
         lastSyncTime: null,
         hasNewEmails: false,
 
@@ -112,6 +123,20 @@ export const useAppStore = create<AppStore>()(
           setTheme(dark ? 'dark' : 'light')
           set({ darkMode: dark })
         },
+
+        // Compose actions
+        setCompose: (compose) => set({ compose }),
+        resetCompose: () => set({
+          compose: {
+            isOpen: false,
+            to: '',
+            subject: '',
+            body: '',
+            cc: '',
+            isSending: false,
+            isAIComposed: false,
+          },
+        }),
 
         // Pagination actions
         setPagination: (type, updates) =>
