@@ -8,6 +8,7 @@ export function useGoogleAuth() {
 
     const login = useGoogleLogin({
         scope: 'https://www.googleapis.com/auth/gmail.modify',
+        flow: 'redirect', // Use redirect instead of popup to avoid COOP issues
         onSuccess: async (response) => {
             try {
                 const token = response.access_token;
