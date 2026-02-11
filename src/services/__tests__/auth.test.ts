@@ -16,14 +16,14 @@ vi.mock('../gmail', () => {
   const getUserProfile = vi.fn(() => Promise.resolve({ emailAddress: 'user@example.com', messagesTotal: 100 }));
   return {
     GmailService: class {
-      constructor(token) {
+      accessToken: string;
+      constructor(token: string) {
         this.accessToken = token;
       }
-      accessToken = '';
       getUserProfile = getUserProfile;
       static exchangeCodeForToken = vi.fn();
       static refreshToken = vi.fn();
-      static getAuthUrl = vi.fn((clientId, redirectUri, state) =>
+      static getAuthUrl = vi.fn((clientId: string, redirectUri: string, state?: string) =>
         `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}${state ? `&state=${state}` : ''}`
       );
     },

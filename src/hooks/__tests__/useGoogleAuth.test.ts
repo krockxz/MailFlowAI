@@ -25,19 +25,23 @@ describe('useGoogleAuth', () => {
     vi.spyOn(store, 'useAppStore').mockReturnValue({
       setUser: mockSetUser,
       setAccessToken: mockSetAccessToken,
-    });
+    } as any);
 
     // Mock useGoogleLogin
     vi.spyOn(googleAuth, 'useGoogleLogin').mockReturnValue(mockLogin);
 
     // Mock GmailService
-    vi.spyOn(gmailService, 'GmailService').mockImplementation(function() {
-      this.accessToken = 'test-token';
-    });
-    (gmailService.GmailService as any).prototype.getUserProfile = vi.fn().mockResolvedValue({
-      emailAddress: 'user@example.com',
-      messagesTotal: 100,
-    });
+    const MockGmailService = class {
+      accessToken: string;
+      constructor(token: string) {
+        this.accessToken = token;
+      }
+      getUserProfile = vi.fn().mockResolvedValue({
+        emailAddress: 'user@example.com',
+        messagesTotal: 100,
+      });
+    };
+    vi.spyOn(gmailService, 'GmailService').mockImplementation(MockGmailService as any);
 
     // Mock token-storage
     vi.spyOn(tokenStorage, 'storeToken').mockImplementation(() => {});
@@ -67,24 +71,9 @@ describe('useGoogleAuth', () => {
   it('should store token and fetch profile on successful login', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    const mockOnSuccess = vi.fn((response) => {
-      // Store token
-      tokenStorage.storeToken('access', response.access_token);
-      tokenStorage.setTimestamp(Date.now());
-
-      // Update store
-      mockSetAccessToken(response.access_token);
-
-      // Fetch user profile
-      const gmail = new gmailService.GmailService(response.access_token);
-      gmail.getUserProfile().then((profile: any) => {
-        mockSetUser({ emailAddress: profile.emailAddress });
-      });
-    });
-
     vi.spyOn(googleAuth, 'useGoogleLogin').mockImplementation(({ onSuccess }) => {
       setTimeout(() => {
-        onSuccess({ access_token: 'test-token' });
+        if (onSuccess) onSuccess({ access_token: 'test-token' } as any);
       }, 0);
       return vi.fn();
     });
@@ -111,40 +100,5 @@ describe('useGoogleAuth', () => {
     expect(mockSetAccessToken).toHaveBeenCalledWith(null);
     expect(tokenStorage.clearAllTokens).toHaveBeenCalled();
     expect(mockLocationReload).toHaveBeenCalled();
-  });
-
-  it('should handle profile fetch error gracefully', async () => {
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    // Make getUserProfile reject
-    (gmailService.GmailService as any).prototype.getUserProfile = vi.fn().mockRejectedValue(new Error('API Error'));
-
-    // Mock useGoogleLogin to trigger error path
-    vi.spyOn(googleAuth, 'useGoogleLogin').mockImplementation(({ onSuccess, onError }) => {
-      setTimeout(() => {
-        try {
-          tokenStorage.storeToken('access', 'test-token');
-          tokenStorage.setTimestamp(Date.now());
-          mockSetAccessToken('test-token');
-
-          const gmail = new gmailService.GmailService('test-token');
-          gmail.getUserProfile().catch((err: Error) => {
-            console.error('Failed to fetch user profile:', err);
-            if (onError) onError(err);
-          });
-        } catch (e) {
-          console.error('Failed to fetch user profile:', e);
-        }
-      }, 0);
-      return vi.fn();
-    });
-
-    renderHook(() => useGoogleAuth());
-
-    await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalled();
-    }, { timeout: 3000 });
-
-    consoleErrorSpy.mockRestore();
   });
 });

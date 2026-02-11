@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { EmailDetail } from '../EmailDetail';
-import { createMockEmail, createMockEmails } from '@/test/test-utils';
+import { createMockEmail } from '@/test/test-utils';
 
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({

@@ -1,6 +1,5 @@
 // @vitest-environment node
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import dayjs from 'dayjs';
 import {
     cn,
     extractEmailAddress,

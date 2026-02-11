@@ -1,7 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { X, Minus, Maximize2, Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAppStore } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -41,7 +40,6 @@ export function Compose({
   isMinimized = false,
   onToggleMinimize
 }: ComposeProps) {
-  const darkMode = useAppStore((state) => state.darkMode);
   const [showCc, setShowCc] = useState(!!initialData?.cc);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 

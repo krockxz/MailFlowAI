@@ -21,7 +21,8 @@ dotenv.config({ path: join(__dirname, '../.env') });
 
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') || [
   'http://localhost:3000',
-  'http://127.0.0.1:3000'
+  'http://127.0.0.1:3000',
+  'https://ai-mail-app.vercel.app' // Add your production domain here
 ];
 
 // Pub/Sub verification token from environment
@@ -36,7 +37,7 @@ const io = new Server(httpServer, {
   }
 });
 
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
 // Custom body parser to preserve raw body for signature verification
 const rawBodySaver = (req, res, buf, encoding) => {
@@ -49,8 +50,16 @@ app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    if (ALLOWED_ORIGINS.includes(origin)) {
-      callback(null, true);
+    if (ALLOWED_ORIGINS.includes(origin) || process.env.NODE_ENV !== 'production') {
+      // In development, might want to be more permissive or check strict list
+      // For now, allow list + localhost
+      if (ALLOWED_ORIGINS.includes(origin)) {
+        callback(null, true);
+      } else {
+        // Optional: Allow all in dev? or just strict. 
+        // Let's stick to the allowed list for safety, but user can add to it.
+        callback(new Error('Not allowed by CORS'));
+      }
     } else {
       callback(new Error('Not allowed by CORS'));
     }
@@ -127,11 +136,14 @@ app.post('/api/webhook/gmail', (req, res) => {
   const message = req.body.message;
 
   // Emit event to all connected clients
-  console.log('Emitting email:new event to clients');
-  io.emit('email:new', {
-    timestamp: new Date().toISOString(),
-    messageId: message.messageId
-  });
+  // NOTE: This will NOT work in Vercel Serverless environment as there is no persistent socket server.
+  if (io) {
+    console.log('Emitting email:new event to clients');
+    io.emit('email:new', {
+      timestamp: new Date().toISOString(),
+      messageId: message.messageId
+    });
+  }
 
   // Always return 200 OK to acknowledge receipt
   res.status(200).send('OK');
@@ -146,17 +158,24 @@ io.on('connection', (socket) => {
   });
 });
 
-httpServer.listen(PORT, () => {
-  console.log(`Webhook Server running on http://localhost:${PORT}`);
-  console.log(`Socket.IO available at http://localhost:${PORT}`);
+// Only listen if run directly, not when imported
+// Check if file is run directly
+const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
+if (process.env.VITE_VERCEL_ENV !== 'true' && isMainModule) {
+  httpServer.listen(PORT, () => {
+    console.log(`Webhook Server running on http://localhost:${PORT}`);
+    console.log(`Socket.IO available at http://localhost:${PORT}`);
 
-  if (!PUBSUB_VERIFICATION_TOKEN) {
-    console.warn('');
-    console.warn('⚠️  SECURITY WARNING: GOOGLE_PUBSUB_VERIFICATION_TOKEN not configured!');
-    console.warn('   Webhook signature verification is disabled.');
-    console.warn('   Set this environment variable for production deployment.');
-    console.warn('');
-  } else {
-    console.log('Signature verification: ENABLED');
-  }
-});
+    if (!PUBSUB_VERIFICATION_TOKEN) {
+      console.warn('');
+      console.warn('⚠️  SECURITY WARNING: GOOGLE_PUBSUB_VERIFICATION_TOKEN not configured!');
+      console.warn('   Webhook signature verification is disabled.');
+      console.warn('   Set this environment variable for production deployment.');
+      console.warn('');
+    } else {
+      console.log('Signature verification: ENABLED');
+    }
+  });
+}
+
+export default app;

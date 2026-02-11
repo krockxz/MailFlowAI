@@ -1,0 +1,26 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+dist-ssr
+
+# Testing
+coverage
+test-results
+
+# Large demo video - exceeds Vercel's 100MB file limit
+public/demo.mp4
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+.DS_Store
+
+# Planning
+.planning

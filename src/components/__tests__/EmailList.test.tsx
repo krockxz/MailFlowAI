@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { EmailList } from '../EmailList';
-import { createMockEmail, createMockEmails, createMockPaginationState } from '@/test/test-utils';
+import { createMockEmail, createMockEmails } from '@/test/test-utils';
 import type { FolderPaginationState } from '@/types/email';
 
 // Mock lucide-react icons

@@ -297,7 +297,7 @@ describe('FilterBar', () => {
 
   describe('Visual regression tests', () => {
     it('search input uses neutral-100/neutral-800 backgrounds', () => {
-      const { container } = render(
+      render(
         <FilterBar
           filters={createMockFilterState()}
           onFiltersChange={mockOnFiltersChange}
@@ -310,7 +310,7 @@ describe('FilterBar', () => {
     });
 
     it('Unread button uses accent-500 when active', () => {
-      const { container } = render(
+      render(
         <FilterBar
           filters={createMockFilterState({ isUnread: true })}
           onFiltersChange={mockOnFiltersChange}
@@ -323,7 +323,7 @@ describe('FilterBar', () => {
     });
 
     it('Filter button uses accent-500 when hasActiveFilters is true', () => {
-      const { container } = render(
+      render(
         <FilterBar
           filters={createMockFilterState({
             query: 'test query',

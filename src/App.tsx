@@ -95,7 +95,7 @@ function AppContent() {
         to: composeData.to,
         subject: composeData.subject,
         body: composeData.body,
-        isSending: composeData.isSending,
+        cc: composeData.cc,
       });
       setIsComposeOpen(true);
     }

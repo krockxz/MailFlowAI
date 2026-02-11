@@ -6,7 +6,6 @@ import { useEmails } from '@/hooks/useEmails';
 import { useAppStore } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
 interface EmailDetailProps {
