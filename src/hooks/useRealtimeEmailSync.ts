@@ -1,7 +1,13 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useAppStore } from '@/store';
 import { useEmails } from './useEmails';
-import { isAuthenticated } from '@/services/auth';
+
+/**
+ * SSE connection error type
+ */
+interface SSEError extends Error {
+  type?: 'connection' | 'authentication' | 'network' | 'unknown';
+}
 
 /**
  * Options for real-time email sync
@@ -51,18 +57,20 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
   } = options;
 
   const { fetchInbox } = useEmails();
+  const isAuthenticated = useAppStore((state) => state.isAuthenticated);
   const eventSourceRef = useRef<EventSource | null>(null);
   const intervalRef = useRef<number | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const lastSyncTime = useRef<Date>(new Date());
   const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState<SSEError | null>(null);
 
   /**
    * Manual sync trigger
    */
   const sync = useCallback(async () => {
-    if (!isAuthenticated()) {
+    if (!isAuthenticated) {
       return;
     }
 
@@ -73,13 +81,13 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
     } catch (error) {
       console.error('Sync failed:', error);
     }
-  }, [fetchInbox]);
+  }, [fetchInbox, isAuthenticated]);
 
   /**
    * Connect to SSE endpoint with reconnection logic
    */
   const connect = useCallback(() => {
-    if (!isAuthenticated()) {
+    if (!isAuthenticated) {
       return;
     }
 
@@ -98,8 +106,8 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
 
       // Connection opened
       eventSource.onopen = () => {
-        console.log('SSE connection established');
         setIsConnected(true);
+        setError(null); // Clear any previous errors
         reconnectAttemptsRef.current = 0; // Reset reconnect counter on successful connection
       };
 
@@ -123,6 +131,11 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
         console.error('SSE connection error:', error);
         setIsConnected(false);
 
+        // Create an error object with type information
+        const sseError: SSEError = new Error('SSE connection failed');
+        sseError.type = 'connection';
+        setError(sseError);
+
         // EventSource will automatically attempt to reconnect, but we implement
         // additional exponential backoff logic for better control
         const eventSourceInstance = eventSourceRef.current;
@@ -130,10 +143,11 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
         if (eventSourceInstance && eventSourceInstance.readyState === EventSource.CLOSED) {
           // Connection is closed, schedule reconnection with exponential backoff
           const delay = calculateReconnectDelay(reconnectAttemptsRef.current);
-          console.log(`SSE connection closed. Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1})`);
+
 
           reconnectTimeoutRef.current = window.setTimeout(() => {
             reconnectAttemptsRef.current++;
+            setError(null); // Clear error on retry
             connect();
           }, delay);
         }
@@ -149,13 +163,13 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
         connect();
       }, delay);
     }
-  }, [sync]);
+  }, [sync, isAuthenticated]);
 
   /**
    * Set up SSE connection and fallback polling
    */
   useEffect(() => {
-    if (!enabled || !isAuthenticated()) {
+    if (!enabled || !isAuthenticated) {
       return;
     }
 
@@ -196,11 +210,12 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
         intervalRef.current = null;
       }
     };
-  }, [enabled, pollingInterval, sync, connect]);
+  }, [enabled, pollingInterval, sync, connect, isAuthenticated]);
 
   return {
     sync,
     isConnected,
+    error,
     lastSyncTime: lastSyncTime.current,
   };
 }

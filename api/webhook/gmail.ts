@@ -1,18 +1,7 @@
 /**
- * Vercel Edge Runtime Gmail Pub/Sub Webhook Handler with KV Storage
- *
- * This Edge function receives Gmail push notifications from Google Cloud Pub/Sub
- * and stores them in Vercel KV for SSE clients to consume.
- *
- * @route POST /api/webhook/gmail
- * @runtime edge
+ * Vercel Edge Runtime Gmail Pub/Sub Webhook Handler with Upstash Redis
  */
 
-import { kv } from '@vercel/kv';
-
-/**
- * Email event structure stored in KV
- */
 interface EmailEvent {
   id: string;
   timestamp: number;
@@ -22,11 +11,88 @@ interface EmailEvent {
 }
 
 const KV_EVENTS_KEY = 'email:events';
-const KV_EVENTS_TTL = 300; // 5 minutes in seconds
 const MAX_EVENTS = 100;
+const TTL = 300; // 5 minutes
+
+// Upstash REST API configuration
+const UPSTASH_REST_URL = process.env.KV_REST_API_URL || '';
+const UPSTASH_REST_TOKEN = process.env.KV_REST_API_TOKEN || '';
 
 /**
- * Verify webhook HMAC signature using Web Crypto API (Edge-compatible)
+ * Store event in Upstash Redis
+ */
+async function storeEventInRedis(event: EmailEvent): Promise<void> {
+  if (!UPSTASH_REST_URL || !UPSTASH_REST_TOKEN) {
+    console.warn('Upstash credentials not found, skipping storage');
+    return;
+  }
+
+  try {
+    // LPUSH to add to beginning of list
+    // Send the event JSON as the body (Upstash treats the body value as the element)
+    const eventStr = JSON.stringify(event);
+    await fetch(`${UPSTASH_REST_URL}/lpush/${KV_EVENTS_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${UPSTASH_REST_TOKEN}`,
+      },
+      body: eventStr,
+    });
+
+    // LTRIM to keep only MAX_EVENTS
+    await fetch(`${UPSTASH_REST_URL}/ltrim/${KV_EVENTS_KEY}/0/${MAX_EVENTS - 1}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${UPSTASH_REST_TOKEN}`,
+      },
+    });
+
+    // EXPIRE to set TTL
+    await fetch(`${UPSTASH_REST_URL}/expire/${KV_EVENTS_KEY}/${TTL}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${UPSTASH_REST_TOKEN}`,
+      },
+    });
+  } catch (error) {
+    console.error('Error storing event in Redis:', error);
+  }
+}
+
+/**
+ * Get events from Upstash Redis
+ */
+async function getEventsFromRedis(limit: number = 50): Promise<string[]> {
+  if (!UPSTASH_REST_URL || !UPSTASH_REST_TOKEN) {
+    console.warn('Upstash credentials not found');
+    return [];
+  }
+
+  try {
+    const response = await fetch(`${UPSTASH_REST_URL}/lrange/${KV_EVENTS_KEY}/0/${limit - 1}`, {
+      headers: {
+        'Authorization': `Bearer ${UPSTASH_REST_TOKEN}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Redis response not OK:', response.status, response.statusText);
+      return [];
+    }
+
+    const data = await response.json();
+    // Upstash returns { result: [array of elements] }
+    // Each element should be a JSON string representing an event
+    const rawEvents = data.result || [];
+    return rawEvents;
+  } catch (error) {
+    console.error('Error fetching events from Redis:', error);
+    return [];
+  }
+}
+
+/**
+ * Verify webhook HMAC signature
  */
 async function verifyWebhookSignature(
   signature: string,
@@ -63,9 +129,6 @@ async function verifyWebhookSignature(
   }
 }
 
-/**
- * Convert base64url string to Uint8Array
- */
 function base64UrlToBytes(base64Url: string): Uint8Array {
   let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
   while (base64.length % 4) {
@@ -79,9 +142,6 @@ function base64UrlToBytes(base64Url: string): Uint8Array {
   return bytes;
 }
 
-/**
- * Validate Pub/Sub payload structure
- */
 function validatePayload(body: any): { valid: boolean; error?: string } {
   if (!body || typeof body !== 'object') {
     return { valid: false, error: 'Request body is missing or not an object' };
@@ -95,29 +155,8 @@ function validatePayload(body: any): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
-/**
- * Extract signature from headers
- */
 function extractSignature(headers: Headers): string | null {
   return headers.get('x-goog-signature') || headers.get('X-Goog-Signature');
-}
-
-/**
- * Store event in KV list
- */
-async function storeEventInKV(event: EmailEvent): Promise<void> {
-  try {
-    // Add to the beginning of the list (newest first)
-    await kv.lpush(KV_EVENTS_KEY, JSON.stringify(event));
-
-    // Trim to max events
-    await kv.ltrim(KV_EVENTS_KEY, 0, MAX_EVENTS - 1);
-
-    // Set expiration on the whole list
-    await kv.expire(KV_EVENTS_KEY, KV_EVENTS_TTL);
-  } catch (error) {
-    console.error('Error storing event in KV:', error);
-  }
 }
 
 /**
@@ -127,16 +166,14 @@ export default async function handler(request: Request) {
   const url = new URL(request.url);
   const method = request.method;
 
-  // Handle GET - retrieve recent events from KV
+  // Handle GET - retrieve recent events from Redis
   if (method === 'GET') {
     try {
       const since = parseInt(url.searchParams.get('since') || '0', 10);
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '10', 10), 100);
 
-      // Get events from KV list
-      const rawEvents = await kv.lrange(KV_EVENTS_KEY, 0, limit - 1);
+      const rawEvents = await getEventsFromRedis(limit);
 
-      // Parse and filter by timestamp
       const events: EmailEvent[] = rawEvents
         .map((e: string) => JSON.parse(e))
         .filter((e: EmailEvent) => e.timestamp > since)
@@ -225,9 +262,9 @@ export default async function handler(request: Request) {
       publishTime: body.message.publishTime,
     };
 
-    await storeEventInKV(event);
+    await storeEventInRedis(event);
 
-    console.log('Event stored in KV:', event.id, 'Message:', body.message.messageId);
+    console.log('Event stored in Redis:', event.id, 'Message:', body.message.messageId);
 
     return Response.json({
       success: true,

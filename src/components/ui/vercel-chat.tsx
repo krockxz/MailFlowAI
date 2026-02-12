@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Loader2, X, Sparkles } from 'lucide-react';
+import { Send, Loader2, X, Sparkles, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useCopilotChat } from '@copilotkit/react-core';
-import { Message, TextMessage, MessageRole } from '@copilotkit/runtime-client-gql';
+import { useCopilotChatHeadless_c } from '@copilotkit/react-core';
 
 interface VercelChatProps {
   instructions?: string;
@@ -12,49 +11,46 @@ interface VercelChatProps {
 
 const DEFAULT_INSTRUCTIONS = `You are an AI email assistant integrated into a mail client. Help users manage emails through natural language.
 
-AVAILABLE ACTIONS (always use these to actually perform actions, don't just describe them):
-1. composeEmail(to, subject, body, cc) - Opens compose form and fills it visibly
-2. sendEmail(confirm) - Sends the composed email (ONLY if confirm=true, always ask user first)
-3. searchEmails(query, sender, days, isUnread) - Searches emails and updates the UI
-4. openEmail(latest, sender, subject) - Opens a specific email in detail view
-5. replyToEmail(emailId, body) - Opens reply form with the message
-6. navigateToView(view) - Switches between 'inbox', 'sent'
-7. clearFilters() - Removes all active filters
-
-CONTEXT AWARENESS:
-- You can see which email is currently open
-- You can see the current view (inbox/sent)
-- You can see all inbox and sent emails (first 20)
-
-IMPORTANT BEHAVIORS:
-- ALWAYS actually perform actions through tools, don't just describe what would happen
-- When composing, the user will see the form fill in real-time
-- When searching, the main email list updates to show filtered results
-- When asked to reply without specifying which email, use the currently open one
-- Always confirm before sending (require explicit user confirmation)
-- Be concise and helpful
-- Never use emojis in responses`;
+Be concise and helpful. Never use emojis in responses.`;
 
 export function VercelChat({
   instructions = DEFAULT_INSTRUCTIONS,
   placeholder = 'Ask to compose, search, or manage emails...',
   className,
 }: VercelChatProps) {
-  // Use the simpler useCopilotChat which works without public API key
-  const chatHook = useCopilotChat({
-    makeSystemMessage: () => instructions,
-  });
+  // Wrap CopilotKit hook in try-catch for graceful degradation
+  let copilotHook;
+  try {
+    copilotHook = useCopilotChatHeadless_c({
+      makeSystemMessage: () => instructions,
+    });
+  } catch (error) {
+    console.error('CopilotKit hook error:', error);
+    // Return degraded UI if hook fails
+    return (
+      <div className="flex flex-col h-full bg-white dark:bg-neutral-950 p-6">
+        <div className="flex flex-col items-center justify-center h-full text-center">
+          <div className="w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center mb-4 border border-neutral-200/60 dark:border-neutral-800/60">
+            <AlertCircle className="w-6 h-6 text-neutral-400" />
+          </div>
+          <h3 className="font-medium text-sm text-neutral-900 dark:text-white mb-2">AI Assistant unavailable</h3>
+          <p className="text-xs text-neutral-500 dark:text-neutral-500 max-w-[280px]">
+            The AI assistant encountered an error. Please refresh the page or try again later.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const { messages, sendMessage, isLoading, reset } = copilotHook;
 
   const [input, setInput] = useState('');
   const [inputHeight, setInputHeight] = useState(44);
+  const [sendError, setSendError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(true);
-
-  // Get values from the hook return
-  const messages = chatHook.visibleMessages || [];
-  const isLoading = chatHook.isLoading || false;
 
   const scrollToBottom = useCallback((smooth = true) => {
     messagesEndRef.current?.scrollIntoView({
@@ -62,14 +58,12 @@ export function VercelChat({
     });
   }, []);
 
-  // Auto-scroll when new messages arrive
   useEffect(() => {
     if (isScrolledToBottom) {
       scrollToBottom();
     }
   }, [messages, isScrolledToBottom, scrollToBottom]);
 
-  // Handle scroll detection
   useEffect(() => {
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
@@ -87,7 +81,6 @@ export function VercelChat({
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
 
-    // Auto-resize textarea
     const target = e.target;
     target.style.height = '44px';
     const newHeight = Math.min(200, Math.max(44, target.scrollHeight));
@@ -112,14 +105,20 @@ export function VercelChat({
       textareaRef.current.style.height = '44px';
     }
 
-    // Use TextMessage class for proper message construction
-    console.log('[VercelChat] Sending message:', trimmed);
-    await chatHook.appendMessage(
-      new TextMessage({
-        role: MessageRole.User,
+    setSendError(null);
+
+    try {
+      await sendMessage({
+        id: Date.now().toString(),
+        role: 'user',
         content: trimmed,
-      })
-    );
+      });
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      setSendError(error instanceof Error ? error.message : 'Failed to send message');
+      // Restore input on error so user can retry
+      setInput(trimmed);
+    }
   };
 
   const formatMessageContent = (content: string) => {
@@ -129,18 +128,63 @@ export function VercelChat({
       .replace(/"([^"]+)"/g, '"<span class="font-mono text-accent-600 dark:text-accent-400">$1</span>"');
   };
 
-  const getMessageContent = (msg: Message): string => {
-    if (msg.isTextMessage()) {
-      return msg.content;
-    }
-    return '';
-  };
-
   const showWelcome = messages.length === 0;
+
+  const renderMessage = (msg: any, index: number) => {
+    const role = msg.role;
+    const content = msg.content ?? '';
+
+    if (!content || typeof content !== 'string') {
+      return null;
+    }
+
+    const isUser = role === 'user';
+    const isAssistant = role === 'assistant';
+
+    if (!isUser && !isAssistant) {
+      return null;
+    }
+
+    return (
+      <div
+        key={msg.id}
+        className={cn(
+          'flex gap-3 animate-fade-in',
+          isUser ? 'justify-end' : 'justify-start'
+        )}
+        style={{ animationDelay: `${index * 30}ms` }}
+      >
+        {!isUser && (
+          <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shadow-sm">
+            <Sparkles className="w-4 h-4 text-white" />
+          </div>
+        )}
+
+        <div
+          className={cn(
+            'max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed',
+            isUser
+              ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-tr-sm'
+              : 'bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-tl-sm border border-neutral-200/60 dark:border-neutral-800/60'
+          )}
+        >
+          <div
+            className="whitespace-pre-wrap break-words"
+            dangerouslySetInnerHTML={{ __html: formatMessageContent(content) }}
+          />
+        </div>
+
+        {isUser && (
+          <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-neutral-900 dark:bg-white flex items-center justify-center shadow-sm">
+            <span className="text-white dark:text-neutral-900 text-xs font-medium">You</span>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className={cn('flex flex-col h-full bg-white dark:bg-neutral-950', className)}>
-      {/* Messages Area */}
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto px-4 py-6"
@@ -176,55 +220,20 @@ export function VercelChat({
             </div>
           )}
 
-          {messages.map((msg, index) => {
-            const isUser = msg.isTextMessage() && msg.role === MessageRole.User;
-            const isAssistant = msg.isTextMessage() && msg.role === MessageRole.Assistant;
+          {messages.map(renderMessage)}
 
-            // Skip system messages and other types
-            if (!isUser && !isAssistant) return null;
-
-            const messageContent = getMessageContent(msg);
-
-            return (
-              <div
-                key={msg.id}
-                className={cn(
-                  'flex gap-3 animate-fade-in',
-                  isUser ? 'justify-end' : 'justify-start'
-                )}
-                style={{ animationDelay: `${index * 30}ms` }}
-              >
-                {!isUser && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shadow-sm">
-                    <Sparkles className="w-4 h-4 text-white" />
-                  </div>
-                )}
-
-                <div
-                  className={cn(
-                    'max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed',
-                    isUser
-                      ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-tr-sm'
-                      : 'bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-tl-sm border border-neutral-200/60 dark:border-neutral-800/60'
-                  )}
-                >
-                  <div
-                    className="whitespace-pre-wrap break-words"
-                    dangerouslySetInnerHTML={{ __html: formatMessageContent(messageContent) }}
-                  />
-                </div>
-
-                {isUser && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-neutral-900 dark:bg-white flex items-center justify-center shadow-sm">
-                    <span className="text-white dark:text-neutral-900 text-xs font-medium">You</span>
-                  </div>
-                )}
+          {sendError && (
+            <div className="flex gap-3 justify-start animate-fade-in">
+              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/50 flex items-center justify-center shadow-sm">
+                <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
               </div>
-            );
-          })}
+              <div className="max-w-[85%] rounded-2xl rounded-tl-sm px-4 py-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 text-sm">
+                <p className="text-red-800 dark:text-red-300">Failed to send message. Please try again.</p>
+              </div>
+            </div>
+          )}
 
-          {/* Loading Indicator - Only show when there are messages */}
-          {isLoading && messages.length > 0 && (
+          {isLoading && (
             <div className="flex gap-3 justify-start animate-fade-in">
               <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shadow-sm">
                 <Sparkles className="w-4 h-4 text-white" />
@@ -243,7 +252,6 @@ export function VercelChat({
         </div>
       </div>
 
-      {/* Input Area */}
       <div className="border-t border-neutral-200/60 dark:border-neutral-800/60 p-4">
         <div className="flex items-end gap-3">
           <div className="flex-1 relative group">
@@ -290,10 +298,9 @@ export function VercelChat({
           </button>
         </div>
 
-        {/* Clear Chat Button */}
         {messages.length > 0 && (
           <button
-            onClick={chatHook.reset}
+            onClick={reset}
             className="mt-3 text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors flex items-center gap-1.5"
           >
             <X className="w-3 h-3" />

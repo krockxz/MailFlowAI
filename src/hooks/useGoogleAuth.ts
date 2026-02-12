@@ -4,7 +4,7 @@ import { GmailService } from '@/services/gmail';
 import { storeToken, setTimestamp, clearAllTokens } from '@/lib/token-storage';
 
 export function useGoogleAuth() {
-    const { setUser, setAccessToken, setEmails } = useAppStore();
+    const { logout: storeLogout, setUser, setAccessToken, setEmails } = useAppStore();
 
     const login = useGoogleLogin({
         scope: 'https://www.googleapis.com/auth/gmail.modify',
@@ -44,16 +44,13 @@ export function useGoogleAuth() {
             console.error('[useGoogleAuth] Non-OAuth error:', error);
             if (error.type === 'popup_failed_to_open') {
                 alert('Popup was blocked. Please allow popups for this site and try again.');
-            } else if (error.type === 'popup_closed') {
-                console.log('User closed the Google sign-in popup');
             }
         },
     });
 
     const logout = () => {
-        setUser(null);
-        setAccessToken(null);
         clearAllTokens();
+        storeLogout();
         window.location.reload();
     };
 

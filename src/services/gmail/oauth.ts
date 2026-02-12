@@ -68,6 +68,7 @@ export async function refreshToken(
   clientSecret: string
 ): Promise<{
   access_token: string;
+  refresh_token?: string;
   expires_in: number;
 }> {
   const response = await fetch('https://oauth2.googleapis.com/token', {

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { VercelChat } from '@/components/ui/vercel-chat';
 import { useAppStore } from '@/store';
+import { isAuthenticated as checkAuthStatus } from '@/services/auth';
 
 interface CopilotSidebarProps {
   isOpen: boolean;
@@ -17,7 +18,9 @@ const DEFAULT_WIDTH = 340;
 const isCopilotConfigured = !!import.meta.env.VITE_COPILOT_API_KEY;
 
 export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
-  const isAuthenticated = useAppStore((state) => state.isAuthenticated);
+  // Use both store state and direct auth check for reliability
+  const storeAuthState = useAppStore((state) => state.isAuthenticated);
+  const isAuthenticated = storeAuthState || checkAuthStatus();
   const [width, setWidth] = useState(DEFAULT_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
   const resizeHandleRef = useRef<HTMLDivElement>(null);
@@ -139,8 +142,8 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
                 <AlertCircle className="w-6 h-6 text-neutral-400" />
               </div>
               <h3 className="font-medium text-sm text-neutral-900 dark:text-white mb-2">AI not configured</h3>
-              <p className="text-xs text-neutral-500 dark:text-neutral-500 max-w-[220px] mb-4">
-                Add <span className="px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-[10px] font-mono">VITE_COPILOT_API_KEY</span> to your .env file
+              <p className="text-xs text-neutral-500 dark:text-neutral-500 max-w-[280px]">
+                Add <span className="px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-[10px] font-mono">VITE_COPILOT_API_KEY</span> to your .env file to enable the AI assistant.
               </p>
               <a
                 href="https://cloud.copilotkit.ai"

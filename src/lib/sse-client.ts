@@ -254,7 +254,7 @@ export class SSEClient {
    * Handle connection open event
    */
   private handleOpen(): void {
-    console.debug('[SSE] Connection opened');
+
     this.reconnectAttempts = 0;
     this.setState('connected');
     this.resetKeepAlive();
@@ -329,7 +329,7 @@ export class SSEClient {
   private setState(state: ConnectionState): void {
     if (this.connectionState !== state) {
       this.connectionState = state;
-      console.debug(`[SSE] State changed to: ${state}`);
+
       if (this.onStateChange) {
         this.onStateChange(state);
       }
@@ -386,7 +386,7 @@ export class SSEClient {
       this.reconnectInterval.max
     );
 
-    console.debug(`[SSE] Scheduling reconnect in ${delay}ms (attempt ${this.reconnectAttempts + 1})`);
+
 
     this.reconnectTimer = setTimeout(() => {
       this.reconnectAttempts++;

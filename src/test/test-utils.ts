@@ -69,7 +69,11 @@ export const mockStoreState = {
   selectedEmailId: null,
   activeThread: null,
   emails: { inbox: [], sent: [] },
-  filters: {},
+  // Per-view filters - each view maintains its own filter state
+  filters: {
+    inbox: {},
+    sent: {},
+  },
   pagination: {
     inbox: { pageToken: null, nextPageToken: null, hasMore: true, isLoading: false },
     sent: { pageToken: null, nextPageToken: null, hasMore: true, isLoading: false },

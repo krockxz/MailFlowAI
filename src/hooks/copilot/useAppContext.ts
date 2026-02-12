@@ -16,9 +16,12 @@ export function useAppContext() {
     currentView,
     selectedEmailId,
     emails,
-    filters,
+    getCurrentFilters,
     user,
   } = useAppStore();
+
+  // Get the current view's filters for AI context
+  const currentFilters = getCurrentFilters();
 
   // Provide current view context
   useCopilotReadable({
@@ -26,7 +29,7 @@ export function useAppContext() {
     value: JSON.stringify({
       view: currentView,
       selectedEmailId,
-      filterState: filters,
+      filterState: currentFilters,
       userEmail: user?.emailAddress,
     }),
   });

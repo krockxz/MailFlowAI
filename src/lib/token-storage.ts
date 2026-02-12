@@ -165,9 +165,7 @@ export function migrateToken(): void {
       localStorage.removeItem(LEGACY_STORAGE_KEYS.timestamp);
     }
 
-    if (accessToken || refreshToken || timestamp) {
-      console.log('Migrated tokens from localStorage to sessionStorage');
-    }
+
   } catch (error) {
     console.error('Failed to migrate tokens:', error);
   }

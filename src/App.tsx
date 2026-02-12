@@ -10,12 +10,13 @@ import { EmailDetail } from '@/components/EmailDetail';
 import { Compose } from '@/components/Compose';
 import { FilterBar } from '@/components/FilterBar';
 import { Moon, Sun, RefreshCw, Sparkles } from 'lucide-react';
-import { getStoredAccessToken, isAuthenticated } from '@/services/auth';
+import { getStoredAccessToken, isAuthenticated as checkIsAuthenticated, setTokenTimestamp } from '@/services/auth';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Button } from '@/components/ui/button';
 import { formatReplyDate, isWithinRange } from '@/lib/utils';
 import { SendConfirmDialog, type EmailConfirmData } from '@/components/SendConfirmDialog';
 import { CopilotSidebar } from '@/components/CopilotSidebar';
+import { InlineErrorBoundary } from '@/components/ErrorBoundary';
 
 /*
  * RESPONSIVE DESIGN STRATEGY
@@ -51,7 +52,6 @@ function AppContent() {
     currentView,
     selectedEmailId,
     emails,
-    filters,
     darkMode,
     toggleDarkMode,
     setCurrentView,
@@ -61,6 +61,8 @@ function AppContent() {
     compose,
     setCompose,
     resetCompose,
+    getCurrentFilters,
+    isAuthenticated,
   } = useAppStore();
 
   const {
@@ -87,7 +89,7 @@ function AppContent() {
   // Set up real-time sync (polling every 30 seconds)
   const { sync } = useRealtimeEmailSync({
     pollingInterval: 30000,
-    enabled: isAuthenticated() || undefined,
+    enabled: isAuthenticated || undefined,
   });
 
   // Sync compose state: use store directly (single source of truth)
@@ -112,25 +114,48 @@ function AppContent() {
   // Check auth on mount and fetch user data
   useEffect(() => {
     const checkAuth = async () => {
-      if (isAuthenticated()) {
-        const token = getStoredAccessToken();
-        if (token) {
-          setAccessToken(token);
+      const token = getStoredAccessToken();
+      const hasValidToken = checkIsAuthenticated();
 
-          // Fetch user profile
+      // If persisted state says authenticated but no token exists, clear the state
+      const store = useAppStore.getState();
+      if (store.isAuthenticated && !hasValidToken) {
+        store.setIsAuthenticated(false);
+        store.setUser(null);
+        store.setAccessToken(null);
+        return;
+      }
+
+      // If token exists, verify and fetch user data
+      if (hasValidToken && token) {
+        setAccessToken(token);
+
+        // Mark token as fresh (prevents immediate expiration)
+        setTokenTimestamp();
+
+        // Fetch user profile if not already loaded
+        if (!store.user) {
           try {
             const { GmailService } = await import('@/services/gmail');
             const gmail = new GmailService(token);
             const profile = await gmail.getUserProfile();
             setUser({ emailAddress: profile.emailAddress });
+            store.setIsAuthenticated(true);
           } catch (error) {
             console.error('Failed to fetch user profile:', error);
+            // Token might be expired, clear auth state
+            store.setIsAuthenticated(false);
+            store.setAccessToken(null);
+            return;
           }
+        } else {
+          // User already persisted, just ensure auth state is correct
+          store.setIsAuthenticated(true);
+        }
 
-          // Only fetch inbox if it's empty (avoid duplicate fetches)
-          if (emails.inbox.length === 0) {
-            await fetchInbox();
-          }
+        // Only fetch inbox if it's empty (avoid duplicate fetches)
+        if (emails.inbox.length === 0) {
+          await fetchInbox();
         }
       }
     };
@@ -141,7 +166,7 @@ function AppContent() {
   // Refresh emails when view changes
   useEffect(() => {
     const fetchForView = async () => {
-      if (!isAuthenticated()) return;
+      if (!checkIsAuthenticated()) return;
 
       // Reset pagination when switching views
       resetAllPagination();
@@ -155,12 +180,15 @@ function AppContent() {
     fetchForView();
   }, [currentView, fetchInbox, fetchSent, resetAllPagination]);
 
+  // Get the current view's filters
+  const currentFilters = getCurrentFilters();
+
   // Reset pagination when filters change
   useEffect(() => {
-    if (filters && Object.keys(filters).length > 0) {
+    if (currentFilters && Object.keys(currentFilters).length > 0) {
       resetAllPagination();
     }
-  }, [filters, resetAllPagination]);
+  }, [currentFilters, resetAllPagination]);
 
   // Get current email list based on view with filters applied
   const getCurrentEmails = useCallback(() => {
@@ -168,14 +196,14 @@ function AppContent() {
                       currentView === 'sent' ? emails.sent : [];
 
     // Apply filters if any are set
-    if (!filters || Object.keys(filters).length === 0) {
+    if (!currentFilters || Object.keys(currentFilters).length === 0) {
       return emailList;
     }
 
     return emailList.filter((email: Email) => {
       // Filter by query (searches subject and body)
-      if (filters.query) {
-        const query = filters.query.toLowerCase();
+      if (currentFilters.query) {
+        const query = currentFilters.query.toLowerCase();
         const subjectMatch = email.subject.toLowerCase().includes(query);
         const bodyMatch = email.body.toLowerCase().includes(query);
         const fromMatch = email.from.email.toLowerCase().includes(query) ||
@@ -186,8 +214,8 @@ function AppContent() {
       }
 
       // Filter by sender
-      if (filters.sender) {
-        const sender = filters.sender.toLowerCase();
+      if (currentFilters.sender) {
+        const sender = currentFilters.sender.toLowerCase();
         const matchesEmail = email.from.email.toLowerCase().includes(sender);
         const matchesName = email.from.name && email.from.name.toLowerCase().includes(sender);
         if (!matchesEmail && !matchesName) {
@@ -196,20 +224,20 @@ function AppContent() {
       }
 
       // Filter by unread status
-      if (filters.isUnread !== undefined && email.isUnread !== filters.isUnread) {
+      if (currentFilters.isUnread !== undefined && email.isUnread !== currentFilters.isUnread) {
         return false;
       }
 
       // Filter by date range
-      if (filters.dateFrom || filters.dateTo) {
-        if (!isWithinRange(email.date, filters.dateFrom, filters.dateTo)) {
+      if (currentFilters.dateFrom || currentFilters.dateTo) {
+        if (!isWithinRange(email.date, currentFilters.dateFrom, currentFilters.dateTo)) {
           return false;
         }
       }
 
       return true;
     });
-  }, [currentView, emails, filters]);
+  }, [currentView, emails, currentFilters]);
 
   // Get current pagination state based on view
   const getCurrentPagination = useCallback(() => {
@@ -358,7 +386,7 @@ function AppContent() {
         unreadCount={unreadCount}
         isLoading={isLoading}
         onRefresh={currentView === 'inbox' ? fetchInbox : fetchSent}
-        isAuthenticated={isAuthenticated()}
+        isAuthenticated={isAuthenticated}
       />
 
       {/* Main content */}
@@ -369,7 +397,7 @@ function AppContent() {
             {/* Filters */}
             <div className="flex-1">
               <FilterBar
-                filters={filters}
+                filters={currentFilters}
                 onFiltersChange={useAppStore.getState().setFilters}
               />
             </div>
@@ -421,31 +449,35 @@ function AppContent() {
 
         {/* Content area */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Email list */}
-          {selectedEmail ? (
-            <EmailDetail
-              email={selectedEmail}
-              onBack={() => setSelectedEmailId(null)}
-              onReply={handleReply}
-              onForward={handleForward}
-            />
-          ) : (
-            <EmailList
-              emails={getCurrentEmails()}
-              selectedId={selectedEmailId}
-              onSelectEmail={handleSelectEmail}
-              pagination={getCurrentPagination()}
-              onLoadMore={handleLoadMore}
-            />
-          )}
+          {/* Email list/detail with error boundary */}
+          <InlineErrorBoundary componentName="EmailDetail">
+            {selectedEmail ? (
+              <EmailDetail
+                email={selectedEmail}
+                onBack={() => setSelectedEmailId(null)}
+                onReply={handleReply}
+                onForward={handleForward}
+              />
+            ) : (
+              <EmailList
+                emails={getCurrentEmails()}
+                selectedId={selectedEmailId}
+                onSelectEmail={handleSelectEmail}
+                pagination={getCurrentPagination()}
+                onLoadMore={handleLoadMore}
+              />
+            )}
+          </InlineErrorBoundary>
         </div>
       </div>
 
       {/* AI Assistant Sidebar */}
-      <CopilotSidebar
-        isOpen={isCopilotOpen}
-        onClose={() => setIsCopilotOpen(false)}
-      />
+      <InlineErrorBoundary componentName="CopilotSidebar">
+        <CopilotSidebar
+          isOpen={isCopilotOpen}
+          onClose={() => setIsCopilotOpen(false)}
+        />
+      </InlineErrorBoundary>
 
       {/* Compose modal - uses store state */}
       <Compose

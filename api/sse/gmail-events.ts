@@ -1,14 +1,7 @@
 /**
- * SSE Endpoint with KV Integration
- *
- * This SSE endpoint polls Vercel KV for new Gmail webhook events
- * and broadcasts them to connected clients via Server-Sent Events.
- *
- * @route GET /api/sse/gmail-events
- * @runtime edge
+ * SSE Endpoint with Upstash Redis Integration
  */
 
-import { kv } from '@vercel/kv';
 import type { SSEEvent, ConnectionData } from './types';
 import { formatSSEMessage, createKeepAliveMessage, SSE_HEADERS } from './types';
 
@@ -21,14 +14,34 @@ interface EmailEvent {
 }
 
 const KV_EVENTS_KEY = 'email:events';
-const EVENT_POLL_INTERVAL = 1000; // Poll every second when using KV
+const EVENT_POLL_INTERVAL = 1000; // Poll every second
+
+// Upstash REST API configuration
+const UPSTASH_REST_URL = process.env.KV_REST_API_URL || '';
+const UPSTASH_REST_TOKEN = process.env.KV_REST_API_TOKEN || '';
 
 /**
- * Fetch new events from KV storage
+ * Fetch new events from Upstash Redis
  */
 async function fetchNewEvents(since: number): Promise<EmailEvent[]> {
+  if (!UPSTASH_REST_URL || !UPSTASH_REST_TOKEN) {
+    console.warn('Upstash credentials not found');
+    return [];
+  }
+
   try {
-    const rawEvents = await kv.lrange(KV_EVENTS_KEY, 0, 49);
+    const response = await fetch(`${UPSTASH_REST_URL}/lrange/${KV_EVENTS_KEY}/0/49`, {
+      headers: {
+        'Authorization': `Bearer ${UPSTASH_REST_TOKEN}`,
+      },
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json();
+    const rawEvents = data.result || [];
 
     const events: EmailEvent[] = rawEvents
       .map((e: string) => JSON.parse(e))
@@ -37,16 +50,13 @@ async function fetchNewEvents(since: number): Promise<EmailEvent[]> {
 
     return events;
   } catch (error) {
-    console.error('Error fetching events from KV:', error);
+    console.error('Error fetching events from Redis:', error);
     return [];
   }
 }
 
 /**
  * GET /api/sse/gmail-events
- *
- * Establishes an SSE connection that polls for new Gmail webhook events
- * from Vercel KV and broadcasts them to the client in real-time.
  */
 export async function GET(): Promise<Response> {
   const clientId = crypto.randomUUID();

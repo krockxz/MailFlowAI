@@ -25,6 +25,20 @@ export interface NewEmailData {
   isUnread: boolean;
 }
 
+export interface EmailReadData {
+  id: string;
+  threadId: string;
+  isRead: boolean;
+}
+
+export interface EmailSentData {
+  id: string;
+  threadId: string;
+  to: string[];
+  subject: string;
+  timestamp: string;
+}
+
 export interface ConnectionData {
   status: 'connected' | 'disconnected';
   clientId?: string;

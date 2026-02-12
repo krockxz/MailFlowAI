@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { AppStore } from '@/types/store';
+import type { FilterState } from '@/types/email';
 import { getTheme, setTheme } from '@/components/theme-provider';
 
 const createInitialPaginationState = () => ({
@@ -17,8 +18,8 @@ export const useAppStore = create<AppStore>()(
       const initialDarkMode = getTheme() === 'dark';
 
       return {
-        // Initial state
-        user: null,
+        // Initial state - using 'as' to satisfy type checker
+        user: null as AppStore['user'],
         isAuthenticated: false,
         accessToken: null,
 
@@ -30,12 +31,16 @@ export const useAppStore = create<AppStore>()(
           inbox: [],
           sent: [],
         },
-        filters: {},
+        // Per-view filters - each view maintains its own filter state
+        filters: {
+          inbox: {} as FilterState,
+          sent: {} as FilterState,
+        } as AppStore['filters'],
 
         pagination: {
           inbox: createInitialPaginationState(),
           sent: createInitialPaginationState(),
-        },
+        } as AppStore['pagination'],
 
         isLoading: false,
         isSending: false,
@@ -50,16 +55,17 @@ export const useAppStore = create<AppStore>()(
           bcc: '',
           isSending: false,
           isAIComposed: false,
-        },
+        } as AppStore['compose'],
 
-        lastSyncTime: null,
+        lastSyncTime: null as AppStore['lastSyncTime'],
         hasNewEmails: false,
 
         darkMode: initialDarkMode,
 
         // Actions
-        setUser: (user) => set({ user, isAuthenticated: !!user }),
-        setAccessToken: (token) => set({ accessToken: token }),
+        setUser: (user: AppStore['user']) => set({ user, isAuthenticated: !!user }),
+        setAccessToken: (token: string | null) => set({ accessToken: token }),
+        setIsAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
 
         logout: () => set({
           user: null,
@@ -68,16 +74,16 @@ export const useAppStore = create<AppStore>()(
           emails: { inbox: [], sent: [] },
         }),
 
-        setCurrentView: (view) => set({ currentView: view }),
-        setSelectedEmailId: (id) => set({ selectedEmailId: id }),
-        setActiveThread: (thread) => set({ activeThread: thread }),
+        setCurrentView: (view: AppStore['currentView']) => set({ currentView: view }),
+        setSelectedEmailId: (id: string | null) => set({ selectedEmailId: id }),
+        setActiveThread: (thread: AppStore['activeThread']) => set({ activeThread: thread }),
 
-        setEmails: (type, emails) =>
+        setEmails: (type: 'inbox' | 'sent', emails: AppStore['emails']['inbox']) =>
           set((state) => ({
             emails: { ...state.emails, [type]: emails },
           })),
 
-        addEmail: (type, email) =>
+        addEmail: (type: 'inbox' | 'sent', email: AppStore['emails']['inbox'][0]) =>
           set((state) => ({
             emails: {
               ...state.emails,
@@ -85,7 +91,7 @@ export const useAppStore = create<AppStore>()(
             },
           })),
 
-        updateEmail: (id, updates) =>
+        updateEmail: (id: string, updates: Partial<AppStore['emails']['inbox'][0]>) =>
           set((state) => ({
             emails: {
               inbox: state.emails.inbox.map((e) =>
@@ -97,7 +103,7 @@ export const useAppStore = create<AppStore>()(
             },
           })),
 
-        deleteEmail: (id) =>
+        deleteEmail: (id: string) =>
           set((state) => ({
             emails: {
               inbox: state.emails.inbox.filter((e) => e.id !== id),
@@ -105,14 +111,57 @@ export const useAppStore = create<AppStore>()(
             },
           })),
 
-        setFilters: (filters) => set({ filters }),
-        clearFilters: () => set({ filters: {} }),
+        // Get the current view's filters
+        getCurrentFilters: (): FilterState => {
+          const state = useAppStore.getState();
+          const view = state.currentView;
+          if (view === 'inbox') return state.filters.inbox;
+          if (view === 'sent') return state.filters.sent;
+          return {};
+        },
 
-        setIsLoading: (loading) => set({ isLoading: loading }),
-        setIsSending: (sending) => set({ isSending: sending }),
+        // Set filters for the current view
+        setFilters: (filters: FilterState) =>
+          set((state) => {
+            const view = state.currentView;
+            if (view === 'inbox') {
+              return { filters: { ...state.filters, inbox: filters } };
+            }
+            if (view === 'sent') {
+              return { filters: { ...state.filters, sent: filters } };
+            }
+            return { filters: state.filters };
+          }),
 
-        setLastSyncTime: (time) => set({ lastSyncTime: time }),
-        setHasNewEmails: (hasNew) => set({ hasNewEmails: hasNew }),
+        // Set filters for a specific view
+        setFiltersForView: (view: AppStore['currentView'], filters: FilterState) =>
+          set((state) => {
+            if (view === 'inbox') {
+              return { filters: { ...state.filters, inbox: filters } };
+            }
+            if (view === 'sent') {
+              return { filters: { ...state.filters, sent: filters } };
+            }
+            return state;
+          }),
+
+        clearFilters: () =>
+          set((state) => {
+            const view = state.currentView;
+            if (view === 'inbox') {
+              return { filters: { ...state.filters, inbox: {} } };
+            }
+            if (view === 'sent') {
+              return { filters: { ...state.filters, sent: {} } };
+            }
+            return state;
+          }),
+
+        setIsLoading: (loading: boolean) => set({ isLoading: loading }),
+        setIsSending: (sending: boolean) => set({ isSending: sending }),
+
+        setLastSyncTime: (time: Date) => set({ lastSyncTime: time }),
+        setHasNewEmails: (hasNew: boolean) => set({ hasNewEmails: hasNew }),
 
         toggleDarkMode: () => {
           const currentState = getTheme() === 'dark'
@@ -120,13 +169,13 @@ export const useAppStore = create<AppStore>()(
           setTheme(newTheme)
           set({ darkMode: !currentState })
         },
-        setDarkMode: (dark) => {
+        setDarkMode: (dark: boolean) => {
           setTheme(dark ? 'dark' : 'light')
           set({ darkMode: dark })
         },
 
         // Compose actions
-        setCompose: (compose) => set({ compose }),
+        setCompose: (compose: AppStore['compose']) => set({ compose }),
         resetCompose: () => set({
           compose: {
             isOpen: false,
@@ -140,7 +189,7 @@ export const useAppStore = create<AppStore>()(
         }),
 
         // Pagination actions
-        setPagination: (type, updates) =>
+        setPagination: (type: 'inbox' | 'sent', updates: Partial<AppStore['pagination']['inbox']>) =>
           set((state) => ({
             pagination: {
               ...state.pagination,
@@ -148,7 +197,7 @@ export const useAppStore = create<AppStore>()(
             },
           })),
 
-        resetPagination: (type) =>
+        resetPagination: (type: 'inbox' | 'sent') =>
           set((state) => ({
             pagination: {
               ...state.pagination,
@@ -169,6 +218,8 @@ export const useAppStore = create<AppStore>()(
       name: 'ai-mail-app-storage',
       partialize: (state) => ({
         user: state.user,
+        isAuthenticated: state.isAuthenticated,
+        darkMode: state.darkMode,
       }),
     }
   )

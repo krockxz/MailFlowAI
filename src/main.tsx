@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { CopilotKit } from '@copilotkit/react-core'
 import { GoogleOAuthProvider } from '@react-oauth/google'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import './index.css'
 import App from './App.tsx'
 
@@ -13,13 +14,6 @@ const COPILOT_ENDPOINT = import.meta.env.VITE_COPILOT_ENDPOINT
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GMAIL_CLIENT_ID
 
-console.log('[main.tsx] Environment check:', {
-  'VITE_GMAIL_CLIENT_ID': GOOGLE_CLIENT_ID ? 'SET' : 'UNSET',
-  'VITE_GMAIL_CLIENT_ID length': GOOGLE_CLIENT_ID?.length,
-  'VITE_COPILOT_API_KEY': COPILOT_API_KEY ? 'SET' : 'UNSET',
-  'VITE_COPILOT_API_KEY length': COPILOT_API_KEY?.length,
-});
-
 // Warn if CopilotKit is not configured
 if (!COPILOT_API_KEY) {
   console.warn(
@@ -29,12 +23,33 @@ if (!COPILOT_API_KEY) {
   )
 }
 
+/**
+ * Error handler for app-level errors
+ */
+function handleAppError(error: Error, errorInfo: React.ErrorInfo) {
+  // Log to console with structured format
+  console.error('[AppErrorBoundary] Unhandled error:', {
+    message: error.message,
+    stack: error.stack,
+    componentStack: errorInfo.componentStack,
+    timestamp: new Date().toISOString(),
+  });
+
+  // In production, you could send this to an error tracking service
+  // e.g., Sentry, LogRocket, etc.
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <CopilotKit publicApiKey={COPILOT_API_KEY} runtimeUrl={COPILOT_ENDPOINT}>
-        <App />
-      </CopilotKit>
-    </GoogleOAuthProvider>
+    <ErrorBoundary
+      componentName="App"
+      onError={handleAppError}
+    >
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <CopilotKit publicApiKey={COPILOT_API_KEY} {...(COPILOT_ENDPOINT && { runtimeUrl: COPILOT_ENDPOINT })}>
+          <App />
+        </CopilotKit>
+      </GoogleOAuthProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )

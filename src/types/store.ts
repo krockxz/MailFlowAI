@@ -19,7 +19,11 @@ export interface AppState {
     inbox: Email[];
     sent: Email[];
   };
-  filters: FilterState;
+  // Per-view filters - each view maintains its own filter state
+  filters: {
+    inbox: FilterState;
+    sent: FilterState;
+  };
 
   // Pagination state
   pagination: PaginationState;
@@ -55,6 +59,7 @@ export interface AppActions {
   // Authentication
   setUser: (user: UserProfile | null) => void;
   setAccessToken: (token: string | null) => void;
+  setIsAuthenticated: (isAuthenticated: boolean) => void;
   logout: () => void;
 
   // UI actions
@@ -68,9 +73,12 @@ export interface AppActions {
   updateEmail: (id: string, updates: Partial<Email>) => void;
   deleteEmail: (id: string) => void;
 
-  // Filter actions
+  // Filter actions - set filters for the current view
   setFilters: (filters: FilterState) => void;
+  setFiltersForView: (view: ViewType, filters: FilterState) => void;
   clearFilters: () => void;
+  // Get the current view's filters
+  getCurrentFilters: () => FilterState;
 
   // Loading actions
   setIsLoading: (loading: boolean) => void;

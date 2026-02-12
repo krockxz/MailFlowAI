@@ -2,9 +2,9 @@ import { GmailService } from './gmail';
 import {
   storeToken,
   getToken,
-  setTimestamp,
   getTimestamp,
-  clearAllTokens
+  setTimestamp,
+  clearAllTokens,
 } from '@/lib/token-storage';
 
 /**
@@ -33,12 +33,14 @@ export function getOAuthConfig(): OAuthConfig {
  * Generate random state for OAuth flow
  */
 export function generateState(): string {
-  return Math.random().toString(36).substring(2, 15) +
-         Math.random().toString(36).substring(2, 15);
+  return (
+    Math.random().toString(36).substring(2, 15) +
+    Math.random().toString(36).substring(2, 15)
+  );
 }
 
 /**
- * Store OAuth state in session storage
+ * Store OAuth state
  */
 export function storeOAuthState(state: string): void {
   sessionStorage.setItem('oauth_state', state);
@@ -46,99 +48,21 @@ export function storeOAuthState(state: string): void {
 }
 
 /**
- * Verify OAuth state
- */
-export function verifyOAuthState(state: string): boolean {
-  const storedState = sessionStorage.getItem('oauth_state');
-  const timestamp = sessionStorage.getItem('oauth_timestamp');
-
-  if (!storedState || !timestamp) {
-    return false;
-  }
-
-  // State should match and be less than 10 minutes old
-  const age = Date.now() - parseInt(timestamp);
-  if (age > 10 * 60 * 1000) {
-    sessionStorage.removeItem('oauth_state');
-    sessionStorage.removeItem('oauth_timestamp');
-    return false;
-  }
-
-  return storedState === state;
-}
-
-/**
- * Clear OAuth state
- */
-export function clearOAuthState(): void {
-  sessionStorage.removeItem('oauth_state');
-  sessionStorage.removeItem('oauth_timestamp');
-}
-
-/**
- * Handle OAuth callback
- */
-export async function handleOAuthCallback(
-  code: string,
-  state: string
-): Promise<{
-  accessToken: string;
-  refreshToken?: string;
-  userProfile: { emailAddress: string };
-}> {
-  // Verify state
-  if (!verifyOAuthState(state)) {
-    throw new Error('Invalid OAuth state');
-  }
-
-  clearOAuthState();
-
-  const config = getOAuthConfig();
-
-  // Exchange code for tokens
-  const tokens = await GmailService.exchangeCodeForToken(
-    code,
-    config.clientId,
-    config.clientSecret,
-    config.redirectUri
-  );
-
-  // Get user profile
-  const gmail = new GmailService(tokens.access_token);
-  const profile = await gmail.getUserProfile();
-
-  return {
-    accessToken: tokens.access_token,
-    refreshToken: tokens.refresh_token,
-    userProfile: {
-      emailAddress: profile.emailAddress,
-    },
-  };
-}
-
-/**
- * Store tokens using secure storage abstraction
- */
-export function storeTokens(accessToken: string, refreshToken?: string): void {
-  storeToken('access', accessToken);
-  if (refreshToken) {
-    storeToken('refresh', refreshToken);
-  }
-  setTimestamp(Date.now());
-}
-
-/**
  * Get stored access token
+ * Refresh token is preferred if more recent than access token
  */
 export function getStoredAccessToken(): string | null {
-  return getToken('access');
+  // Logic simplified as token-storage only tracks one timestamp
+  const token = getToken('access');
+  return token || null;
 }
 
 /**
- * Get stored refresh token
+ * Set a fresh timestamp for the access token (marks it as valid)
  */
-export function getStoredRefreshToken(): string | null {
-  return getToken('refresh');
+export function setTokenTimestamp(): void {
+  const timestamp = Date.now();
+  setTimestamp(timestamp);
 }
 
 /**
@@ -146,18 +70,40 @@ export function getStoredRefreshToken(): string | null {
  */
 export function isTokenExpired(): boolean {
   const timestamp = getTimestamp();
-  if (!timestamp) return true;
 
-  const age = Date.now() - timestamp;
-  // Consider expired after 55 minutes (token is valid for 1 hour)
+  // If no timestamp stored, token is expired
+  if (!timestamp) {
+    return true;
+  }
+
+  // Token is expired if older than 55 minutes (1 hour)
+  const age = Date.now() - Number(timestamp);
   return age > 55 * 60 * 1000;
+}
+
+/**
+ * Initiate OAuth flow
+ */
+export function initiateOAuth(): void {
+  const config = getOAuthConfig();
+  const state = generateState();
+  storeOAuthState(state);
+
+  const authUrl = GmailService.getAuthUrl(
+    config.clientId,
+    config.redirectUri,
+    state
+  );
+
+  window.location.href = authUrl;
 }
 
 /**
  * Refresh access token
  */
 export async function refreshAccessToken(): Promise<string> {
-  const refreshToken = getStoredRefreshToken();
+  const refreshToken = getToken('refresh');
+
   if (!refreshToken) {
     throw new Error('No refresh token available');
   }
@@ -169,12 +115,17 @@ export async function refreshAccessToken(): Promise<string> {
     config.clientSecret
   );
 
-  storeTokens(tokens.access_token, refreshToken);
+  storeToken('access', tokens.access_token);
+  // Gmail API replaces refresh token sometimes, but if not we keep the old one.
+  // Assuming tokens object might have refresh_token
+  if (tokens.refresh_token) {
+    storeToken('refresh', tokens.refresh_token);
+  }
   return tokens.access_token;
 }
 
 /**
- * Get valid access token, refreshing if necessary
+ * Get valid access token (refreshing if necessary)
  */
 export async function getValidAccessToken(): Promise<string> {
   const storedToken = getStoredAccessToken();
@@ -187,33 +138,22 @@ export async function getValidAccessToken(): Promise<string> {
 }
 
 /**
- * Clear stored tokens (logout)
- */
-export function clearTokens(): void {
-  clearAllTokens();
-}
-
-/**
  * Check if user is authenticated
+ * Returns true if user has a valid, non-expired access token
  */
 export function isAuthenticated(): boolean {
   return !!getStoredAccessToken() && !isTokenExpired();
 }
 
 /**
- * Initiate OAuth flow
+ * Clear stored tokens (logout)
+ * Also syncs with Zustand store to keep authentication state in sync
  */
-export function initiateOAuth(): void {
-  const config = getOAuthConfig();
-  const state = generateState();
+export function clearTokens(): void {
+  clearAllTokens();
 
-  storeOAuthState(state);
-
-  const authUrl = GmailService.getAuthUrl(
-    config.clientId,
-    config.redirectUri,
-    state
-  );
-
-  window.location.href = authUrl;
+  // Sync with store - set isAuthenticated to false when tokens are cleared
+  import('@/store/useAppStore').then(({ useAppStore }) => {
+    useAppStore.getState().setIsAuthenticated(false);
+  });
 }
