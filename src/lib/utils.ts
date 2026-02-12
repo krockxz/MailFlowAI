@@ -159,3 +159,47 @@ export function isWithinRange(date: Date, start?: Date, end?: Date): boolean {
 export function formatReplyDate(date: Date): string {
   return dayjs(date).format('MMMM D, YYYY [at] h:mm A');
 }
+
+/**
+ * Creates a debounced function that delays invoking func until after wait milliseconds
+ * have elapsed since the last time the debounced function was invoked.
+ *
+ * @param func - The function to debounce
+ * @param wait - The number of milliseconds to delay
+ * @returns A new debounced function with a `cancel` method to clear pending calls
+ *
+ * @example
+ * ```ts
+ * const debouncedSearch = debounce((value: string) => {
+ *   performSearch(value);
+ * }, 300);
+ *
+ * debouncedSearch('query');
+ * debouncedSearch.cancel(); // Cancel pending invocation
+ * ```
+ */
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): ((...args: Parameters<T>) => void) & { cancel: () => void } {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  const debounced = (...args: Parameters<T>) => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      func(...args);
+      timeoutId = null;
+    }, wait);
+  };
+
+  debounced.cancel = () => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+  };
+
+  return debounced;
+}

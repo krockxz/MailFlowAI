@@ -74,7 +74,7 @@ export const useAppStore = create<AppStore>()(
           emails: { inbox: [], sent: [] },
         }),
 
-        setCurrentView: (view: AppStore['currentView']) => set({ currentView: view }),
+        setCurrentView: (view: AppStore['currentView']) => set({ currentView: view, selectedEmailId: null }),
         setSelectedEmailId: (id: string | null) => set({ selectedEmailId: id }),
         setActiveThread: (thread: AppStore['activeThread']) => set({ activeThread: thread }),
 
@@ -92,16 +92,37 @@ export const useAppStore = create<AppStore>()(
           })),
 
         updateEmail: (id: string, updates: Partial<AppStore['emails']['inbox'][0]>) =>
-          set((state) => ({
-            emails: {
-              inbox: state.emails.inbox.map((e) =>
-                e.id === id ? { ...e, ...updates } : e
-              ),
-              sent: state.emails.sent.map((e) =>
-                e.id === id ? { ...e, ...updates } : e
-              ),
-            },
-          })),
+          set((state) => {
+            // Find which folder contains the email
+            const inboxEmail = state.emails.inbox.find((e) => e.id === id);
+            const sentEmail = state.emails.sent.find((e) => e.id === id);
+
+            // Only update the folder that contains the email
+            if (inboxEmail) {
+              return {
+                emails: {
+                  ...state.emails,
+                  inbox: state.emails.inbox.map((e) =>
+                    e.id === id ? { ...e, ...updates } : e
+                  ),
+                },
+              };
+            }
+
+            if (sentEmail) {
+              return {
+                emails: {
+                  ...state.emails,
+                  sent: state.emails.sent.map((e) =>
+                    e.id === id ? { ...e, ...updates } : e
+                  ),
+                },
+              };
+            }
+
+            // Email not found in either folder, return state unchanged
+            return state;
+          }),
 
         deleteEmail: (id: string) =>
           set((state) => ({

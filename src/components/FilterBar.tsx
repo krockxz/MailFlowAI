@@ -1,7 +1,7 @@
 import { Search, X, Filter, Calendar as CalendarIcon, User } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { cn, debounce } from '@/lib/utils';
 import type { FilterState } from '@/types/email';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -45,26 +45,63 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
   const [isFilterPopoverOpen, setIsFilterPopoverOpen] = useState(false);
   const [dateFromOpen, setDateFromOpen] = useState(false);
   const [dateToOpen, setDateToOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Keep local state in sync with external filters
   useEffect(() => {
     setSearchQuery(filters.query || '');
   }, [filters.query]);
 
+  useEffect(() => {
+    setSenderFilter(filters.sender || '');
+  }, [filters.sender]);
+
+  // Debounced filter update (300ms delay)
+  const debouncedFilterUpdate = useCallback(
+    debounce((newFilters: FilterState) => {
+      setIsSearching(false);
+      onFiltersChange(newFilters);
+    }, 300),
+    [onFiltersChange]
+  );
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedFilterUpdate.cancel();
+    };
+  }, [debouncedFilterUpdate]);
+
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    onFiltersChange({ ...filters, query: value || undefined });
+    setIsSearching(true);
+    debouncedFilterUpdate({ ...filters, query: value || undefined });
+  };
+
+  const handleSenderChange = (value: string) => {
+    setSenderFilter(value);
+    setIsSearching(true);
+    debouncedFilterUpdate({
+      ...filters,
+      sender: value || undefined,
+    });
   };
 
   const clearSearch = () => {
     setSearchQuery('');
-    setSenderFilter('');
-    onFiltersChange({});
+    // Cancel any pending debounced search
+    debouncedFilterUpdate.cancel();
+    setIsSearching(false);
+    onFiltersChange({ ...filters, query: undefined });
   };
 
   const clearAllFilters = () => {
     setSearchQuery('');
     setSenderFilter('');
+    // Cancel any pending debounced search
+    debouncedFilterUpdate.cancel();
+    setIsSearching(false);
     onFiltersChange({});
   };
 
@@ -119,16 +156,22 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
       <div className="flex items-center gap-3">
         {/* Search input */}
         <div className="flex-1 relative group">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-neutral-400 group-focus-within:text-accent-500 transition-colors duration-300" />
+          <Search className={cn(
+            "absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-neutral-400 transition-colors duration-300",
+            isSearching ? "text-accent-500 animate-pulse" : "group-focus-within:text-accent-500"
+          )} />
           <Input
             ref={searchInputRef}
             type="text"
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search emails..."
-            className="pl-11 pr-10 bg-neutral-100/80 dark:bg-neutral-800/50 border-neutral-200/60 dark:border-neutral-700/50 focus-visible:bg-white dark:focus-visible:bg-neutral-900/50 focus-visible:border-accent-500 rounded-xl h-10 transition-all duration-300"
+            className={cn(
+              "pl-11 pr-10 bg-neutral-100/80 dark:bg-neutral-800/50 border-neutral-200/60 dark:border-neutral-700/50 focus-visible:bg-white dark:focus-visible:bg-neutral-900/50 focus-visible:border-accent-500 rounded-xl h-10 transition-all duration-300",
+              isSearching && "border-accent-400/50 dark:border-accent-500/50"
+            )}
           />
-          {searchQuery && (
+          {searchQuery && !isSearching && (
             <button
               onClick={clearSearch}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-all duration-200 p-1.5 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700/50 flex items-center justify-center"
@@ -136,6 +179,11 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
             >
               <X className="w-3.5 h-3.5" />
             </button>
+          )}
+          {isSearching && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="w-4 h-4 border-2 border-accent-500 border-t-transparent rounded-full animate-spin" />
+            </div>
           )}
         </div>
 
@@ -201,20 +249,23 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
                   <User className="w-3.5 h-3.5" />
                   From sender
                 </label>
-                <Input
-                  type="text"
-                  value={senderFilter}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSenderFilter(value);
-                    onFiltersChange({
-                      ...filters,
-                      sender: value || undefined,
-                    });
-                  }}
-                  placeholder="email@example.com"
-                  className="bg-neutral-100/80 dark:bg-neutral-800/50 border-neutral-200/60 dark:border-neutral-700/50 focus-visible:border-accent-500 rounded-lg h-10 text-sm"
-                />
+                <div className="relative">
+                  <Input
+                    type="text"
+                    value={senderFilter}
+                    onChange={(e) => handleSenderChange(e.target.value)}
+                    placeholder="email@example.com"
+                    className={cn(
+                      "bg-neutral-100/80 dark:bg-neutral-800/50 border-neutral-200/60 dark:border-neutral-700/50 focus-visible:border-accent-500 rounded-lg h-10 text-sm pr-9",
+                      isSearching && "border-accent-400/50 dark:border-accent-500/50"
+                    )}
+                  />
+                  {isSearching && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="w-4 h-4 border-2 border-accent-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Date range filter */}

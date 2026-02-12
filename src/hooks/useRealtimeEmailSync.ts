@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useAppStore } from '@/store';
 import { useEmails } from './useEmails';
+import { showInfo, showError } from '@/lib/toast';
 
 /**
  * SSE connection error type
@@ -65,6 +66,10 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
   const lastSyncTime = useRef<Date>(new Date());
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<SSEError | null>(null);
+  // Track if we've shown disconnection toast to avoid spamming
+  const hasShownDisconnectToastRef = useRef(false);
+  // Track if we were previously connected to show reconnection toast
+  const wasConnectedRef = useRef(false);
 
   /**
    * Manual sync trigger
@@ -84,6 +89,24 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
   }, [fetchInbox, isAuthenticated]);
 
   /**
+   * Clean up all connection resources (EventSource and any pending timeouts)
+   * This is called before creating new connections and during unmount
+   */
+  const cleanup = useCallback(() => {
+    // Close SSE connection
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+
+    // Clear any pending reconnection timeout
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+  }, []);
+
+  /**
    * Connect to SSE endpoint with reconnection logic
    */
   const connect = useCallback(() => {
@@ -91,10 +114,9 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
       return;
     }
 
-    // Clean up existing connection
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-    }
+    // Clean up existing connection AND any pending reconnection timeouts
+    // This prevents memory leaks when connect() is called multiple times
+    cleanup();
 
     // Build SSE URL - use the Gmail events endpoint which polls webhook
     const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
@@ -109,6 +131,13 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
         setIsConnected(true);
         setError(null); // Clear any previous errors
         reconnectAttemptsRef.current = 0; // Reset reconnect counter on successful connection
+        hasShownDisconnectToastRef.current = false; // Reset disconnect toast flag
+
+        // Show reconnection success toast if we were previously disconnected
+        if (wasConnectedRef.current) {
+          showInfo('Real-time sync reconnected');
+        }
+        wasConnectedRef.current = true;
       };
 
       // Handle new email events
@@ -136,6 +165,15 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
         sseError.type = 'connection';
         setError(sseError);
 
+        // Show user-facing toast notification (only once per disconnection event)
+        if (!hasShownDisconnectToastRef.current) {
+          showError(
+            'Real-time sync disconnected. Using polling mode instead.',
+            () => connect() // Allow manual retry via toast
+          );
+          hasShownDisconnectToastRef.current = true;
+        }
+
         // EventSource will automatically attempt to reconnect, but we implement
         // additional exponential backoff logic for better control
         const eventSourceInstance = eventSourceRef.current;
@@ -144,6 +182,11 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
           // Connection is closed, schedule reconnection with exponential backoff
           const delay = calculateReconnectDelay(reconnectAttemptsRef.current);
 
+          // Clear any existing timeout before scheduling a new one
+          // This prevents multiple timeouts from accumulating
+          if (reconnectTimeoutRef.current) {
+            clearTimeout(reconnectTimeoutRef.current);
+          }
 
           reconnectTimeoutRef.current = window.setTimeout(() => {
             reconnectAttemptsRef.current++;
@@ -158,12 +201,18 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
 
       // If initialization fails, schedule reconnection attempt
       const delay = calculateReconnectDelay(reconnectAttemptsRef.current);
+
+      // Clear any existing timeout before scheduling a new one
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+
       reconnectTimeoutRef.current = window.setTimeout(() => {
         reconnectAttemptsRef.current++;
         connect();
       }, delay);
     }
-  }, [sync, isAuthenticated]);
+  }, [sync, isAuthenticated, cleanup]);
 
   /**
    * Set up SSE connection and fallback polling
@@ -192,17 +241,8 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
 
     // Cleanup
     return () => {
-      // Close SSE connection
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
-      }
-
-      // Clear reconnection timeout
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-        reconnectTimeoutRef.current = null;
-      }
+      // Use the cleanup function to properly close SSE and clear timeouts
+      cleanup();
 
       // Clear polling interval
       if (intervalRef.current) {
@@ -210,7 +250,7 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
         intervalRef.current = null;
       }
     };
-  }, [enabled, pollingInterval, sync, connect, isAuthenticated]);
+  }, [enabled, pollingInterval, sync, connect, cleanup, isAuthenticated]);
 
   return {
     sync,
