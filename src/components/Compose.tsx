@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState } from 'react';
-import { X, Send, Loader2, Sparkles } from 'lucide-react';
+import { useRef, useEffect, useState, useCallback, memo } from 'react';
+import { X, Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +36,7 @@ interface ComposeProps {
 
 const MAX_BODY_LENGTH = 50000; // Gmail limit
 
-export function Compose({
+export const Compose = memo(function Compose({
   isOpen,
   onClose,
   onSend,
@@ -67,6 +67,7 @@ export function Compose({
   // Track user edits - monitor ALL form fields
   const watchedValues = watch();
 
+  // Sync initial data when it changes
   useEffect(() => {
     if (initialData && !userHasEdited) {
       reset({
@@ -81,6 +82,7 @@ export function Compose({
     }
   }, [initialData, reset, userHasEdited]);
 
+  // Focus body on open
   useEffect(() => {
     if (isOpen && bodyRef.current) {
       bodyRef.current.focus();
@@ -124,7 +126,7 @@ export function Compose({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, handleSubmit, onClose]);
 
-  const onSubmit = async (data: EmailForm) => {
+  const onSubmit = useCallback(async (data: EmailForm) => {
     try {
       await onSend({
         to: data.to,
@@ -147,31 +149,29 @@ export function Compose({
         handleSubmit(onSubmit)();
       });
     }
-  };
+  }, [onSend, reset, onClose, handleSubmit]);
 
   if (!isOpen) return null;
 
   const bodyLength = watchedValues.body?.length || 0;
 
   return (
-    <div className={cn(
-      'fixed bottom-0 right-4 z-50 shadow-2xl transition-all duration-300 ease-out animate-scale-in border border-neutral-200/60 dark:border-neutral-800/60',
-      'glass-elevated',
-      'w-[620px] h-[560px] rounded-t-2xl'
-    )}>
-      {/* Header with gradient accent */}
-      <div className={cn(
-        'flex items-center justify-between px-5 py-3.5 rounded-t-2xl border-b border-neutral-200/50 dark:border-neutral-800/50',
-        'bg-gradient-to-r from-accent-50 to-transparent dark:from-accent-950/30'
-      )}>
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shadow-md shadow-accent-500/20">
-            <Send className="w-3.5 h-3.5 text-white" />
-          </div>
-          <span className="font-semibold text-sm text-neutral-900 dark:text-white">New Message</span>
+    <div
+      className={cn(
+        'fixed bottom-0 right-4 z-50 shadow-lg transition-all duration-200',
+        'w-[580px] h-[540px] rounded-lg border border-neutral-200 dark:border-neutral-800',
+        'bg-white dark:bg-neutral-950'
+      )}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Compose email"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-neutral-900 dark:text-white">New Message</span>
           {isAIComposed && (
-            <span className="inline-flex items-center gap-1.5 ml-2 px-2.5 py-1 rounded-full bg-gradient-to-r from-accent-500 to-purple-500 text-white border-0 text-xs font-medium">
-              <Sparkles className="w-3 h-3" />
+            <span className="inline-flex items-center gap-1.5 ml-2 px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
               AI Composed
             </span>
           )}
@@ -181,118 +181,116 @@ export function Compose({
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="h-8 w-8 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-all duration-200"
-            title="Close (Esc)"
+            aria-label="Close (Esc)"
           >
             <X className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-[calc(100%-60px)]">
-          <div className="border-b border-neutral-200/50 dark:border-neutral-800/50">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-[calc(100%-53px)]">
+        <div className="border-b border-neutral-200 dark:border-neutral-800">
+          <Input
+            {...register('to')}
+            type="email"
+            placeholder="To"
+            className="border-none rounded-none px-4 py-2.5 h-10 focus:ring-0 bg-transparent text-sm"
+          />
+          {errors.to && <span className="text-error text-xs px-4 block mt-1">{errors.to.message}</span>}
+        </div>
+
+        {showCc && (
+          <div className="border-b border-neutral-200 dark:border-neutral-800">
             <Input
-              {...register('to')}
+              {...register('cc')}
               type="email"
-              placeholder="To"
-              className="border-none rounded-none px-5 py-3 focus-visible:ring-0 bg-transparent text-sm"
+              placeholder="Cc"
+              className="border-none rounded-none px-4 py-2.5 h-10 focus:ring-0 bg-transparent text-sm"
             />
-            {errors.to && <span className="text-red-500 text-xs px-5">{errors.to.message}</span>}
+            {errors.cc && <span className="text-error text-xs px-4 block mt-1">{errors.cc.message}</span>}
           </div>
+        )}
 
-          {showCc && (
-            <div className="border-b border-neutral-200/50 dark:border-neutral-800/50">
-              <Input
-                {...register('cc')}
-                type="email"
-                placeholder="Cc"
-                className="border-none rounded-none px-5 py-3 focus-visible:ring-0 bg-transparent text-sm"
-              />
-              {errors.cc && <span className="text-red-500 text-xs px-5">{errors.cc.message}</span>}
-            </div>
-          )}
-
-          {showBcc && (
-            <div className="border-b border-neutral-200/50 dark:border-neutral-800/50">
-              <Input
-                {...register('bcc')}
-                type="email"
-                placeholder="Bcc"
-                className="border-none rounded-none px-5 py-3 focus-visible:ring-0 bg-transparent text-sm"
-              />
-              {errors.bcc && <span className="text-red-500 text-xs px-5">{errors.bcc.message}</span>}
-            </div>
-          )}
-
-          <div className="border-b border-neutral-200/50 dark:border-neutral-800/50">
+        {showBcc && (
+          <div className="border-b border-neutral-200 dark:border-neutral-800">
             <Input
-              {...register('subject')}
-              type="text"
-              placeholder="Subject"
-              className="border-none rounded-none px-5 py-3 font-medium focus-visible:ring-0 bg-transparent text-sm"
+              {...register('bcc')}
+              type="email"
+              placeholder="Bcc"
+              className="border-none rounded-none px-4 py-2.5 h-10 focus:ring-0 bg-transparent text-sm"
             />
-            {errors.subject && <span className="text-red-500 text-xs px-5">{errors.subject.message}</span>}
+            {errors.bcc && <span className="text-error text-xs px-4 block mt-1">{errors.bcc.message}</span>}
+          </div>
+        )}
+
+        <div className="border-b border-neutral-200 dark:border-neutral-800">
+          <Input
+            {...register('subject')}
+            type="text"
+            placeholder="Subject"
+            className="border-none rounded-none px-4 py-2.5 font-medium h-10 focus:ring-0 bg-transparent text-sm"
+          />
+          {errors.subject && <span className="text-error text-xs px-4 block mt-1">{errors.subject.message}</span>}
+        </div>
+
+        <div className="flex-1 min-h-0 relative">
+          <Textarea
+            {...register('body')}
+            ref={bodyRef}
+            placeholder="Write your message..."
+            className="w-full h-full resize-none border-none focus:ring-0 shadow-none bg-transparent px-4 py-3 text-sm"
+          />
+          {/* Character count */}
+          <div className="absolute bottom-3 right-4 text-xs text-neutral-400 dark:text-neutral-500">
+            {bodyLength.toLocaleString()} / {MAX_BODY_LENGTH.toLocaleString()}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between px-4 py-2.5 border-t border-neutral-200 dark:border-neutral-800 shrink-0">
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowCc(!showCc)}
+              className="h-8 px-2 text-xs"
+            >
+              {showCc ? 'Hide Cc' : 'Add Cc'}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowBcc(!showBcc)}
+              className="h-8 px-2 text-xs"
+            >
+              {showBcc ? 'Hide Bcc' : 'Add Bcc'}
+            </Button>
           </div>
 
-          <div className="flex-1 min-h-0 p-0 relative">
-            <Textarea
-              {...register('body')}
-              ref={bodyRef}
-              placeholder="Write your message..."
-              className="w-full h-full resize-none border-none focus-visible:ring-0 shadow-none bg-transparent px-5 py-4 text-sm"
-            />
-
-            {/* Character count */}
-            <div className="absolute bottom-4 right-5 text-xs text-neutral-400 dark:text-neutral-500">
-              {bodyLength.toLocaleString()} / {MAX_BODY_LENGTH.toLocaleString()}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between px-5 py-3.5 border-t border-neutral-200/50 dark:border-neutral-800/50 shrink-0">
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setShowCc(!showCc)}
-                className="text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800/50 rounded-lg h-9 px-3 transition-all duration-200"
-              >
-                {showCc ? 'Hide Cc' : 'Add Cc'}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setShowBcc(!showBcc)}
-                className="text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800/50 rounded-lg h-9 px-3 transition-all duration-200"
-              >
-                {showBcc ? 'Hide Bcc' : 'Add Bcc'}
-              </Button>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {(isSubmitting || externalIsSending) && (
-                <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  Sending...
-                </span>
+          <div className="flex items-center gap-2">
+            {(isSubmitting || externalIsSending) && (
+              <span className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Sending...
+              </span>
+            )}
+            <Button
+              type="submit"
+              disabled={isSubmitting || externalIsSending}
+              className="bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-900 h-8 px-4 text-sm"
+              title="Ctrl+Enter to send"
+            >
+              {(isSubmitting || externalIsSending) ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  Send
+                </>
               )}
-              <Button
-                type="submit"
-                disabled={isSubmitting || externalIsSending}
-                className="btn-accent-gradient text-white rounded-xl h-9 px-5 font-medium shadow-lg shadow-accent-500/25 hover:shadow-accent-500/30 min-w-[100px] transition-all duration-300"
-                title="Ctrl+Enter to send"
-              >
-                {(isSubmitting || externalIsSending) ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    <Send className="w-4 h-4 mr-2" />
-                    Send
-                  </>
-                )}
-              </Button>
-            </div>
+            </Button>
           </div>
-        </form>
+        </div>
+      </form>
     </div>
   );
-}
+});

@@ -1,35 +1,25 @@
 @import "tailwindcss";
 
 /* ===== Dark Mode Configuration ===== */
-/* Override dark variant to use class-based strategy instead of media query */
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *))
 
-/* Dark mode is controlled via 'dark' class on document element */
-/* The theme-provider.tsx manages adding/removing this class */
-
-/* ===== Typography - Distinctive Font Pairing ===== */
-/* Instrument Sans - Modern geometric sans with character */
+/* ===== Typography - Vercel-Style Font Stack ===== */
 @import "@fontsource/instrument-sans/400.css";
 @import "@fontsource/instrument-sans/500.css";
 @import "@fontsource/instrument-sans/600.css";
-@import "@fontsource/instrument-sans/700.css";
-
-/* JetBrains Mono - Distinctive monospace for code */
 @import "@fontsource/jetbrains-mono/400.css";
 
-/* ===== Design System Foundation ===== */
-/* Based on .planning/DESIGN.md specification */
-
+/* ===== Vercel-Inspired Design System ===== */
 @theme {
   /* ===== Font Families ===== */
   --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
 
   /* ===== Line Heights ===== */
-  --line-height-body: 1.6;
-  --line-height-heading: 1.15;
+  --line-height-body: 1.5;
+  --line-height-heading: 1.1;
 
-  /* ===== Neutral Color Scale (Warm, sophisticated grays) ===== */
+  /* ===== Neutral Color Scale (Stone-inspired warm grays) ===== */
   --color-neutral-50: #fafafa;
   --color-neutral-100: #f5f5f4;
   --color-neutral-200: #e7e5e4;
@@ -40,106 +30,59 @@
   --color-neutral-700: #44403c;
   --color-neutral-800: #292524;
   --color-neutral-900: #1c1917;
-  --color-neutral-950: #0c0a09;
+  --color-neutral-950: #0a0a0a;
 
-  /* ===== Electric Violet Accent Scale ===== */
-  --color-accent-50: #f5f3ff;
-  --color-accent-100: #ede9fe;
-  --color-accent-200: #ddd6fe;
-  --color-accent-300: #c4b5fd;
-  --color-accent-400: #a78bfa;
-  --color-accent-500: #8b5cf6;
-  /* Primary action - violet */
-  --color-accent-600: #7c3aed;
-  --color-accent-700: #6d28d9;
-  --color-accent-800: #5b21b6;
-  --color-accent-900: #4c1d95;
+  /* ===== Vercel Blue Accent Scale ===== */
+  --color-accent-50: #f0f9ff;
+  --color-accent-100: #e0f2fe;
+  --color-accent-200: #bae6fd;
+  --color-accent-300: #7dd3fc;
+  --color-accent-400: #38bdf8;
+  --color-accent-500: #0070f3;
+  --color-accent-600: #0060d9;
+  --color-accent-700: #0050b8;
+  --color-accent-800: #004097;
+  --color-accent-900: #003076;
 
-  /* ===== Electric Indigo Secondary ===== */
-  --color-indigo-400: #818cf8;
-  --color-indigo-500: #6366f1;
-  --color-indigo-600: #4f46e5;
-
-  /* ===== Semantic Colors (Refined) ===== */
+  /* ===== Semantic Colors ===== */
   --color-success: #22c55e;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
 
-  /* ===== Spacing Scale (4px base unit) ===== */
+  /* ===== Spacing Scale ===== */
   --spacing-1: 4px;
-  /* Tight gaps */
   --spacing-2: 8px;
-  /* Related items */
   --spacing-3: 12px;
-  /* Compact padding */
   --spacing-4: 16px;
-  /* Default padding */
   --spacing-5: 20px;
-  /* Generous padding */
   --spacing-6: 24px;
-  /* Section spacing */
   --spacing-8: 32px;
-  /* Large sections */
   --spacing-10: 40px;
-  /* Component gaps */
   --spacing-12: 48px;
-  /* Major sections */
 
-  /* ===== Border Radius Scale ===== */
-  --radius-sm: 6px;
-  /* Small elements, badges */
-  --radius-md: 8px;
-  /* Default, buttons, inputs */
-  --radius-lg: 12px;
-  /* Cards, panels */
-  --radius-xl: 16px;
-  /* Modals, large containers */
+  /* ===== Vercel-Style Border Radius (minimal) ===== */
+  --radius-sm: 4px;
+  --radius-md: 5px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-2xl: 10px;
   --radius-full: 9999px;
-  /* Pills, avatar */
 
-  /* ===== Shadow Elevation System ===== */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.16);
-
-  /* ===== Dark Mode Shadows ===== */
-  --shadow-sm-dark: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md-dark: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-lg-dark: 0 8px 24px rgba(0, 0, 0, 0.6);
-  --shadow-xl-dark: 0 16px 48px rgba(0, 0, 0, 0.7);
-
-  /* ===== Legacy Color Aliases (for backward compatibility) ===== */
-  --color-background: #ffffff;
-  --color-background-elevated: #fafafa;
-  --color-background-muted: #f5f5f4;
-  --color-border: #e7e5e4;
-  --color-border-subtle: #f5f5f4;
-  --color-text: #1c1917;
-  --color-text-secondary: #78716c;
-  --color-text-muted: #a8a29e;
-  --color-primary: #1c1917;
-  --color-primary-hover: #292524;
-  --color-accent: #8b5cf6;
-  --color-accent-light: #a78bfa;
-
-  /* Dark mode colors (legacy aliases) */
-  --color-dark-background: #0c0a09;
-  --color-dark-background-elevated: #1c1917;
-  --color-dark-background-muted: #292524;
-  --color-dark-border: #44403c;
-  --color-dark-border-subtle: #292524;
-  --color-dark-text: #fafafa;
-  --color-dark-text-secondary: #a8a29e;
-  --color-dark-text-muted: #78716c;
-  --color-dark-primary: #fafafa;
-  --color-dark-accent: #a78bfa;
-  --color-dark-accent-light: #8b5cf6;
+  /* ===== Vercel-Style Shadow System (neutral only) ===== */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
-/* Base styles */
+/* ===== Base Styles ===== */
 * {
   box-sizing: border-box;
+}
+
+html {
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
 body {
@@ -148,8 +91,8 @@ body {
   line-height: var(--line-height-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: 'ss01', 'ss02';
   background: var(--color-neutral-50);
+  color: var(--color-neutral-900);
   min-height: 100vh;
 }
 
@@ -162,39 +105,46 @@ code {
   font-family: var(--font-mono);
 }
 
-/* ===== Utility Classes ===== */
-/* Minimalist transitions */
-.transition-smooth {
-  transition: all 0.15s ease-out;
+/* ===== Skip Link (Accessibility) ===== */
+.skip-to-main {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: -999;
 }
 
-/* Glass Morphism - Simplified */
-.glass {
-  background: rgba(255, 255, 255, 0.9);
-  border-bottom: 1px solid var(--color-neutral-200);
-}
-
-.dark .glass {
-  background: rgba(12, 10, 9, 0.9);
-  border-bottom: 1px solid var(--color-neutral-800);
-}
-
-.glass-elevated {
-  background: white;
-  border: 1px solid var(--color-neutral-200);
-  box-shadow: var(--shadow-sm);
-}
-
-.dark .glass-elevated {
+.skip-to-main:focus,
+.skip-to-main:focus-within {
+  position: fixed;
+  left: var(--spacing-4);
+  top: var(--spacing-4);
+  width: auto;
+  height: auto;
+  padding: var(--spacing-3) var(--spacing-5);
   background: var(--color-neutral-900);
-  border: 1px solid var(--color-neutral-800);
-  box-shadow: var(--shadow-sm-dark);
+  color: white;
+  border-radius: var(--radius-md);
+  z-index: 9999;
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 2px;
 }
 
-/* Custom scrollbar - minimalistic */
+/* ===== Transitions ===== */
+.transition-base {
+  transition: all 0.15s ease;
+}
+
+.transition-colors {
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+/* ===== Scrollbar ===== */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -203,7 +153,7 @@ code {
 
 ::-webkit-scrollbar-thumb {
   background: var(--color-neutral-300);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -218,64 +168,183 @@ code {
   background: var(--color-neutral-600);
 }
 
-/* Focus visible styles - clean ring */
+/* ===== Focus Styles ===== */
 *:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--color-neutral-900);
-  border-radius: 2px;
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 2px;
 }
 
-.dark *:focus-visible {
-  box-shadow: 0 0 0 2px var(--color-neutral-100);
-}
-
-/* Selection */
+/* ===== Selection ===== */
 ::selection {
-  background: var(--color-neutral-200);
-  color: inherit;
+  background: var(--color-accent-500);
+  color: white;
 }
 
 .dark ::selection {
-  background: var(--color-neutral-800);
+  background: var(--color-accent-400);
+  color: var(--color-neutral-900);
 }
 
-/* Clean Button Styles */
+/* ===== Animations ===== */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.15s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.2s ease-out;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ===== Component Utilities ===== */
 .btn-primary {
   background: var(--color-neutral-900);
   color: white;
-  transition: background 0.15s ease;
+  border: 1px solid var(--color-neutral-900);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .btn-primary:hover {
   background: var(--color-neutral-800);
+  border-color: var(--color-neutral-800);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .dark .btn-primary {
-  background: var(--color-neutral-50);
-  color: black;
+  background: white;
+  color: var(--color-neutral-900);
+  border-color: var(--color-neutral-600);
 }
 
 .dark .btn-primary:hover {
-  background: var(--color-neutral-200);
+  background: var(--color-neutral-100);
 }
 
-/* Elevated card style - Flat with border */
-.card-elevated {
-  background: white;
-  border-radius: var(--radius-lg);
+.btn-ghost {
+  background: transparent;
+  color: var(--color-neutral-600);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-2) var(--spacing-3);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-ghost:hover {
+  background: var(--color-neutral-100);
+}
+
+.dark .btn-ghost {
+  color: var(--color-neutral-400);
+}
+
+.dark .btn-ghost:hover {
+  background: var(--color-neutral-800);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-neutral-700);
   border: 1px solid var(--color-neutral-200);
-  transition: border-color 0.15s ease;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.dark .card-elevated {
-  background: var(--color-neutral-900);
-  border: 1px solid var(--color-neutral-800);
-}
-
-.card-elevated:hover {
+.btn-outline:hover {
+  background: var(--color-neutral-50);
   border-color: var(--color-neutral-300);
 }
 
-.dark .card-elevated:hover {
+.dark .btn-outline {
+  color: var(--color-neutral-300);
   border-color: var(--color-neutral-700);
+}
+
+.dark .btn-outline:hover {
+  background: var(--color-neutral-800);
+  border-color: var(--color-neutral-600);
+}
+
+.card {
+  background: white;
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-lg);
+}
+
+.dark .card {
+  background: var(--color-neutral-900);
+  border-color: var(--color-neutral-800);
+}
+
+.input-base {
+  background: white;
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-2) var(--spacing-3);
+  font-size: 14px;
+  transition: all 0.15s ease;
+}
+
+.input-base:focus {
+  outline: none;
+  border-color: var(--color-neutral-400);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.04);
+}
+
+.dark .input-base {
+  background: var(--color-neutral-900);
+  border-color: var(--color-neutral-700);
+}
+
+.dark .input-base:focus {
+  border-color: var(--color-neutral-500);
+}
+
+/* ===== Utility Classes for Component Migration ===== */
+.glass-header {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--color-neutral-200);
+}
+
+.dark .glass-header {
+  background: rgba(10, 10, 10, 0.8);
+  border-color: var(--color-neutral-800);
 }

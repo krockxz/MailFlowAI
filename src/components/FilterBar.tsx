@@ -1,5 +1,5 @@
 import { Search, X, Filter, Calendar as CalendarIcon, User } from 'lucide-react';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { format } from 'date-fns';
 import { cn, debounce } from '@/lib/utils';
 import type { FilterState } from '@/types/email';
@@ -57,9 +57,9 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
     setSenderFilter(filters.sender || '');
   }, [filters.sender]);
 
-  // Debounced filter update (300ms delay)
-  const debouncedFilterUpdate = useCallback(
-    debounce((newFilters: FilterState) => {
+  // Debounced filter update (300ms delay) - memoized
+  const debouncedFilterUpdate = useMemo(
+    () => debounce((newFilters: FilterState) => {
       setIsSearching(false);
       onFiltersChange(newFilters);
     }, 300),
@@ -73,54 +73,52 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
     };
   }, [debouncedFilterUpdate]);
 
-  const handleSearchChange = (value: string) => {
+  const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
     setIsSearching(true);
     debouncedFilterUpdate({ ...filters, query: value || undefined });
-  };
+  }, [filters, debouncedFilterUpdate]);
 
-  const handleSenderChange = (value: string) => {
+  const handleSenderChange = useCallback((value: string) => {
     setSenderFilter(value);
     setIsSearching(true);
     debouncedFilterUpdate({
       ...filters,
       sender: value || undefined,
     });
-  };
+  }, [filters, debouncedFilterUpdate]);
 
-  const clearSearch = () => {
+  const clearSearch = useCallback(() => {
     setSearchQuery('');
-    // Cancel any pending debounced search
     debouncedFilterUpdate.cancel();
     setIsSearching(false);
     onFiltersChange({ ...filters, query: undefined });
-  };
+  }, [filters, onFiltersChange, debouncedFilterUpdate]);
 
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     setSearchQuery('');
     setSenderFilter('');
-    // Cancel any pending debounced search
     debouncedFilterUpdate.cancel();
     setIsSearching(false);
     onFiltersChange({});
-  };
+  }, [onFiltersChange, debouncedFilterUpdate]);
 
-  const toggleUnread = () => {
+  const toggleUnread = useCallback(() => {
     onFiltersChange({
       ...filters,
       isUnread: filters.isUnread === undefined ? true : undefined,
     });
-  };
+  }, [filters, onFiltersChange]);
 
-  const setDateFilter = (dateFrom?: Date, dateTo?: Date) => {
+  const setDateFilter = useCallback((dateFrom?: Date, dateTo?: Date) => {
     onFiltersChange({
       ...filters,
       dateFrom,
       dateTo,
     });
-  };
+  }, [filters, onFiltersChange]);
 
-  const applyDatePreset = (preset: DatePreset) => {
+  const applyDatePreset = useCallback((preset: DatePreset) => {
     if (!preset) {
       setDateFilter(undefined, undefined);
       return;
@@ -133,7 +131,7 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
       fromDate.setHours(0, 0, 0, 0);
       setDateFilter(fromDate, undefined);
     }
-  };
+  }, [setDateFilter]);
 
   const hasActiveFilters = !!(
     filters.query ||
@@ -153,12 +151,12 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
 
   return (
     <div className="px-4 py-2">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {/* Search input */}
-        <div className="flex-1 relative group">
+        <div className="flex-1 relative">
           <Search className={cn(
-            "absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-neutral-400 transition-colors duration-300",
-            isSearching ? "text-accent-500 animate-pulse" : "group-focus-within:text-accent-500"
+            "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400",
+            isSearching && "text-neutral-600 dark:text-neutral-500"
           )} />
           <Input
             ref={searchInputRef}
@@ -167,22 +165,22 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search emails..."
             className={cn(
-              "pl-11 pr-10 bg-neutral-100/80 dark:bg-neutral-800/50 border-neutral-200/60 dark:border-neutral-700/50 focus-visible:bg-white dark:focus-visible:bg-neutral-900/50 focus-visible:border-accent-500 rounded-xl h-10 transition-all duration-300",
-              isSearching && "border-accent-400/50 dark:border-accent-500/50"
+              "pl-10 pr-9 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 h-9 text-sm",
+              isSearching && "border-neutral-400 dark:border-neutral-600"
             )}
           />
           {searchQuery && !isSearching && (
             <button
               onClick={clearSearch}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-all duration-200 p-1.5 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700/50 flex items-center justify-center"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800"
               aria-label="Clear search"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3 h-3" />
             </button>
           )}
           {isSearching && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div className="w-4 h-4 border-2 border-accent-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-3 h-3 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
             </div>
           )}
         </div>
@@ -192,12 +190,7 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
           onClick={toggleUnread}
           variant={filters.isUnread ? "default" : "secondary"}
           size="sm"
-          className={cn(
-            'rounded-xl h-10 transition-all duration-300 font-medium',
-            filters.isUnread
-              ? 'bg-accent-500 hover:bg-accent-600 text-white shadow-lg shadow-accent-500/25'
-              : 'bg-neutral-100/80 dark:bg-neutral-800/50 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700/50'
-          )}
+          className="h-9"
         >
           Unread
         </Button>
@@ -208,35 +201,30 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
             <Button
               variant="secondary"
               size="sm"
-              className={cn(
-                'rounded-xl h-10 relative transition-all duration-300 font-medium',
-                hasActiveFilters
-                  ? 'bg-accent-500 dark:bg-accent-500 text-white hover:bg-accent-600 dark:hover:bg-accent-600 shadow-lg shadow-accent-500/25'
-                  : 'bg-neutral-100/80 dark:bg-neutral-800/50 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700/50'
-              )}
+              className="h-9 relative"
             >
-              <Filter className="w-4 h-4 mr-2" />
+              <Filter className="w-3.5 h-3.5 mr-1.5" />
               <span className="hidden sm:inline">Filter</span>
               {activeFilterCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-white dark:bg-black text-accent-500 dark:text-accent-500 rounded-full text-xs font-semibold flex items-center justify-center shadow-sm">
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-full text-xs font-semibold flex items-center justify-center">
                   {activeFilterCount}
                 </span>
               )}
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            className="w-80 p-5 rounded-2xl border-neutral-200/60 dark:border-neutral-800/60 glass-elevated"
+            className="w-80 p-4 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800"
             align="end"
-            sideOffset={8}
+            sideOffset={4}
           >
-            <div className="space-y-5">
+            <div className="space-y-4">
               {/* Header */}
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-sm text-neutral-900 dark:text-white">Filters</h3>
+                <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">Filters</h3>
                 {hasActiveFilters && (
                   <button
                     onClick={clearAllFilters}
-                    className="text-xs text-accent-600 dark:text-accent-400 hover:text-accent-500 transition-colors font-medium"
+                    className="text-xs text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors"
                   >
                     Clear all
                   </button>
@@ -244,9 +232,9 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
               </div>
 
               {/* Sender filter */}
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400 flex items-center gap-2">
-                  <User className="w-3.5 h-3.5" />
+                  <User className="w-3 h-3" />
                   From sender
                 </label>
                 <div className="relative">
@@ -255,28 +243,25 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
                     value={senderFilter}
                     onChange={(e) => handleSenderChange(e.target.value)}
                     placeholder="email@example.com"
-                    className={cn(
-                      "bg-neutral-100/80 dark:bg-neutral-800/50 border-neutral-200/60 dark:border-neutral-700/50 focus-visible:border-accent-500 rounded-lg h-10 text-sm pr-9",
-                      isSearching && "border-accent-400/50 dark:border-accent-500/50"
-                    )}
+                    className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 h-9 text-sm pr-9"
                   />
                   {isSearching && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <div className="w-4 h-4 border-2 border-accent-500 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-3 h-3 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Date range filter */}
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400 flex items-center gap-2">
-                  <CalendarIcon className="w-3.5 h-3.5" />
+                  <CalendarIcon className="w-3 h-3" />
                   Date range
                 </label>
 
                 {/* Quick presets */}
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {DATE_PRESETS.map((preset) => {
                     const isActive = preset.value && (
                       (preset.value === 'today' && filters.dateFrom && isToday(filters.dateFrom)) ||
@@ -287,10 +272,10 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
                         key={preset.label}
                         onClick={() => applyDatePreset(preset.value)}
                         className={cn(
-                          'text-xs px-3 py-1.5 rounded-lg font-medium transition-all duration-200',
+                          'text-xs px-2.5 py-1 font-medium transition-colors',
                           isActive
-                            ? 'bg-accent-500 text-white shadow-sm shadow-accent-500/20'
-                            : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                            ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
+                            : 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
                         )}
                       >
                         {preset.label}
@@ -306,15 +291,12 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className={cn(
-                          'flex-1 justify-start text-left font-normal rounded-lg h-10 transition-all duration-200',
-                          !filters.dateFrom && 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300'
-                        )}
+                        className="flex-1 justify-start text-left font-normal h-9"
                       >
                         {filters.dateFrom ? format(filters.dateFrom, 'MMM d') : 'From'}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 rounded-xl border-neutral-200/60 dark:border-neutral-800/60 glass-elevated" align="start">
+                    <PopoverContent className="w-auto p-0 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800" align="start">
                       <Calendar
                         mode="single"
                         selected={filters.dateFrom}
@@ -332,15 +314,12 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className={cn(
-                          'flex-1 justify-start text-left font-normal rounded-lg h-10 transition-all duration-200',
-                          !filters.dateTo && 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300'
-                        )}
+                        className="flex-1 justify-start text-left font-normal h-9"
                       >
                         {filters.dateTo ? format(filters.dateTo, 'MMM d') : 'To'}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 rounded-xl border-neutral-200/60 dark:border-neutral-800/60 glass-elevated" align="end">
+                    <PopoverContent className="w-auto p-0 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800" align="end">
                       <Calendar
                         mode="single"
                         selected={filters.dateTo}
@@ -363,7 +342,7 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
                 {(filters.dateFrom || filters.dateTo) && (
                   <button
                     onClick={() => setDateFilter(undefined, undefined)}
-                    className="text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors font-medium"
+                    className="text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
                   >
                     Clear date range
                   </button>
@@ -371,10 +350,10 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
               </div>
 
               {/* Apply button for mobile */}
-              <div className="pt-2 border-t border-neutral-200/50 dark:border-neutral-800/50 sm:hidden">
+              <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800 sm:hidden">
                 <Button
                   onClick={() => setIsFilterPopoverOpen(false)}
-                  className="w-full rounded-xl h-10"
+                  className="w-full h-9"
                   size="sm"
                 >
                   Apply Filters

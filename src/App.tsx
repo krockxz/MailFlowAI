@@ -18,35 +18,6 @@ import { SendConfirmDialog, type EmailConfirmData } from '@/components/SendConfi
 import { CopilotSidebar } from '@/components/CopilotSidebar';
 import { InlineErrorBoundary } from '@/components/ErrorBoundary';
 
-/*
- * RESPONSIVE DESIGN STRATEGY
- * ==========================
- *
- * Breakpoint Strategy (Tailwind CSS v4):
- * - Mobile: < 640px (no breakpoint prefix) - Single column, stacked layout
- * - Tablet: 640px - 1023px (sm:, md:, lg:) - Condensed layout
- * - Desktop: >= 1024px (xl:) - Full 3-column layout
- *
- * Current Layout Structure:
- * 1. Sidebar (240px fixed) - Navigation and compose
- * 2. Main content (flex-1) - Email list/detail and filters
- * 3. CopilotSidebar (320px fixed, toggleable) - AI assistant panel
- *
- * Responsive Behaviors:
- * - All containers use h-screen + overflow-hidden for app-like feel
- * - Flex layout allows proper shrinking/expansion
- * - Components have responsive variants (e.g., FilterBar hides "Filter" text on mobile)
- *
- * Known Limitations:
- * - Sidebar is always visible (future: mobile drawer)
- * - CopilotSidebar is fixed 320px (future: collapsible on tablet)
- * - EmailDetail doesn't use full-screen on mobile (future: modal overlay)
- *
- * Touch Targets:
- * - All buttons meet 44x44px minimum (Button component h-10 + padding)
- * - Email list items: min-h-[72px]
- * - Icon buttons: h-10 w-10 (40px, meets guidelines with visual expansion)
- */
 function AppContent() {
   const {
     currentView,
@@ -377,7 +348,13 @@ function AppContent() {
   const unreadCount = emails.inbox.filter((e: Email) => e.isUnread).length;
 
   return (
-    <div className="flex h-screen overflow-hidden mesh-gradient">
+    <>
+      {/* Skip to main content (accessibility) */}
+      <a href="#main-content" className="skip-to-main">
+        Skip to main content
+      </a>
+
+      <div className="flex h-screen overflow-hidden bg-neutral-50 dark:bg-neutral-950">
       {/* Sidebar */}
       <Sidebar
         currentView={currentView}
@@ -390,9 +367,9 @@ function AppContent() {
       />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden relative bg-white/40 dark:bg-neutral-900/40 backdrop-blur-sm">
+      <div id="main-content" className="flex-1 flex flex-col overflow-hidden relative">
         {/* Header with filters and actions */}
-        <header className="glass-elevated border-b border-neutral-200/50 dark:border-neutral-800/50 bg-white/70 dark:bg-neutral-900/70 transition-smooth">
+        <header className="glass-header border-b border-neutral-200 dark:border-neutral-800">
           <div className="flex items-center px-5 py-3">
             {/* Filters */}
             <div className="flex-1">
@@ -403,45 +380,33 @@ function AppContent() {
             </div>
 
             {/* Action buttons */}
-            <div className="flex items-center gap-2 pr-2">
+            <div className="flex items-center gap-1 pr-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={sync}
-                title="Sync emails"
-                className="h-9 w-9 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-all duration-300"
+                aria-label="Sync emails"
               >
-                <RefreshCw className="w-4.5 h-4.5" />
+                <RefreshCw className="w-4 h-4" />
               </Button>
 
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsCopilotOpen(!isCopilotOpen)}
-                className={`h-9 w-9 rounded-xl relative transition-all duration-300 ${
-                  isCopilotOpen
-                    ? 'bg-gradient-to-br from-accent-500 to-accent-600 text-white shadow-lg shadow-accent-500/30'
-                    : 'hover:bg-neutral-100 dark:hover:bg-neutral-800/50'
-                }`}
-                title={isCopilotOpen ? 'Close AI Assistant' : 'Open AI Assistant'}
+                aria-label={isCopilotOpen ? 'Close AI Assistant' : 'Open AI Assistant'}
+                className={isCopilotOpen ? 'bg-neutral-200 dark:bg-neutral-800' : ''}
               >
-                <Sparkles className={`w-4.5 h-4.5 ${isCopilotOpen ? 'text-white' : ''}`} />
-                {isCopilotOpen && (
-                  <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
-                  </span>
-                )}
+                <Sparkles className="w-4 h-4" />
               </Button>
 
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={toggleDarkMode}
-                className={`h-9 w-9 rounded-xl ${darkMode ? 'text-amber-400 hover:bg-amber-950/30' : ''} hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-all duration-300`}
-                title={darkMode ? 'Light mode' : 'Dark mode'}
+                aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               >
-                {darkMode ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
+                {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </Button>
             </div>
           </div>
@@ -504,6 +469,7 @@ function AppContent() {
         isSending={compose.isSending}
       />
     </div>
+    </>
   );
 }
 

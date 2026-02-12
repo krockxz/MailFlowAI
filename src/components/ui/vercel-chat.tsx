@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Send, Loader2, X, Sparkles, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useCopilotChatHeadless_c } from '@copilotkit/react-core';
+import { useCopilotChatHeadless_c as useCopilotChatHeadless } from '@copilotkit/react-core';
 import { Streamdown } from 'streamdown';
 
 interface VercelChatProps {
@@ -14,19 +14,19 @@ const DEFAULT_INSTRUCTIONS = `You are an AI email assistant integrated into a ma
 
 Be concise and helpful. Never use emojis in responses.`;
 
-// Custom components for Streamdown styling
+// Custom components for Streamdown styling - Vercel minimal style
 const streamdownComponents = {
   h1: ({ children, ...props }: any) => (
-    <h1 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mt-3 mb-2" {...props}>{children}</h1>
+    <h1 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mt-4 mb-2" {...props}>{children}</h1>
   ),
   h2: ({ children, ...props }: any) => (
-    <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mt-2 mb-1" {...props}>{children}</h2>
+    <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mt-3 mb-2" {...props}>{children}</h2>
   ),
   h3: ({ children, ...props }: any) => (
-    <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mt-2 mb-1" {...props}>{children}</h3>
+    <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mt-2 mb-1" {...props}>{children}</h3>
   ),
   p: ({ children, ...props }: any) => (
-    <p className="my-1" {...props}>{children}</p>
+    <p className="my-1.5 text-sm text-neutral-700 dark:text-neutral-300" {...props}>{children}</p>
   ),
   strong: ({ children, ...props }: any) => (
     <strong className="font-semibold text-neutral-900 dark:text-neutral-100" {...props}>{children}</strong>
@@ -38,13 +38,13 @@ const streamdownComponents = {
     // Inline code (no className) vs code block (has className)
     if (className) {
       return (
-        <code className={cn("text-xs font-mono bg-neutral-200 dark:bg-neutral-800 rounded px-1.5 py-0.5 my-1 block overflow-x-auto", className)} {...props}>
+        <code className={cn("text-xs font-mono bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 my-2 block overflow-x-auto text-neutral-800 dark:text-neutral-200", className)} {...props}>
           {children}
         </code>
       );
     }
     return (
-      <code className="text-xs font-mono bg-neutral-200 dark:bg-neutral-800 text-accent-600 dark:text-accent-400 px-1.5 py-0.5 rounded" {...props}>
+      <code className="text-xs font-mono bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 text-neutral-800 dark:text-neutral-200" {...props}>
         {children}
       </code>
     );
@@ -52,7 +52,7 @@ const streamdownComponents = {
   a: ({ href, children, ...props }: any) => (
     <a
       href={href}
-      className="text-accent-600 dark:text-accent-400 hover:underline"
+      className="text-neutral-900 dark:text-neutral-100 hover:underline"
       target="_blank"
       rel="noopener noreferrer"
       {...props}
@@ -61,28 +61,28 @@ const streamdownComponents = {
     </a>
   ),
   ul: ({ children, ...props }: any) => (
-    <ul className="my-1 space-y-0.5" {...props}>{children}</ul>
+    <ul className="my-1.5 space-y-0.5" {...props}>{children}</ul>
   ),
   ol: ({ children, ...props }: any) => (
-    <ol className="my-1 space-y-0.5" {...props}>{children}</ol>
+    <ol className="my-1.5 space-y-0.5" {...props}>{children}</ol>
   ),
   li: ({ children, ...props }: any) => (
-    <li className="flex items-start" {...props}>{children}</li>
+    <li className="text-sm text-neutral-700 dark:text-neutral-300" {...props}>{children}</li>
   ),
   blockquote: ({ children, ...props }: any) => (
-    <blockquote className="border-l-2 border-neutral-300 dark:border-neutral-700 pl-3 italic text-neutral-600 dark:text-neutral-400 my-1" {...props}>
+    <blockquote className="border-l-2 border-neutral-300 dark:border-neutral-700 pl-3 text-neutral-600 dark:text-neutral-400 my-2" {...props}>
       {children}
     </blockquote>
   ),
   hr: (props: any) => (
-    <hr className="my-2 border-neutral-300 dark:border-neutral-700" {...props} />
+    <hr className="my-3 border-neutral-200 dark:border-neutral-800" {...props} />
   ),
   del: ({ children, ...props }: any) => (
     <del className="line-through text-neutral-500" {...props}>{children}</del>
   ),
 };
 
-export function VercelChat({
+export const VercelChat = memo(function VercelChatInternal({
   instructions = DEFAULT_INSTRUCTIONS,
   placeholder = 'Ask to compose, search, or manage emails...',
   className,
@@ -90,19 +90,18 @@ export function VercelChat({
   // Wrap CopilotKit hook in try-catch for graceful degradation
   let copilotHook;
   try {
-    copilotHook = useCopilotChatHeadless_c({
+    copilotHook = useCopilotChatHeadless({
       makeSystemMessage: () => instructions,
     });
   } catch (error) {
     console.error('CopilotKit hook error:', error);
-    // Return degraded UI if hook fails
     return (
       <div className="flex flex-col h-full bg-white dark:bg-neutral-950 p-6">
         <div className="flex flex-col items-center justify-center h-full text-center">
-          <div className="w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center mb-4 border border-neutral-200/60 dark:border-neutral-800/60">
+          <div className="w-12 h-12 rounded-lg bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center mb-4 border border-neutral-200 dark:border-neutral-800">
             <AlertCircle className="w-6 h-6 text-neutral-400" />
           </div>
-          <h3 className="font-medium text-sm text-neutral-900 dark:text-white mb-2">AI Assistant unavailable</h3>
+          <h3 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">AI Assistant unavailable</h3>
           <p className="text-xs text-neutral-500 dark:text-neutral-500 max-w-[280px]">
             The AI assistant encountered an error. Please refresh the page or try again later.
           </p>
@@ -114,7 +113,7 @@ export function VercelChat({
   const { messages, sendMessage, isLoading, reset } = copilotHook;
 
   const [input, setInput] = useState('');
-  const [inputHeight, setInputHeight] = useState(44);
+  const [inputHeight, setInputHeight] = useState(40);
   const [sendError, setSendError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -147,31 +146,32 @@ export function VercelChat({
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
-
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const target = e.target;
-    target.style.height = '44px';
-    const newHeight = Math.min(200, Math.max(44, target.scrollHeight));
+    setInput(target.value);
+
+    // Auto-resize textarea
+    target.style.height = '40px';
+    const newHeight = Math.min(150, Math.max(40, target.scrollHeight));
     target.style.height = `${newHeight}px`;
     setInputHeight(newHeight);
-  };
+  }, []);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
-  };
+  }, []);
 
-  const handleSend = async () => {
+  const handleSend = useCallback(async () => {
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
 
     setInput('');
-    setInputHeight(44);
+    setInputHeight(40);
     if (textareaRef.current) {
-      textareaRef.current.style.height = '44px';
+      textareaRef.current.style.height = '40px';
     }
 
     setSendError(null);
@@ -185,14 +185,13 @@ export function VercelChat({
     } catch (error) {
       console.error('Failed to send message:', error);
       setSendError(error instanceof Error ? error.message : 'Failed to send message');
-      // Restore input on error so user can retry
       setInput(trimmed);
     }
-  };
+  }, [input, isLoading, sendMessage]);
 
   const showWelcome = messages.length === 0;
 
-  const renderMessage = (msg: any, index: number) => {
+  const renderMessage = useCallback((msg: any, _index: number) => {
     const role = msg.role;
 
     // Handle different content formats from CopilotKit
@@ -200,7 +199,6 @@ export function VercelChat({
     if (typeof msg.content === 'string') {
       content = msg.content;
     } else if (Array.isArray(msg.content)) {
-      // Content is an array of parts (text or binary)
       const textParts = msg.content.filter((part: any) => part.type === 'text');
       content = textParts.map((part: any) => part.text).join('');
     } else {
@@ -222,23 +220,22 @@ export function VercelChat({
       <div
         key={msg.id}
         className={cn(
-          'flex gap-3 animate-fade-in',
+          'flex gap-3 mb-4',
           isUser ? 'justify-end' : 'justify-start'
         )}
-        style={{ animationDelay: `${index * 30}ms` }}
       >
         {!isUser && (
-          <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shadow-sm">
-            <Sparkles className="w-4 h-4 text-white" />
+          <div className="flex-shrink-0 w-7 h-7 rounded bg-neutral-900 dark:bg-white flex items-center justify-center">
+            <Sparkles className="w-3.5 h-3.5 text-white dark:text-neutral-900" />
           </div>
         )}
 
         <div
           className={cn(
-            'max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed overflow-hidden',
+            'max-w-[85%] px-3 py-2 text-sm',
             isUser
-              ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-tr-sm'
-              : 'bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-tl-sm border border-neutral-200/60 dark:border-neutral-800/60'
+              ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded'
+              : 'bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded'
           )}
         >
           {isUser ? (
@@ -251,44 +248,43 @@ export function VercelChat({
         </div>
 
         {isUser && (
-          <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-neutral-900 dark:bg-white flex items-center justify-center shadow-sm">
-            <span className="text-white dark:text-neutral-900 text-xs font-medium">You</span>
+          <div className="flex-shrink-0 w-7 h-7 rounded bg-neutral-900 dark:bg-white flex items-center justify-center">
+            <span className="text-white dark:text-neutral-900 text-xs font-medium">Y</span>
           </div>
         )}
       </div>
     );
-  };
+  }, []);
 
   return (
     <div className={cn('flex flex-col h-full bg-white dark:bg-neutral-950', className)}>
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 py-6"
-        style={{ scrollbarWidth: 'thin', scrollbarColor: 'hsl(var(--muted-foreground)) transparent' }}
+        className="flex-1 overflow-y-auto px-4 py-4"
       >
-        <div className="max-w-full space-y-5">
+        <div className="max-w-full">
           {showWelcome && (
-            <div className="flex gap-3 justify-start animate-fade-in">
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shadow-sm">
-                <Sparkles className="w-4 h-4 text-white" />
+            <div className="flex gap-3 justify-start mb-4">
+              <div className="flex-shrink-0 w-7 h-7 rounded bg-neutral-900 dark:bg-white flex items-center justify-center">
+                <Sparkles className="w-3.5 h-3.5 text-white dark:text-neutral-900" />
               </div>
-              <div className="max-w-[85%] rounded-2xl rounded-tl-sm px-4 py-3 bg-neutral-50/80 dark:bg-neutral-900/50 border border-neutral-200/60 dark:border-neutral-800/60 text-sm backdrop-blur-sm">
+              <div className="max-w-[85%] px-3 py-2 bg-neutral-50 dark:bg-neutral-900 rounded text-sm">
                 <p className="font-medium text-neutral-900 dark:text-neutral-100 mb-3">How can I help with your email today?</p>
-                <div className="space-y-2 text-neutral-600 dark:text-neutral-400 text-xs">
+                <div className="space-y-1.5 text-neutral-600 dark:text-neutral-400 text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="w-1 h-1 bg-neutral-400 rounded-full shrink-0" />
-                    <span>"Send an email to <span className="font-mono text-accent-600 dark:text-accent-400">john@example.com</span>"</span>
+                    <span className="w-1 h-1 bg-neutral-300 dark:bg-neutral-700 rounded-full shrink-0" />
+                    <span>"Send an email to <span className="font-mono text-neutral-900 dark:text-neutral-100">john@example.com</span>"</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="w-1 h-1 bg-neutral-400 rounded-full shrink-0" />
+                    <span className="w-1 h-1 bg-neutral-300 dark:bg-neutral-700 rounded-full shrink-0" />
                     <span>"Show emails from Sarah"</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="w-1 h-1 bg-neutral-400 rounded-full shrink-0" />
-                    <span>"Find emails about the project"</span>
+                    <span className="w-1 h-1 bg-neutral-300 dark:bg-neutral-700 rounded-full shrink-0" />
+                    <span>"Find emails about project"</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="w-1 h-1 bg-neutral-400 rounded-full shrink-0" />
+                    <span className="w-1 h-1 bg-neutral-300 dark:bg-neutral-700 rounded-full shrink-0" />
                     <span>"Reply saying I'll be there"</span>
                   </div>
                 </div>
@@ -299,26 +295,26 @@ export function VercelChat({
           {messages.map(renderMessage)}
 
           {sendError && (
-            <div className="flex gap-3 justify-start animate-fade-in">
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/50 flex items-center justify-center shadow-sm">
-                <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+            <div className="flex gap-3 justify-start mb-4">
+              <div className="flex-shrink-0 w-7 h-7 rounded bg-error flex items-center justify-center">
+                <AlertCircle className="w-3.5 h-3.5 text-white" />
               </div>
-              <div className="max-w-[85%] rounded-2xl rounded-tl-sm px-4 py-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 text-sm">
-                <p className="text-red-800 dark:text-red-300">Failed to send message. Please try again.</p>
+              <div className="max-w-[85%] px-3 py-2 bg-error/10 dark:bg-error/20 text-sm rounded text-error">
+                <p className="text-error dark:text-error/80">Failed to send message. Please try again.</p>
               </div>
             </div>
           )}
 
           {isLoading && (
-            <div className="flex gap-3 justify-start animate-fade-in">
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shadow-sm">
-                <Sparkles className="w-4 h-4 text-white" />
+            <div className="flex gap-3 justify-start mb-4">
+              <div className="flex-shrink-0 w-7 h-7 rounded bg-neutral-900 dark:bg-white flex items-center justify-center">
+                <Sparkles className="w-3.5 h-3.5 text-white dark:text-neutral-900" />
               </div>
-              <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl rounded-tl-sm px-4 py-2.5 border border-neutral-200/60 dark:border-neutral-800/60">
-                <div className="flex items-center gap-1.5 h-5">
-                  <span className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-[pulse_1.2s_ease-in-out_infinite]" />
-                  <span className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-[pulse_1.2s_ease-in-out_0.15s_infinite]" />
-                  <span className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-[pulse_1.2s_ease-in-out_0.3s_infinite]" />
+              <div className="bg-neutral-100 dark:bg-neutral-900 rounded px-3 py-2 text-sm">
+                <div className="flex items-center gap-1">
+                  <span className="w-1 h-1 bg-neutral-400 dark:bg-neutral-600 rounded-full animate-pulse"></span>
+                  <span className="w-1 h-1 bg-neutral-400 dark:bg-neutral-600 rounded-full animate-pulse" style={{ animationDelay: '0.15s' }}></span>
+                  <span className="w-1 h-1 bg-neutral-400 dark:bg-neutral-600 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></span>
                 </div>
               </div>
             </div>
@@ -328,9 +324,9 @@ export function VercelChat({
         </div>
       </div>
 
-      <div className="border-t border-neutral-200/60 dark:border-neutral-800/60 p-4">
-        <div className="flex items-end gap-3">
-          <div className="flex-1 relative group">
+      <div className="border-t border-neutral-200 dark:border-neutral-800 p-4">
+        <div className="flex items-end gap-2">
+          <div className="flex-1 relative">
             <textarea
               ref={textareaRef}
               value={input}
@@ -340,15 +336,15 @@ export function VercelChat({
               rows={1}
               disabled={isLoading}
               className={cn(
-                'w-full resize-none rounded-xl px-4 py-3 text-sm',
-                'bg-neutral-100 dark:bg-neutral-900/50',
-                'border border-neutral-200/60 dark:border-neutral-800/60',
+                'w-full resize-none rounded px-3 py-2 text-sm',
+                'bg-white dark:bg-neutral-900',
+                'border border-neutral-300 dark:border-neutral-700',
                 'text-neutral-900 dark:text-neutral-100',
                 'placeholder:text-neutral-400 dark:placeholder:text-neutral-600',
-                'focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500/60 focus:bg-white dark:focus:bg-neutral-950',
+                'focus:outline-none focus:border-neutral-400 focus:bg-white dark:focus:bg-neutral-900 focus:ring-1 focus:ring-neutral-400 dark:focus:border-neutral-500',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
-                'transition-all duration-200',
-                'shadow-inner shadow-neutral-200/50 dark:shadow-neutral-800/50'
+                'transition-colors',
+                'pr-10'
               )}
               style={{ height: `${inputHeight}px`, fontFamily: 'inherit' }}
             />
@@ -358,11 +354,11 @@ export function VercelChat({
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
             className={cn(
-              'flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200',
-              'border border-transparent',
+              'flex-shrink-0 w-9 h-9 rounded flex items-center justify-center transition-colors',
+              'border',
               input.trim() && !isLoading
-                ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 shadow-md hover:shadow-lg hover:scale-105 active:scale-95'
-                : 'bg-neutral-100 dark:bg-neutral-900 text-neutral-400 dark:text-neutral-600 cursor-not-allowed'
+                ? 'bg-neutral-900 text-white border-neutral-900 hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:border-neutral-100'
+                : 'bg-transparent text-neutral-400 border-neutral-300 dark:text-neutral-600 dark:border-neutral-700 cursor-not-allowed'
             )}
             aria-label="Send message"
           >
@@ -386,4 +382,4 @@ export function VercelChat({
       </div>
     </div>
   );
-}
+});

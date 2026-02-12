@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo, memo } from 'react';
 import { ArrowLeft, Reply, Forward, Loader2 } from 'lucide-react';
 import { formatFullDate, getInitials } from '@/lib/utils';
 import type { Email } from '@/types/email';
@@ -15,7 +15,7 @@ interface EmailDetailProps {
   onForward?: (emailId: string) => void;
 }
 
-export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailProps) {
+export const EmailDetail = memo(function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailProps) {
   const { fetchThread } = useEmails();
   const activeThread = useAppStore((state) => state.activeThread);
   const isLoading = useAppStore((state) => state.isLoading);
@@ -35,11 +35,19 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
     }
   }, [activeThread]);
 
+  // Memoize thread sorting to avoid re-sorting on every render
+  const displayEmails = useMemo(() => {
+    if (!activeThread || activeThread.length === 0 || activeThread[0].threadId !== email?.threadId) {
+      return email ? [email] : [];
+    }
+    return [...activeThread].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [activeThread, email]);
+
   if (isLoading && !activeThread) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-neutral-500 dark:text-neutral-400">
         <Loader2 className="w-8 h-8 animate-spin mb-4" />
-        <p className="text-sm font-medium">Loading conversation...</p>
+        <p className="text-sm">Loading conversation...</p>
       </div>
     );
   }
@@ -47,31 +55,26 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
   if (!email) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-neutral-500 dark:text-neutral-400 p-8">
-        <div className="w-12 h-12 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4">
-          <ArrowLeft className="w-6 h-6 text-neutral-400 dark:text-neutral-500" />
+        <div className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center mb-4">
+          <ArrowLeft className="w-5 h-5 text-neutral-400 dark:text-neutral-600" />
         </div>
-        <p className="text-sm font-medium">Select an email to read</p>
+        <p className="text-sm">Select an email to read</p>
       </div>
     );
   }
 
-  // Use thread if available and matches current email, otherwise show single email
-  const displayEmails = activeThread && activeThread.length > 0 && activeThread[0].threadId === email.threadId
-    ? activeThread.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    : [email];
-
   return (
     <div className="flex flex-col h-full bg-white dark:bg-neutral-950">
       {/* Header */}
-      <header className="border-b border-neutral-200 dark:border-neutral-800 px-6 py-4 shrink-0">
+      <header className="border-b border-neutral-200 dark:border-neutral-800 px-5 py-4 shrink-0">
         <div className="flex items-center justify-between mb-4">
           <Button
             variant="ghost"
             onClick={onBack}
-            className="pl-0 text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-transparent"
+            className="pl-0 text-neutral-600 hover:text-neutral-900 dark:text-neutral-400"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            <span className="font-medium">Back</span>
+            Back
           </Button>
 
           <div className="flex items-center gap-1">
@@ -79,8 +82,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
               variant="ghost"
               size="icon"
               onClick={() => onReply?.(email.id)}
-              title="Reply"
-              className="h-8 w-8 text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+              aria-label="Reply to email"
             >
               <Reply className="w-4 h-4" />
             </Button>
@@ -88,21 +90,20 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
               variant="ghost"
               size="icon"
               onClick={() => onForward?.(email.id)}
-              title="Forward"
-              className="h-8 w-8 text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+              aria-label="Forward email"
             >
               <Forward className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
-        <h1 className="text-xl font-semibold mb-2 text-neutral-900 dark:text-white leading-tight">
+        <h1 className="text-lg font-semibold text-neutral-900 dark:text-white leading-tight">
           {email.subject}
         </h1>
 
         {activeThread && activeThread.length > 1 && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">
               {activeThread.length} messages
             </span>
           </div>
@@ -112,7 +113,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
       {/* Messages List */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-6 py-6"
+        className="flex-1 overflow-y-auto px-5 py-6"
       >
         <div className="max-w-3xl mx-auto space-y-8">
           {displayEmails.map((msg, index) => {
@@ -134,7 +135,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline justify-between gap-4">
-                      <span className="font-semibold text-neutral-900 dark:text-white text-sm">
+                      <span className="font-semibold text-sm text-neutral-900 dark:text-white">
                         {msg.from.name || msg.from.email}
                       </span>
                       <span className="text-xs shrink-0 text-neutral-500 dark:text-neutral-500 tabular-nums">
@@ -150,7 +151,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
 
                 {/* Message Body */}
                 <div className="pl-14">
-                  <div className="text-[15px] leading-relaxed text-neutral-800 dark:text-neutral-300 whitespace-pre-wrap font-sans">
+                  <div className="text-sm leading-relaxed text-neutral-800 dark:text-neutral-300 whitespace-pre-wrap">
                     {msg.body}
                   </div>
                 </div>
@@ -162,11 +163,11 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
 
       {/* Quick reply */}
       {onReply && displayEmails.length > 0 && (
-        <div className="border-t border-neutral-200 dark:border-neutral-800 p-4 shrink-0 bg-white dark:bg-neutral-950">
+        <div className="border-t border-neutral-200 dark:border-neutral-800 p-4 shrink-0">
           <Button
             variant="outline"
             onClick={() => onReply(displayEmails[displayEmails.length - 1].id)}
-            className="w-full justify-start h-10 border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-900 hover:text-neutral-900 dark:hover:text-neutral-200"
+            className="w-full justify-start h-10"
           >
             <Reply className="w-4 h-4 mr-2" />
             <span className="text-sm">
@@ -177,4 +178,4 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
       )}
     </div>
   );
-}
+});

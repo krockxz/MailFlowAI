@@ -61,6 +61,7 @@
     "clsx": "^2.1.1",
     "eslint": "^9.17.0",
     "jsdom": "^25.0.1",
+    "shadcn": "^3.8.4",
     "tailwind-merge": "^3.4.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.54.0",
