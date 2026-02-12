@@ -45,7 +45,7 @@ export function Sidebar({
       <div className="px-3 mb-4">
         <Button
           onClick={onCompose}
-          className="w-full bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100"
+          className="w-full bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100"
         >
           Compose
         </Button>
