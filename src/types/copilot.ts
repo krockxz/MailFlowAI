@@ -34,6 +34,7 @@ export interface SearchEmailsParams {
   dateTo?: string; // ISO date string
   isUnread?: boolean;
   days?: number;
+  [key: string]: unknown; // Index signature for Record<string, unknown> compatibility
 }
 
 /**
@@ -44,6 +45,7 @@ export interface OpenEmailParams {
   sender?: string;
   subject?: string;
   latest?: boolean;
+  [key: string]: unknown; // Index signature for Record<string, unknown> compatibility
 }
 
 /**
@@ -53,4 +55,5 @@ export interface ReplyEmailParams {
   emailId?: string; // If not provided, use currently selected email
   body: string;
   cc?: string;
+  [key: string]: unknown; // Index signature for Record<string, unknown> compatibility
 }
