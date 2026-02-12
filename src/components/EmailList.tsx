@@ -1,10 +1,8 @@
 import { memo } from 'react';
 import { Mail, ChevronDown, Loader2 } from 'lucide-react';
-import { formatDate, truncate } from '@/lib/utils';
+import { cn, formatDate, getInitials, truncate } from '@/lib/utils';
 import type { Email } from '@/types/email';
-import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { getInitials } from '@/lib/utils';
 import type { FolderPaginationState } from '@/types/email';
 
 interface EmailListProps {

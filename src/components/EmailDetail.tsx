@@ -143,7 +143,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
                     </div>
 
                     <div className="text-sm mt-0.5 text-neutral-500 dark:text-neutral-400">
-                      &lt;{msg.from.email}&gt; to {msg.to.map(t => t.name || t.email).join(', ')}
+                      &lt;{msg.from.email}&gt; to {msg.to?.map(t => t.name || t.email).join(', ') || ' undisclosed recipients'}
                     </div>
                   </div>
                 </div>
@@ -161,7 +161,7 @@ export function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailPr
       </div>
 
       {/* Quick reply */}
-      {onReply && (
+      {onReply && displayEmails.length > 0 && (
         <div className="border-t border-neutral-200 dark:border-neutral-800 p-4 shrink-0 bg-white dark:bg-neutral-950">
           <Button
             variant="outline"

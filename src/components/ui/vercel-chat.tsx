@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Loader2, X, Sparkles, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCopilotChatHeadless_c } from '@copilotkit/react-core';
+import { Streamdown } from 'streamdown';
 
 interface VercelChatProps {
   instructions?: string;
@@ -12,6 +13,74 @@ interface VercelChatProps {
 const DEFAULT_INSTRUCTIONS = `You are an AI email assistant integrated into a mail client. Help users manage emails through natural language.
 
 Be concise and helpful. Never use emojis in responses.`;
+
+// Custom components for Streamdown styling
+const streamdownComponents = {
+  h1: ({ children, ...props }: any) => (
+    <h1 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mt-3 mb-2" {...props}>{children}</h1>
+  ),
+  h2: ({ children, ...props }: any) => (
+    <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mt-2 mb-1" {...props}>{children}</h2>
+  ),
+  h3: ({ children, ...props }: any) => (
+    <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mt-2 mb-1" {...props}>{children}</h3>
+  ),
+  p: ({ children, ...props }: any) => (
+    <p className="my-1" {...props}>{children}</p>
+  ),
+  strong: ({ children, ...props }: any) => (
+    <strong className="font-semibold text-neutral-900 dark:text-neutral-100" {...props}>{children}</strong>
+  ),
+  em: ({ children, ...props }: any) => (
+    <em className="italic text-neutral-800 dark:text-neutral-200" {...props}>{children}</em>
+  ),
+  code: ({ children, className, ...props }: any) => {
+    // Inline code (no className) vs code block (has className)
+    if (className) {
+      return (
+        <code className={cn("text-xs font-mono bg-neutral-200 dark:bg-neutral-800 rounded px-1.5 py-0.5 my-1 block overflow-x-auto", className)} {...props}>
+          {children}
+        </code>
+      );
+    }
+    return (
+      <code className="text-xs font-mono bg-neutral-200 dark:bg-neutral-800 text-accent-600 dark:text-accent-400 px-1.5 py-0.5 rounded" {...props}>
+        {children}
+      </code>
+    );
+  },
+  a: ({ href, children, ...props }: any) => (
+    <a
+      href={href}
+      className="text-accent-600 dark:text-accent-400 hover:underline"
+      target="_blank"
+      rel="noopener noreferrer"
+      {...props}
+    >
+      {children}
+    </a>
+  ),
+  ul: ({ children, ...props }: any) => (
+    <ul className="my-1 space-y-0.5" {...props}>{children}</ul>
+  ),
+  ol: ({ children, ...props }: any) => (
+    <ol className="my-1 space-y-0.5" {...props}>{children}</ol>
+  ),
+  li: ({ children, ...props }: any) => (
+    <li className="flex items-start" {...props}>{children}</li>
+  ),
+  blockquote: ({ children, ...props }: any) => (
+    <blockquote className="border-l-2 border-neutral-300 dark:border-neutral-700 pl-3 italic text-neutral-600 dark:text-neutral-400 my-1" {...props}>
+      {children}
+    </blockquote>
+  ),
+  hr: (props: any) => (
+    <hr className="my-2 border-neutral-300 dark:border-neutral-700" {...props} />
+  ),
+  del: ({ children, ...props }: any) => (
+    <del className="line-through text-neutral-500" {...props}>{children}</del>
+  ),
+};
 
 export function VercelChat({
   instructions = DEFAULT_INSTRUCTIONS,
@@ -121,20 +190,24 @@ export function VercelChat({
     }
   };
 
-  const formatMessageContent = (content: string) => {
-    return content
-      .replace(/\n/g, '<br />')
-      .replace(/• /g, '<span class="inline-block w-1.5 h-1.5 bg-current rounded-full mr-2 opacity-50"></span>')
-      .replace(/"([^"]+)"/g, '"<span class="font-mono text-accent-600 dark:text-accent-400">$1</span>"');
-  };
-
   const showWelcome = messages.length === 0;
 
   const renderMessage = (msg: any, index: number) => {
     const role = msg.role;
-    const content = msg.content ?? '';
 
-    if (!content || typeof content !== 'string') {
+    // Handle different content formats from CopilotKit
+    let content = '';
+    if (typeof msg.content === 'string') {
+      content = msg.content;
+    } else if (Array.isArray(msg.content)) {
+      // Content is an array of parts (text or binary)
+      const textParts = msg.content.filter((part: any) => part.type === 'text');
+      content = textParts.map((part: any) => part.text).join('');
+    } else {
+      content = String(msg.content ?? '');
+    }
+
+    if (!content) {
       return null;
     }
 
@@ -162,16 +235,19 @@ export function VercelChat({
 
         <div
           className={cn(
-            'max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed',
+            'max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed overflow-hidden',
             isUser
               ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-tr-sm'
               : 'bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-tl-sm border border-neutral-200/60 dark:border-neutral-800/60'
           )}
         >
-          <div
-            className="whitespace-pre-wrap break-words"
-            dangerouslySetInnerHTML={{ __html: formatMessageContent(content) }}
-          />
+          {isUser ? (
+            <div className="whitespace-pre-wrap break-words">{content}</div>
+          ) : (
+            <Streamdown components={streamdownComponents}>
+              {content}
+            </Streamdown>
+          )}
         </div>
 
         {isUser && (
