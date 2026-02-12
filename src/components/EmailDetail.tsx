@@ -1,5 +1,5 @@
-import { useEffect, useRef, useMemo, memo } from 'react';
-import { ArrowLeft, Reply, Forward, Loader2 } from 'lucide-react';
+import { useEffect, useRef, useMemo, memo, useState, useCallback } from 'react';
+import { ArrowLeft, Reply, Forward, Loader2, ChevronDown } from 'lucide-react';
 import { formatFullDate, getInitials } from '@/lib/utils';
 import type { Email } from '@/types/email';
 import { useEmails } from '@/hooks/useEmails';
@@ -7,6 +7,7 @@ import { useAppStore } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { ThreadParticipantsRow } from '@/components/ThreadParticipantsRow';
 
 interface EmailDetailProps {
   email: Email | null;
@@ -15,11 +16,14 @@ interface EmailDetailProps {
   onForward?: (emailId: string) => void;
 }
 
+const COLLAPSE_THRESHOLD = 4;
+
 export const EmailDetail = memo(function EmailDetail({ email, onBack, onReply, onForward }: EmailDetailProps) {
   const { fetchThread } = useEmails();
   const activeThread = useAppStore((state) => state.activeThread);
   const isLoading = useAppStore((state) => state.isLoading);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Fetch thread when email changes
   useEffect(() => {
@@ -43,6 +47,20 @@ export const EmailDetail = memo(function EmailDetail({ email, onBack, onReply, o
     return [...activeThread].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [activeThread, email]);
 
+  // Determine which messages to show based on collapse state
+  const visibleEmails = useMemo(() => {
+    if (displayEmails.length <= COLLAPSE_THRESHOLD || isExpanded) {
+      return displayEmails;
+    }
+    return displayEmails.slice(0, COLLAPSE_THRESHOLD);
+  }, [displayEmails, isExpanded]);
+
+  const hiddenCount = displayEmails.length - visibleEmails.length;
+
+  const toggleExpanded = useCallback(() => {
+    setIsExpanded((prev) => !prev);
+  }, []);
+
   if (isLoading && !activeThread) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-neutral-500 dark:text-neutral-400">
@@ -63,6 +81,8 @@ export const EmailDetail = memo(function EmailDetail({ email, onBack, onReply, o
     );
   }
 
+  const isThread = displayEmails.length > 1;
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-neutral-950">
       {/* Header */}
@@ -82,7 +102,6 @@ export const EmailDetail = memo(function EmailDetail({ email, onBack, onReply, o
               variant="ghost"
               size="icon"
               onClick={() => onReply?.(email.id)}
-              aria-label="Reply to email"
             >
               <Reply className="w-4 h-4" />
             </Button>
@@ -90,23 +109,18 @@ export const EmailDetail = memo(function EmailDetail({ email, onBack, onReply, o
               variant="ghost"
               size="icon"
               onClick={() => onForward?.(email.id)}
-              aria-label="Forward email"
             >
               <Forward className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
-        <h1 className="text-lg font-semibold text-neutral-900 dark:text-white leading-tight">
+        <h1 className="text-lg font-semibold text-neutral-900 dark:text-white leading-tight mb-3">
           {email.subject}
         </h1>
 
-        {activeThread && activeThread.length > 1 && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-neutral-500 dark:text-neutral-400">
-              {activeThread.length} messages
-            </span>
-          </div>
+        {isThread && (
+          <ThreadParticipantsRow messages={displayEmails} />
         )}
       </header>
 
@@ -115,49 +129,59 @@ export const EmailDetail = memo(function EmailDetail({ email, onBack, onReply, o
         ref={scrollRef}
         className="flex-1 overflow-y-auto px-5 py-6"
       >
-        <div className="max-w-3xl mx-auto space-y-8">
-          {displayEmails.map((msg, index) => {
-            return (
-              <div
-                key={msg.id}
-                className={cn(
-                  'relative',
-                  index !== displayEmails.length - 1 && 'pb-8 border-b border-neutral-100 dark:border-neutral-900'
-                )}
-              >
-                {/* Message Header */}
-                <div className="flex items-start gap-4 mb-4">
-                  <Avatar className="w-10 h-10 shrink-0">
-                    <AvatarFallback className="bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400 text-sm font-medium">
-                      {getInitials(msg.from.name || msg.from.email)}
-                    </AvatarFallback>
-                  </Avatar>
+        <div className="max-w-3xl mx-auto">
+          {visibleEmails.map((msg, index) => (
+            <div
+              key={msg.id}
+              className={cn(
+                'relative mb-8',
+                index !== visibleEmails.length - 1 && 'pb-8 border-b border-neutral-100 dark:border-neutral-900',
+                index > 0 && 'ml-6'
+              )}
+            >
+              {/* Message Header */}
+              <div className="flex items-start gap-4 mb-4">
+                <Avatar className="w-10 h-10 shrink-0">
+                  <AvatarFallback className="bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400 text-sm font-medium">
+                    {getInitials(msg.from.name || msg.from.email)}
+                  </AvatarFallback>
+                </Avatar>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline justify-between gap-4">
-                      <span className="font-semibold text-sm text-neutral-900 dark:text-white">
-                        {msg.from.name || msg.from.email}
-                      </span>
-                      <span className="text-xs shrink-0 text-neutral-500 dark:text-neutral-500 tabular-nums">
-                        {formatFullDate(msg.date)}
-                      </span>
-                    </div>
-
-                    <div className="text-sm mt-0.5 text-neutral-500 dark:text-neutral-400">
-                      &lt;{msg.from.email}&gt; to {msg.to?.map(t => t.name || t.email).join(', ') || ' undisclosed recipients'}
-                    </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <span className="font-semibold text-sm text-neutral-900 dark:text-white">
+                      {msg.from.name || msg.from.email}
+                    </span>
+                    <span className="text-xs shrink-0 text-neutral-500 dark:text-neutral-500 tabular-nums">
+                      {formatFullDate(msg.date)}
+                    </span>
                   </div>
-                </div>
 
-                {/* Message Body */}
-                <div className="pl-14">
-                  <div className="text-sm leading-relaxed text-neutral-800 dark:text-neutral-300 whitespace-pre-wrap">
-                    {msg.body}
+                  <div className="text-sm mt-0.5 text-neutral-500 dark:text-neutral-400">
+                    &lt;{msg.from.email}&gt; to {msg.to?.map(t => t.name || t.email).join(', ') || ' undisclosed recipients'}
                   </div>
                 </div>
               </div>
-            );
-          })}
+
+              {/* Message Body */}
+              <div className="pl-14">
+                <div className="text-sm leading-relaxed text-neutral-800 dark:text-neutral-300 whitespace-pre-wrap">
+                  {msg.body}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Collapse/Expand Button */}
+          {hiddenCount > 0 && (
+            <button
+              onClick={toggleExpanded}
+              className="flex items-center gap-1 text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors mx-auto"
+            >
+              <ChevronDown className={cn('w-4 h-4 transition-transform', isExpanded && 'rotate-180')} />
+              {hiddenCount} more messages
+            </button>
+          )}
         </div>
       </div>
 
