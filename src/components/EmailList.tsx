@@ -88,7 +88,7 @@ EmailItem.displayName = 'EmailItem';
 
 export const EmailList = memo(function EmailList({ emails, selectedId, onSelectEmail, pagination, onLoadMore }: EmailListProps) {
   const hasMore = pagination?.hasMore && emails.length > 0;
-  const isLoading = pagination?.isLoading ?? false;
+  const isLoading = pagination?.status === 'loading';
 
   const handleLoadMore = useCallback(() => {
     onLoadMore?.();

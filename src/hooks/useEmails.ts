@@ -29,6 +29,8 @@ export function useEmails() {
   const fetchInbox = useCallback(async () => {
     try {
       setIsLoading(true);
+      setPagination('inbox', { status: 'loading' });
+
       const token = await getValidAccessToken();
       const gmail = createGmailService(token);
 
@@ -37,12 +39,6 @@ export function useEmails() {
 
       // List messages
       const response = await gmail.listMessages(['INBOX'], PAGE_SIZE, currentPageToken || undefined);
-
-      // Update pagination state with next page token
-      setPagination('inbox', {
-        nextPageToken: response.nextPageToken || null,
-        hasMore: !!response.nextPageToken,
-      });
 
       // Fetch full message details
       const fullMessages = await gmail.getBatchMessages(
@@ -63,9 +59,19 @@ export function useEmails() {
         setEmails('inbox', parsedEmails);
       }
 
+      // Update pagination state with next page token and timestamp
+      setPagination('inbox', {
+        nextPageToken: response.nextPageToken || null,
+        hasMore: !!response.nextPageToken,
+        pageToken: response.nextPageToken || null,
+        status: 'success',
+        lastLoadedAt: Date.now(),
+      });
+
       setLastSyncTime(new Date());
     } catch (error) {
       console.error('Failed to fetch inbox:', error);
+      setPagination('inbox', { status: 'error' });
       throw error;
     } finally {
       setIsLoading(false);
@@ -78,6 +84,8 @@ export function useEmails() {
   const fetchSent = useCallback(async () => {
     try {
       setIsLoading(true);
+      setPagination('sent', { status: 'loading' });
+
       const token = await getValidAccessToken();
       const gmail = createGmailService(token);
 
@@ -86,12 +94,6 @@ export function useEmails() {
 
       // List messages
       const response = await gmail.listMessages(['SENT'], PAGE_SIZE, currentPageToken || undefined);
-
-      // Update pagination state with next page token
-      setPagination('sent', {
-        nextPageToken: response.nextPageToken || null,
-        hasMore: !!response.nextPageToken,
-      });
 
       // Fetch full message details
       const fullMessages = await gmail.getBatchMessages(
@@ -112,9 +114,19 @@ export function useEmails() {
         setEmails('sent', parsedEmails);
       }
 
+      // Update pagination state with next page token and timestamp
+      setPagination('sent', {
+        nextPageToken: response.nextPageToken || null,
+        hasMore: !!response.nextPageToken,
+        pageToken: response.nextPageToken || null,
+        status: 'success',
+        lastLoadedAt: Date.now(),
+      });
+
       setLastSyncTime(new Date());
     } catch (error) {
       console.error('Failed to fetch sent:', error);
+      setPagination('sent', { status: 'error' });
       throw error;
     } finally {
       setIsLoading(false);
@@ -128,13 +140,13 @@ export function useEmails() {
     const paginationState = pagination[type];
 
     // Don't load if already loading or no more emails
-    if (paginationState.isLoading || !paginationState.hasMore || !paginationState.nextPageToken) {
+    if (paginationState.status === 'loading' || !paginationState.hasMore || !paginationState.nextPageToken) {
       return;
     }
 
     try {
       // Set loading state for pagination
-      setPagination(type, { isLoading: true });
+      setPagination(type, { status: 'loading' });
 
       // Update page token to fetch next page
       setPagination(type, { pageToken: paginationState.nextPageToken });
@@ -163,14 +175,15 @@ export function useEmails() {
         nextPageToken: response.nextPageToken || null,
         hasMore: !!response.nextPageToken,
         pageToken: response.nextPageToken || null,
-        isLoading: false,
+        status: 'success',
+        lastLoadedAt: Date.now(),
       });
 
       setLastSyncTime(new Date());
     } catch (error) {
       console.error(`Failed to load more ${type} emails:`, error);
       // Reset loading state on error
-      setPagination(type, { isLoading: false });
+      setPagination(type, { status: 'error' });
       throw error;
     }
   }, [pagination, emails, setEmails, setLastSyncTime, setPagination]);
@@ -274,9 +287,22 @@ export function useEmails() {
   }, []);
 
   /**
-   * Search emails
+   * Search emails with caching (60-second cache)
    */
   const searchEmails = useCallback(async (query: string): Promise<Email[]> => {
+    const state = useAppStore.getState();
+    const SEARCH_CACHE_DURATION = 60000; // 60 seconds
+
+    // Check if we have cached results for this query
+    if (
+      state.search.isSearchMode &&
+      state.search.query === query &&
+      state.search.timestamp &&
+      Date.now() - state.search.timestamp < SEARCH_CACHE_DURATION
+    ) {
+      return state.search.results;
+    }
+
     try {
       setIsLoading(true);
       const token = await getValidAccessToken();
@@ -290,9 +316,14 @@ export function useEmails() {
       );
 
       // Parse messages
-      return fullMessages.map((msg: GmailMessage) =>
+      const results = fullMessages.map((msg: GmailMessage) =>
         gmail.parseMessage(msg)
       );
+
+      // Store results in cache and enter search mode
+      state.setSearchResults(results, query);
+
+      return results;
     } catch (error) {
       console.error('Failed to search emails:', error);
       throw error;

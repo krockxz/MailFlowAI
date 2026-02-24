@@ -3,6 +3,9 @@ import { useAppStore } from '@/store';
 import { useEmails } from '@/hooks/useEmails';
 import { useRealtimeEmailSync } from '@/hooks/useRealtimeEmailSync';
 import { useAppContext, useCopilotEmailActions } from '@/hooks/useCopilotActions';
+import { useBootstrapAuthAndInbox } from '@/hooks/useBootstrapAuthAndInbox';
+import { useViewSync } from '@/hooks/useViewSync';
+import { useFilterPaginationReset } from '@/hooks/useFilterPaginationReset';
 import type { Email } from '@/types/email';
 import { Sidebar } from '@/components/Sidebar';
 import { EmailList } from '@/components/EmailList';
@@ -10,7 +13,6 @@ import { EmailDetail } from '@/components/EmailDetail';
 import { Compose } from '@/components/Compose';
 import { FilterBar } from '@/components/FilterBar';
 import { Moon, Sun, RefreshCw, Sparkles } from 'lucide-react';
-import { getStoredAccessToken, isAuthenticated as checkIsAuthenticated, setTokenTimestamp } from '@/services/auth';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Button } from '@/components/ui/button';
 import { formatReplyDate, isWithinRange } from '@/lib/utils';
@@ -27,13 +29,12 @@ function AppContent() {
     toggleDarkMode,
     setCurrentView,
     setSelectedEmailId,
-    setAccessToken,
-    setUser,
     compose,
     setCompose,
     resetCompose,
     getCurrentFilters,
     isAuthenticated,
+    search,
   } = useAppStore();
 
   const {
@@ -44,7 +45,6 @@ function AppContent() {
     isLoading,
     pagination,
     loadMore,
-    resetAllPagination,
   } = useEmails();
 
   const [isCopilotOpen, setIsCopilotOpen] = useState(true);
@@ -62,6 +62,15 @@ function AppContent() {
     pollingInterval: 30000,
     enabled: isAuthenticated || undefined,
   });
+
+  // Bootstrap auth and initial inbox fetch (extracted hook)
+  useBootstrapAuthAndInbox();
+
+  // Sync email data when view changes (extracted hook)
+  useViewSync();
+
+  // Reset pagination when filters change (extracted hook)
+  useFilterPaginationReset();
 
   // Sync compose state: use store directly (single source of truth)
   // When AI triggers send, show confirmation dialog
@@ -82,87 +91,16 @@ function AppContent() {
     }
   }, [compose.isOpen, aiCompose.isSending, aiCompose.to, aiCompose.subject, aiCompose.body, aiCompose.cc, aiCompose.bcc, showSendConfirm, setCompose]);
 
-  // Check auth on mount and fetch user data
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = getStoredAccessToken();
-      const hasValidToken = checkIsAuthenticated();
-
-      // If persisted state says authenticated but no token exists, clear the state
-      const store = useAppStore.getState();
-      if (store.isAuthenticated && !hasValidToken) {
-        store.setIsAuthenticated(false);
-        store.setUser(null);
-        store.setAccessToken(null);
-        return;
-      }
-
-      // If token exists, verify and fetch user data
-      if (hasValidToken && token) {
-        setAccessToken(token);
-
-        // Mark token as fresh (prevents immediate expiration)
-        setTokenTimestamp();
-
-        // Fetch user profile if not already loaded
-        if (!store.user) {
-          try {
-            const { GmailService } = await import('@/services/gmail');
-            const gmail = new GmailService(token);
-            const profile = await gmail.getUserProfile();
-            setUser({ emailAddress: profile.emailAddress });
-            store.setIsAuthenticated(true);
-          } catch (error) {
-            console.error('Failed to fetch user profile:', error);
-            // Token might be expired, clear auth state
-            store.setIsAuthenticated(false);
-            store.setAccessToken(null);
-            return;
-          }
-        } else {
-          // User already persisted, just ensure auth state is correct
-          store.setIsAuthenticated(true);
-        }
-
-        // Only fetch inbox if it's empty (avoid duplicate fetches)
-        if (emails.inbox.length === 0) {
-          await fetchInbox();
-        }
-      }
-    };
-    checkAuth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount only
-
-  // Refresh emails when view changes
-  useEffect(() => {
-    const fetchForView = async () => {
-      if (!checkIsAuthenticated()) return;
-
-      // Reset pagination when switching views
-      resetAllPagination();
-
-      if (currentView === 'inbox') {
-        await fetchInbox();
-      } else if (currentView === 'sent') {
-        await fetchSent();
-      }
-    };
-    fetchForView();
-  }, [currentView, fetchInbox, fetchSent, resetAllPagination]);
-
   // Get the current view's filters
   const currentFilters = getCurrentFilters();
 
-  // Reset pagination when filters change
-  useEffect(() => {
-    if (currentFilters && Object.keys(currentFilters).length > 0) {
-      resetAllPagination();
-    }
-  }, [currentFilters, resetAllPagination]);
-
   // Get current email list based on view with filters applied
   const getCurrentEmails = useCallback(() => {
+    // If in search mode, return cached search results
+    if (search.isSearchMode) {
+      return search.results;
+    }
+
     const emailList = currentView === 'inbox' ? emails.inbox :
                       currentView === 'sent' ? emails.sent : [];
 

@@ -5,6 +5,7 @@ import { useComposeActions } from './useComposeActions';
 import { useNavigationActions } from './useNavigationActions';
 import { useSearchActions } from './useSearchActions';
 import { useEmailActions } from './useEmailActions';
+import { useThreadActions } from './useThreadActions';
 import { logger, createActionError, ActionErrorType } from './errorHandler';
 
 // Re-export individual hooks
@@ -13,6 +14,7 @@ export { useNavigationActions } from './useNavigationActions';
 export { useComposeActions, type ComposeData } from './useComposeActions';
 export { useSearchActions } from './useSearchActions';
 export { useEmailActions } from './useEmailActions';
+export { useThreadActions } from './useThreadActions';
 
 /**
  * Hook that registers additional AI actions that need compose state access
@@ -171,6 +173,7 @@ export function useCopilotEmailActions() {
     useSearchActions();
     useAdditionalActions();
     useEmailActions();
+    useThreadActions();
 
     // Export compose state from useComposeActions
     const { compose } = useComposeActions();

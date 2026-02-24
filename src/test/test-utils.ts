@@ -44,7 +44,8 @@ export const createMockPaginationState = (overrides: Partial<FolderPaginationSta
   pageToken: null,
   nextPageToken: 'next-page-token',
   hasMore: true,
-  isLoading: false,
+  status: 'idle' as const,
+  lastLoadedAt: null,
   ...overrides,
 });
 
@@ -75,8 +76,8 @@ export const mockStoreState = {
     sent: {},
   },
   pagination: {
-    inbox: { pageToken: null, nextPageToken: null, hasMore: true, isLoading: false },
-    sent: { pageToken: null, nextPageToken: null, hasMore: true, isLoading: false },
+    inbox: { pageToken: null, nextPageToken: null, hasMore: true, status: 'idle' as const, lastLoadedAt: null },
+    sent: { pageToken: null, nextPageToken: null, hasMore: true, status: 'idle' as const, lastLoadedAt: null },
   },
   isLoading: false,
   isSending: false,

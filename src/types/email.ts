@@ -38,7 +38,21 @@ export interface FilterState {
 /**
  * View types in the app
  */
-export type ViewType = 'inbox' | 'sent' | 'compose' | 'detail';
+export type ViewType = 'inbox' | 'sent' | 'compose' | 'detail' | 'drafts';
+
+/**
+ * Draft email model
+ */
+export interface Draft {
+  id: string;
+  to: string;
+  subject: string;
+  body: string;
+  cc: string;
+  bcc: string;
+  timestamp: number;
+  preview: string;
+}
 
 /**
  * User profile
@@ -90,13 +104,19 @@ export interface GmailMessageBody {
 }
 
 /**
+ * Pagination status enum
+ */
+export type PaginationStatus = 'idle' | 'loading' | 'error' | 'success';
+
+/**
  * Pagination state for a single folder (inbox or sent)
  */
 export interface FolderPaginationState {
   pageToken: string | null;
   nextPageToken: string | null;
   hasMore: boolean;
-  isLoading: boolean;
+  status: PaginationStatus;
+  lastLoadedAt: number | null; // timestamp for cache-aware fetching
 }
 
 /**

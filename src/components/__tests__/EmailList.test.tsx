@@ -217,7 +217,8 @@ describe('EmailList', () => {
         pageToken: null,
         nextPageToken: 'next-token',
         hasMore: true,
-        isLoading: false,
+        status: 'idle' as const,
+        lastLoadedAt: null,
       };
 
       render(
@@ -240,7 +241,8 @@ describe('EmailList', () => {
         pageToken: null,
         nextPageToken: null,
         hasMore: false,
-        isLoading: false,
+        status: 'idle' as const,
+        lastLoadedAt: null,
       };
 
       render(
@@ -261,7 +263,8 @@ describe('EmailList', () => {
         pageToken: null,
         nextPageToken: 'next-token',
         hasMore: true,
-        isLoading: false,
+        status: 'idle' as const,
+        lastLoadedAt: null,
       };
 
       render(
@@ -283,7 +286,8 @@ describe('EmailList', () => {
         pageToken: null,
         nextPageToken: 'next-token',
         hasMore: true,
-        isLoading: true,
+        status: 'loading' as const,
+        lastLoadedAt: null,
       };
 
       render(
@@ -306,7 +310,8 @@ describe('EmailList', () => {
         pageToken: null,
         nextPageToken: 'next-token',
         hasMore: true,
-        isLoading: false,
+        status: 'idle' as const,
+        lastLoadedAt: null,
       };
 
       render(

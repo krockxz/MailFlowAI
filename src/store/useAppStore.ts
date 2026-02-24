@@ -8,7 +8,8 @@ const createInitialPaginationState = () => ({
   pageToken: null as string | null,
   nextPageToken: null as string | null,
   hasMore: true,
-  isLoading: false,
+  status: 'idle' as const,
+  lastLoadedAt: null as number | null,
 });
 
 export const useAppStore = create<AppStore>()(
@@ -41,6 +42,13 @@ export const useAppStore = create<AppStore>()(
           inbox: createInitialPaginationState(),
           sent: createInitialPaginationState(),
         } as AppStore['pagination'],
+
+        search: {
+          results: [],
+          query: '',
+          timestamp: null,
+          isSearchMode: false,
+        } as AppStore['search'],
 
         isLoading: false,
         isSending: false,
@@ -177,6 +185,35 @@ export const useAppStore = create<AppStore>()(
             }
             return state;
           }),
+
+        // Search actions
+        setSearchResults: (results: AppStore['emails']['inbox'], query: string) =>
+          set({
+            search: {
+              results,
+              query,
+              timestamp: Date.now(),
+              isSearchMode: true,
+            },
+          }),
+
+        clearSearch: () =>
+          set({
+            search: {
+              results: [],
+              query: '',
+              timestamp: null,
+              isSearchMode: false,
+            },
+          }),
+
+        exitSearchMode: () =>
+          set((state) => ({
+            search: {
+              ...state.search,
+              isSearchMode: false,
+            },
+          })),
 
         setIsLoading: (loading: boolean) => set({ isLoading: loading }),
         setIsSending: (sending: boolean) => set({ isSending: sending }),

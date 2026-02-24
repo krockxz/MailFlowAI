@@ -1,6 +1,16 @@
 import type { Email, FilterState, ViewType, UserProfile, PaginationState } from './email';
 
 /**
+ * Search state for caching search results
+ */
+export interface SearchState {
+  results: Email[];
+  query: string;
+  timestamp: number | null; // When the search was performed (for cache expiration)
+  isSearchMode: boolean;
+}
+
+/**
  * Main application state
  */
 export interface AppState {
@@ -27,6 +37,9 @@ export interface AppState {
 
   // Pagination state
   pagination: PaginationState;
+
+  // Search state
+  search: SearchState;
 
   // Loading states
   isLoading: boolean;
@@ -79,6 +92,11 @@ export interface AppActions {
   clearFilters: () => void;
   // Get the current view's filters
   getCurrentFilters: () => FilterState;
+
+  // Search actions
+  setSearchResults: (results: Email[], query: string) => void;
+  clearSearch: () => void;
+  exitSearchMode: () => void;
 
   // Loading actions
   setIsLoading: (loading: boolean) => void;
