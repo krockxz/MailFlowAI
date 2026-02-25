@@ -8,6 +8,17 @@ import type { GmailMessage } from '@/types/email';
 const PAGE_SIZE = 30;
 
 /**
+ * Custom error class for email fetch operations
+ * Provides better error handling with retry capability tracking
+ */
+export class EmailFetchError extends Error {
+  constructor(message: string, public isRetryable = true) {
+    super(message);
+    this.name = 'EmailFetchError';
+  }
+}
+
+/**
  * Hook for fetching and managing emails
  */
 export function useEmails() {
@@ -27,6 +38,11 @@ export function useEmails() {
    * Fetch inbox emails with pagination support
    */
   const fetchInbox = useCallback(async () => {
+    // Prevent duplicate requests
+    if (pagination.inbox.status === 'loading') {
+      return;
+    }
+
     try {
       setIsLoading(true);
       setPagination('inbox', { status: 'loading' });
@@ -87,7 +103,10 @@ export function useEmails() {
     } catch (error) {
       console.error('Failed to fetch inbox:', error);
       setPagination('inbox', { status: 'error' });
-      throw error;
+      throw new EmailFetchError(
+        error instanceof Error ? error.message : 'Failed to fetch inbox emails',
+        true
+      );
     } finally {
       setIsLoading(false);
     }
@@ -97,6 +116,11 @@ export function useEmails() {
    * Fetch sent emails with pagination support
    */
   const fetchSent = useCallback(async () => {
+    // Prevent duplicate requests
+    if (pagination.sent.status === 'loading') {
+      return;
+    }
+
     try {
       setIsLoading(true);
       setPagination('sent', { status: 'loading' });
@@ -157,7 +181,10 @@ export function useEmails() {
     } catch (error) {
       console.error('Failed to fetch sent:', error);
       setPagination('sent', { status: 'error' });
-      throw error;
+      throw new EmailFetchError(
+        error instanceof Error ? error.message : 'Failed to fetch sent emails',
+        true
+      );
     } finally {
       setIsLoading(false);
     }

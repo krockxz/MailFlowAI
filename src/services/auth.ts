@@ -31,12 +31,12 @@ export function getOAuthConfig(): OAuthConfig {
 
 /**
  * Generate random state for OAuth flow
+ * Uses cryptographically secure random values for CSRF protection
  */
 export function generateState(): string {
-  return (
-    Math.random().toString(36).substring(2, 15) +
-    Math.random().toString(36).substring(2, 15)
-  );
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
 /**

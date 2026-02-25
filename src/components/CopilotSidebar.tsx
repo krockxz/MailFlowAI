@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { X, Sparkles, AlertCircle, ChevronLeft, GripVertical } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { X, Sparkles, AlertCircle } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { VercelChat } from '@/components/ui/vercel-chat';
 import { useAppStore } from '@/store';

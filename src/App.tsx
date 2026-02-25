@@ -137,8 +137,8 @@ function AppContent() {
   // Get the current view's filters
   const currentFilters = getCurrentFilters();
 
-  // Get current email list based on view with filters applied
-  const getCurrentEmails = useCallback(() => {
+  // Get current email list based on view with filters applied (memoized for performance)
+  const currentEmailList = useMemo(() => {
     // If in search mode, return cached search results
     if (search.isSearchMode) {
       return search.results;
@@ -156,11 +156,11 @@ function AppContent() {
       // Filter by query (searches subject and body)
       if (currentFilters.query) {
         const query = currentFilters.query.toLowerCase();
-        const subjectMatch = email.subject.toLowerCase().includes(query);
-        const bodyMatch = email.body.toLowerCase().includes(query);
-        const fromMatch = email.from.email.toLowerCase().includes(query) ||
-          (email.from.name && email.from.name.toLowerCase().includes(query));
-        if (!subjectMatch && !bodyMatch && !fromMatch) {
+        const subjectMatch = email.subject?.toLowerCase().includes(query) ?? false;
+        const bodyMatch = email.body?.toLowerCase().includes(query) ?? false;
+        const fromMatch = email.from.email?.toLowerCase().includes(query) ?? false;
+        const fromNameMatch = email.from.name?.toLowerCase().includes(query) ?? false;
+        if (!subjectMatch && !bodyMatch && !fromMatch && !fromNameMatch) {
           return false;
         }
       }
@@ -168,8 +168,8 @@ function AppContent() {
       // Filter by sender
       if (currentFilters.sender) {
         const sender = currentFilters.sender.toLowerCase();
-        const matchesEmail = email.from.email.toLowerCase().includes(sender);
-        const matchesName = email.from.name && email.from.name.toLowerCase().includes(sender);
+        const matchesEmail = email.from.email?.toLowerCase().includes(sender) ?? false;
+        const matchesName = email.from.name?.toLowerCase().includes(sender) ?? false;
         if (!matchesEmail && !matchesName) {
           return false;
         }
@@ -189,7 +189,7 @@ function AppContent() {
 
       return true;
     });
-  }, [currentView, emails, currentFilters]);
+  }, [currentView, emails, currentFilters, search.isSearchMode, search.results]);
 
   // Get current pagination state based on view
   const getCurrentPagination = useCallback(() => {
@@ -208,7 +208,7 @@ function AppContent() {
   }, [currentView, loadMore]);
 
   // Get selected email
-  const selectedEmail = getCurrentEmails().find((e: Email) => e.id === selectedEmailId) || null;
+  const selectedEmail = currentEmailList.find((e: Email) => e.id === selectedEmailId) || null;
 
   // Handle email select - auto-mark as read with view transition
   const handleSelectEmail = useCallback(async (email: Email) => {
@@ -566,7 +566,7 @@ function AppContent() {
                 ) : (
                   <div className="h-full animate-fade-in">
                     <EmailList
-                      emails={getCurrentEmails()}
+                      emails={currentEmailList}
                       selectedId={selectedEmailId}
                       onSelectEmail={handleSelectEmail}
                       pagination={getCurrentPagination()}

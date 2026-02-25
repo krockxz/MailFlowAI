@@ -7,6 +7,7 @@ import { useAppStore } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import DOMPurify from 'dompurify';
 import { ThreadParticipantsRow } from '@/components/ThreadParticipantsRow';
 import {
   DropdownMenu,
@@ -452,7 +453,7 @@ export const EmailDetail = memo(function EmailDetail({ email, onBack, onReply, o
                       {msg.bodyIsHtml ? (
                         <div
                           className="email-body"
-                          dangerouslySetInnerHTML={{ __html: msg.body }}
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(msg.body) }}
                         />
                       ) : (
                         <div className="text-[15px] leading-7 text-neutral-800 dark:text-neutral-300 whitespace-pre-wrap font-normal">

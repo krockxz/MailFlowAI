@@ -18,6 +18,12 @@ export default defineConfig({
       // Allow popup windows for OAuth flow - REQUIRED by @react-oauth/google
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
       'Cross-Origin-Resource-Policy': 'cross-origin',
+
+      // Security headers
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
     },
   },
 })

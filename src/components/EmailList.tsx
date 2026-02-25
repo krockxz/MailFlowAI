@@ -278,7 +278,7 @@ export const EmailList = memo(function EmailList({ emails, selectedId, onSelectE
                 <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:translate-y-0.5" />
                 <span>Load More</span>
                 <span className="text-neutral-400 dark:text-neutral-500 text-xs font-normal">
-                  ({pagination?.total ?? emails.length} total)
+                  ({emails.length} total)
                 </span>
               </>
             )}
