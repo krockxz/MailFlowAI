@@ -48,16 +48,19 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
   const [isSearching, setIsSearching] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Keep local state in sync with external filters
+  // Use a ref to always have current filters without recreating callbacks
+  const filtersRef = useRef(filters);
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
+
+  // Keep local state in sync with external filters - combined effect
   useEffect(() => {
     setSearchQuery(filters.query || '');
-  }, [filters.query]);
-
-  useEffect(() => {
     setSenderFilter(filters.sender || '');
-  }, [filters.sender]);
+  }, [filters.query, filters.sender]);
 
-  // Debounced filter update (300ms delay) - memoized
+  // Debounced filter update (300ms delay) - stable reference
   const debouncedFilterUpdate = useMemo(
     () => debounce((newFilters: FilterState) => {
       setIsSearching(false);
@@ -76,24 +79,26 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
     setIsSearching(true);
-    debouncedFilterUpdate({ ...filters, query: value || undefined });
-  }, [filters, debouncedFilterUpdate]);
+    // Use ref to get current filters, avoiding callback recreation
+    debouncedFilterUpdate({ ...filtersRef.current, query: value || undefined });
+  }, [debouncedFilterUpdate]);
 
   const handleSenderChange = useCallback((value: string) => {
     setSenderFilter(value);
     setIsSearching(true);
+    // Use ref to get current filters, avoiding callback recreation
     debouncedFilterUpdate({
-      ...filters,
+      ...filtersRef.current,
       sender: value || undefined,
     });
-  }, [filters, debouncedFilterUpdate]);
+  }, [debouncedFilterUpdate]);
 
   const clearSearch = useCallback(() => {
     setSearchQuery('');
     debouncedFilterUpdate.cancel();
     setIsSearching(false);
-    onFiltersChange({ ...filters, query: undefined });
-  }, [filters, onFiltersChange, debouncedFilterUpdate]);
+    onFiltersChange({ ...filtersRef.current, query: undefined });
+  }, [onFiltersChange, debouncedFilterUpdate]);
 
   const clearAllFilters = useCallback(() => {
     setSearchQuery('');
@@ -105,18 +110,18 @@ export function FilterBar({ filters, onFiltersChange }: FilterBarProps) {
 
   const toggleUnread = useCallback(() => {
     onFiltersChange({
-      ...filters,
-      isUnread: filters.isUnread === undefined ? true : undefined,
+      ...filtersRef.current,
+      isUnread: filtersRef.current.isUnread === undefined ? true : undefined,
     });
-  }, [filters, onFiltersChange]);
+  }, [onFiltersChange]);
 
   const setDateFilter = useCallback((dateFrom?: Date, dateTo?: Date) => {
     onFiltersChange({
-      ...filters,
+      ...filtersRef.current,
       dateFrom,
       dateTo,
     });
-  }, [filters, onFiltersChange]);
+  }, [onFiltersChange]);
 
   const applyDatePreset = useCallback((preset: DatePreset) => {
     if (!preset) {

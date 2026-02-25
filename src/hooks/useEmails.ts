@@ -40,6 +40,21 @@ export function useEmails() {
       // List messages
       const response = await gmail.listMessages(['INBOX'], PAGE_SIZE, currentPageToken || undefined);
 
+      // Guard for empty/undefined messages
+      if (!response.messages || response.messages.length === 0) {
+        setEmails('inbox', []);
+        setPagination('inbox', {
+          nextPageToken: null,
+          hasMore: false,
+          pageToken: null,
+          status: 'success',
+          lastLoadedAt: Date.now(),
+        });
+        setLastSyncTime(new Date());
+        setIsLoading(false);
+        return;
+      }
+
       // Fetch full message details
       const fullMessages = await gmail.getBatchMessages(
         response.messages.map((m) => m.id)
@@ -94,6 +109,21 @@ export function useEmails() {
 
       // List messages
       const response = await gmail.listMessages(['SENT'], PAGE_SIZE, currentPageToken || undefined);
+
+      // Guard for empty/undefined messages
+      if (!response.messages || response.messages.length === 0) {
+        setEmails('sent', []);
+        setPagination('sent', {
+          nextPageToken: null,
+          hasMore: false,
+          pageToken: null,
+          status: 'success',
+          lastLoadedAt: Date.now(),
+        });
+        setLastSyncTime(new Date());
+        setIsLoading(false);
+        return;
+      }
 
       // Fetch full message details
       const fullMessages = await gmail.getBatchMessages(
@@ -156,6 +186,19 @@ export function useEmails() {
 
       const labelIds = type === 'inbox' ? ['INBOX'] : ['SENT'];
       const response = await gmail.listMessages(labelIds, PAGE_SIZE, paginationState.nextPageToken);
+
+      // Guard for empty/undefined messages
+      if (!response.messages || response.messages.length === 0) {
+        setPagination(type, {
+          nextPageToken: null,
+          hasMore: false,
+          pageToken: paginationState.nextPageToken,
+          status: 'success',
+          lastLoadedAt: Date.now(),
+        });
+        setLastSyncTime(new Date());
+        return;
+      }
 
       // Fetch full message details
       const fullMessages = await gmail.getBatchMessages(
@@ -309,6 +352,13 @@ export function useEmails() {
       const gmail = createGmailService(token);
 
       const { messages } = await gmail.searchMessages(query, 50);
+
+      // Guard for empty/undefined messages
+      if (!messages || messages.length === 0) {
+        const results: Email[] = [];
+        state.setSearchResults(results, query);
+        return results;
+      }
 
       // Fetch full message details
       const fullMessages = await gmail.getBatchMessages(

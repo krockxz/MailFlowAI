@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useMemo } from 'react';
 import { useAppStore } from '@/store';
 import { useEmails } from '@/hooks/useEmails';
 import { useRealtimeEmailSync } from '@/hooks/useRealtimeEmailSync';
@@ -64,7 +64,7 @@ function AppContent() {
   });
 
   // Bootstrap auth and initial inbox fetch (extracted hook)
-  useBootstrapAuthAndInbox();
+  const { isInitializing, hasError, error: bootstrapError, retry: retryBootstrap } = useBootstrapAuthAndInbox();
 
   // Sync email data when view changes (extracted hook)
   useViewSync();
@@ -285,6 +285,62 @@ function AppContent() {
   // Get unread count
   const unreadCount = emails.inbox.filter((e: Email) => e.isUnread).length;
 
+  // Show loading state during bootstrap (initial auth check)
+  if (isInitializing && !isAuthenticated) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-neutral-50 dark:bg-neutral-950">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-neutral-300 border-t-neutral-900 dark:border-neutral-700 dark:border-t-neutral-100 mb-4" />
+          <p className="text-neutral-600 dark:text-neutral-400 text-lg">
+            Loading...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if bootstrap failed
+  if (hasError && !isAuthenticated) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-neutral-50 dark:bg-neutral-950 px-4">
+        <div className="max-w-md w-full bg-white dark:bg-neutral-900 rounded-lg shadow-lg p-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-red-600 dark:text-red-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+            <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+              Initialization Failed
+            </h1>
+          </div>
+          <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+            {bootstrapError?.message || 'Failed to initialize the application. Please try again.'}
+          </p>
+          <button
+            onClick={() => {
+              retryBootstrap();
+              window.location.reload();
+            }}
+            className="w-full inline-flex items-center justify-center px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-md hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors font-medium"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       {/* Skip to main content (accessibility) */}
@@ -387,7 +443,7 @@ function AppContent() {
         isOpen={compose.isOpen}
         onClose={handleCloseCompose}
         onSend={handleSendEmail}
-        initialData={{
+        initialData={useMemo(() => ({
           to: compose.to,
           subject: compose.subject,
           body: compose.body,
@@ -395,7 +451,7 @@ function AppContent() {
           bcc: compose.bcc,
           isSending: compose.isSending,
           isAIComposed: compose.isAIComposed,
-        }}
+        }), [compose.to, compose.subject, compose.body, compose.cc, compose.bcc, compose.isSending, compose.isAIComposed])}
       />
 
       {/* Send Confirmation Dialog */}

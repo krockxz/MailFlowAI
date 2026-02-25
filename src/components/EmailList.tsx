@@ -22,9 +22,17 @@ const EmailItem = memo(({
   isSelected: boolean;
   onClick: () => void;
 }) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
     <div
       onClick={onClick}
+      onKeyDown={handleKeyDown}
       className={cn(
         'group relative px-4 py-3 cursor-pointer transition-colors border-b',
         'border-neutral-200 dark:border-neutral-800',
@@ -89,10 +97,20 @@ EmailItem.displayName = 'EmailItem';
 export const EmailList = memo(function EmailList({ emails, selectedId, onSelectEmail, pagination, onLoadMore }: EmailListProps) {
   const hasMore = pagination?.hasMore && emails.length > 0;
   const isLoading = pagination?.status === 'loading';
+  const isInitialLoading = isLoading && emails.length === 0;
 
   const handleLoadMore = useCallback(() => {
     onLoadMore?.();
   }, [onLoadMore]);
+
+  if (isInitialLoading) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center h-full text-neutral-500 dark:text-neutral-400 p-8">
+        <Loader2 className="w-8 h-8 animate-spin mb-4" />
+        <p className="text-sm">Loading emails...</p>
+      </div>
+    );
+  }
 
   if (emails.length === 0) {
     return (

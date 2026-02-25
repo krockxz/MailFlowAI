@@ -1,63 +1,192 @@
 /**
  * Hook for bootstrapping authentication and fetching initial inbox
- * Extracted from App.tsx for better organization
+ * Handles initialization after OAuth callback redirect (authorization code flow)
+ *
+ * Flow:
+ * 1. Check for existing valid token (stored after callback)
+ * 2. Fetch user profile if missing
+ * 3. Fetch initial inbox if needed
+ * 4. Handle token expiry/invalidation gracefully
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAppStore } from '@/store';
 import { useEmails } from './useEmails';
-import { getStoredAccessToken, isAuthenticated as checkIsAuthenticated, setTokenTimestamp } from '@/services/auth';
+import {
+  getStoredAccessToken,
+  isAuthenticated as checkIsAuthenticated,
+  setTokenTimestamp,
+} from '@/services/auth';
+import type { AppStore } from '@/types/store';
 
-export function useBootstrapAuthAndInbox() {
-  const { setUser, setAccessToken, emails } = useAppStore();
+export interface BootstrapState {
+  isInitializing: boolean;
+  hasError: boolean;
+  error?: Error;
+}
+
+/**
+ * Result type for the bootstrap hook
+ */
+export interface BootstrapResult extends BootstrapState {
+  retry: () => void;
+}
+
+/**
+ * Token verification result
+ */
+interface TokenVerification {
+  isValid: boolean;
+  token: string | null;
+  needsProfileFetch: boolean;
+  needsInboxFetch: boolean;
+}
+
+/**
+ * Verify stored token and determine what needs to be fetched
+ */
+function verifyToken(store: AppStore): TokenVerification {
+  const token = getStoredAccessToken();
+  const hasValidToken = checkIsAuthenticated();
+
+  // If persisted state says authenticated but no valid token exists, clear the state
+  if (store.isAuthenticated && !hasValidToken) {
+    store.setIsAuthenticated(false);
+    store.setUser(null);
+    store.setAccessToken(null);
+    return { isValid: false, token: null, needsProfileFetch: false, needsInboxFetch: false };
+  }
+
+  return {
+    isValid: hasValidToken && !!token,
+    token,
+    needsProfileFetch: hasValidToken && !store.user,
+    needsInboxFetch: hasValidToken && store.emails.inbox.length === 0,
+  };
+}
+
+/**
+ * Hook for bootstrapping authentication and initial data fetch
+ *
+ * This hook handles the post-OAuth callback initialization:
+ * - After authorization code flow, tokens are already stored by AuthCallback
+ * - This hook verifies the tokens and fetches user profile + initial inbox
+ * - No duplicate fetching - checks state before making API calls
+ */
+export function useBootstrapAuthAndInbox(): BootstrapResult {
+  const { setUser, setAccessToken, setIsAuthenticated } = useAppStore();
   const { fetchInbox } = useEmails();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = getStoredAccessToken();
-      const hasValidToken = checkIsAuthenticated();
+  // Local state for bootstrap status
+  const [state, setState] = useState<BootstrapState>({
+    isInitializing: true,
+    hasError: false,
+  });
 
-      // If persisted state says authenticated but no token exists, clear the state
-      const store = useAppStore.getState();
-      if (store.isAuthenticated && !hasValidToken) {
-        store.setIsAuthenticated(false);
-        store.setUser(null);
-        store.setAccessToken(null);
+  // Track if bootstrap has completed to prevent re-running
+  const hasBootstrapped = useRef(false);
+  const retryCallback = useRef<(() => void) | null>(null);
+
+  /**
+   * Main bootstrap function - runs once on mount
+   */
+  const bootstrap = useCallback(async () => {
+    // Skip if already bootstrapped
+    if (hasBootstrapped.current) {
+      return;
+    }
+
+    const store = useAppStore.getState();
+    const verification = verifyToken(store);
+
+    // If no valid token, we're done (user needs to log in)
+    if (!verification.isValid) {
+      setState({ isInitializing: false, hasError: false });
+      hasBootstrapped.current = true;
+      return;
+    }
+
+    // We have a valid token - set it in the store
+    if (verification.token) {
+      setAccessToken(verification.token);
+
+      // Mark token as fresh (prevents immediate expiration check)
+      setTokenTimestamp();
+    }
+
+    // Fetch user profile if needed
+    if (verification.needsProfileFetch) {
+      try {
+        const { GmailService } = await import('@/services/gmail');
+        const gmail = new GmailService(verification.token!);
+        const profile = await gmail.getUserProfile();
+
+        setUser({ emailAddress: profile.emailAddress });
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+        // Clear invalid tokens
+        setIsAuthenticated(false);
+        setUser(null);
+        setAccessToken(null);
+        setState({
+          isInitializing: false,
+          hasError: true,
+          error: error instanceof Error ? error : new Error('Failed to fetch user profile'),
+        });
+        hasBootstrapped.current = true;
         return;
       }
+    } else {
+      // User already persisted, ensure auth state is correct
+      setIsAuthenticated(true);
+    }
 
-      // If token exists, verify and fetch user data
-      if (hasValidToken && token) {
-        setAccessToken(token);
-
-        // Mark token as fresh (prevents immediate expiration)
-        setTokenTimestamp();
-
-        // Fetch user profile if not already loaded
-        if (!store.user) {
-          try {
-            const { GmailService } = await import('@/services/gmail');
-            const gmail = new GmailService(token);
-            const profile = await gmail.getUserProfile();
-            setUser({ emailAddress: profile.emailAddress });
-            store.setIsAuthenticated(true);
-          } catch (error) {
-            console.error('Failed to fetch user profile:', error);
-            store.setIsAuthenticated(false);
-            store.setAccessToken(null);
-            return;
-          }
-        } else {
-          // User already persisted, just ensure auth state is correct
-          store.setIsAuthenticated(true);
-        }
-
-        // Only fetch inbox if it's empty (avoid duplicate fetches)
-        if (emails.inbox.length === 0) {
-          await fetchInbox();
-        }
+    // Fetch initial inbox if needed (avoid duplicate fetches)
+    if (verification.needsInboxFetch) {
+      try {
+        await fetchInbox();
+      } catch (error) {
+        console.error('Failed to fetch inbox:', error);
+        // Don't fail completely - user can retry manually
+        setState({
+          isInitializing: false,
+          hasError: true,
+          error: error instanceof Error ? error : new Error('Failed to fetch inbox'),
+        });
+        hasBootstrapped.current = true;
+        return;
       }
-    };
-    checkAuth();
-  }, []); // Run once on mount only
+    }
+
+    // Bootstrap complete
+    setState({ isInitializing: false, hasError: false });
+    hasBootstrapped.current = true;
+  }, [setAccessToken, setUser, setIsAuthenticated, fetchInbox]);
+
+  /**
+   * Retry function - allows user to retry after error
+   */
+  const retry = useCallback(() => {
+    hasBootstrapped.current = false;
+    setState({ isInitializing: true, hasError: false });
+    // bootstrap will run on next render due to state change
+  }, []);
+
+  // Store retry callback ref
+  retryCallback.current = retry;
+
+  // Run bootstrap on mount
+  useEffect(() => {
+    if (!hasBootstrapped.current && state.isInitializing) {
+      bootstrap();
+    }
+  }, [state.isInitializing, bootstrap]);
+
+  return {
+    isInitializing: state.isInitializing,
+    hasError: state.hasError,
+    error: state.error,
+    retry: retryCallback.current ?? retry,
+  };
 }

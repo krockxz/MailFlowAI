@@ -67,7 +67,7 @@ export const Compose = memo(function Compose({
   // Track user edits - monitor ALL form fields
   const watchedValues = watch();
 
-  // Sync initial data when it changes
+  // Sync initial data when it changes (parent memoizes initialData, so this is stable)
   useEffect(() => {
     if (initialData && !userHasEdited) {
       reset({

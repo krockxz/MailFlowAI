@@ -143,7 +143,7 @@ export function useRealtimeEmailSync(options: RealtimeSyncOptions = {}) {
       // Handle new email events
       eventSource.addEventListener('email:new', () => {
         // Show browser notification
-        if (Notification.permission === 'granted') {
+        if ('Notification' in window && Notification.permission === 'granted') {
           new Notification('New Email Received', {
             body: 'A new email has arrived in your inbox.',
             icon: '/vite.svg',

@@ -1,8 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { CopilotKit } from '@copilotkit/react-core'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { AuthCallback } from '@/components/AuthCallback'
 import './index.css'
 import App from './App.tsx'
 
@@ -45,11 +47,18 @@ createRoot(document.getElementById('root')!).render(
       componentName="App"
       onError={handleAppError}
     >
-      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-        <CopilotKit publicApiKey={COPILOT_API_KEY} {...(COPILOT_ENDPOINT && { runtimeUrl: COPILOT_ENDPOINT })}>
-          <App />
-        </CopilotKit>
-      </GoogleOAuthProvider>
+      <BrowserRouter>
+        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+          <CopilotKit publicApiKey={COPILOT_API_KEY} {...(COPILOT_ENDPOINT && { runtimeUrl: COPILOT_ENDPOINT })}>
+            <Routes>
+              {/* OAuth callback route */}
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              {/* Main app route - acts as catchall */}
+              <Route path="*" element={<App />} />
+            </Routes>
+          </CopilotKit>
+        </GoogleOAuthProvider>
+      </BrowserRouter>
     </ErrorBoundary>
   </StrictMode>,
 )

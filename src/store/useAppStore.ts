@@ -12,6 +12,17 @@ const createInitialPaginationState = () => ({
   lastLoadedAt: null as number | null,
 });
 
+const initialComposeState: AppStore['compose'] = {
+  isOpen: false,
+  to: '',
+  subject: '',
+  body: '',
+  cc: '',
+  bcc: '',
+  isSending: false,
+  isAIComposed: false,
+};
+
 export const useAppStore = create<AppStore>()(
   persist(
     (set) => {
@@ -54,16 +65,7 @@ export const useAppStore = create<AppStore>()(
         isSending: false,
 
         // Compose state (single source of truth)
-        compose: {
-          isOpen: false,
-          to: '',
-          subject: '',
-          body: '',
-          cc: '',
-          bcc: '',
-          isSending: false,
-          isAIComposed: false,
-        } as AppStore['compose'],
+        compose: initialComposeState,
 
         lastSyncTime: null as AppStore['lastSyncTime'],
         hasNewEmails: false,
@@ -234,17 +236,7 @@ export const useAppStore = create<AppStore>()(
 
         // Compose actions
         setCompose: (compose: AppStore['compose']) => set({ compose }),
-        resetCompose: () => set({
-          compose: {
-            isOpen: false,
-            to: '',
-            subject: '',
-            body: '',
-            cc: '',
-            isSending: false,
-            isAIComposed: false,
-          },
-        }),
+        resetCompose: () => set({ compose: initialComposeState }),
 
         // Pagination actions
         setPagination: (type: 'inbox' | 'sent', updates: Partial<AppStore['pagination']['inbox']>) =>
