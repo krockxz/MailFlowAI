@@ -9,7 +9,7 @@
 @import "@fontsource/instrument-sans/600.css";
 @import "@fontsource/jetbrains-mono/400.css";
 
-/* ===== Vercel-Inspired Design System ===== */
+/* ===== Premium Design System with Cool Gray Palette ===== */
 @theme {
   /* ===== Font Families ===== */
   --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
@@ -19,30 +19,30 @@
   --line-height-body: 1.5;
   --line-height-heading: 1.1;
 
-  /* ===== Neutral Color Scale (Stone-inspired warm grays) ===== */
+  /* ===== Cool Gray Neutral Scale ===== */
   --color-neutral-50: #fafafa;
-  --color-neutral-100: #f5f5f4;
-  --color-neutral-200: #e7e5e4;
-  --color-neutral-300: #d6d3d1;
-  --color-neutral-400: #a8a29e;
-  --color-neutral-500: #78716c;
-  --color-neutral-600: #57534e;
-  --color-neutral-700: #44403c;
-  --color-neutral-800: #292524;
-  --color-neutral-900: #1c1917;
-  --color-neutral-950: #0a0a0a;
+  --color-neutral-100: #f4f4f5;
+  --color-neutral-200: #e4e4e7;
+  --color-neutral-300: #d4d4d8;
+  --color-neutral-400: #a1a1aa;
+  --color-neutral-500: #71717a;
+  --color-neutral-600: #52525b;
+  --color-neutral-700: #3f3f46;
+  --color-neutral-800: #27272a;
+  --color-neutral-900: #18181b;
+  --color-neutral-950: #09090b;
 
-  /* ===== Vercel Blue Accent Scale ===== */
-  --color-accent-50: #f0f9ff;
-  --color-accent-100: #e0f2fe;
-  --color-accent-200: #bae6fd;
-  --color-accent-300: #7dd3fc;
-  --color-accent-400: #38bdf8;
-  --color-accent-500: #0070f3;
-  --color-accent-600: #0060d9;
-  --color-accent-700: #0050b8;
-  --color-accent-800: #004097;
-  --color-accent-900: #003076;
+  /* ===== Electric Purple Accent Scale ===== */
+  --color-accent-50: #faf5ff;
+  --color-accent-100: #f3e8ff;
+  --color-accent-200: #e9d5ff;
+  --color-accent-300: #d8b4fe;
+  --color-accent-400: #c084fc;
+  --color-accent-500: #8b5cf6;
+  --color-accent-600: #7c3aed;
+  --color-accent-700: #6d28d9;
+  --color-accent-800: #5b21b6;
+  --color-accent-900: #4c1d95;
 
   /* ===== Semantic Colors ===== */
   --color-success: #22c55e;
@@ -60,20 +60,45 @@
   --spacing-10: 40px;
   --spacing-12: 48px;
 
-  /* ===== Vercel-Style Border Radius (minimal) ===== */
+  /* ===== Premium Border Radius ===== */
   --radius-sm: 4px;
-  --radius-md: 5px;
-  --radius-lg: 6px;
-  --radius-xl: 8px;
-  --radius-2xl: 10px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
   --radius-full: 9999px;
 
-  /* ===== Vercel-Style Shadow System (neutral only) ===== */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.02);
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.08);
-  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.1);
+  /* ===== Enhanced Shadow System ===== */
+  /* Base shadows - subtle and layered */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.08), 0 6px 12px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.12), 0 12px 24px rgba(0, 0, 0, 0.08);
+
+  /* Glow shadows - colored ambient effects */
+  --shadow-glow-sm: 0 0 20px rgba(139, 92, 246, 0.08);
+  --shadow-glow-md: 0 0 40px rgba(139, 92, 246, 0.12), 0 4px 12px rgba(139, 92, 246, 0.08);
+  --shadow-glow-lg: 0 0 60px rgba(139, 92, 246, 0.15), 0 8px 24px rgba(139, 92, 246, 0.1);
+
+  /* Interactive shadows - for hover/active states */
+  --shadow-interactive-sm: 0 4px 12px rgba(139, 92, 246, 0.15), 0 2px 4px rgba(139, 92, 246, 0.1);
+  --shadow-interactive-md: 0 8px 24px rgba(139, 92, 246, 0.2), 0 4px 8px rgba(139, 92, 246, 0.12);
+  --shadow-interactive-lg: 0 16px 48px rgba(139, 92, 246, 0.25), 0 8px 16px rgba(139, 92, 246, 0.15);
+
+  /* Inner shadows - for depth */
+  --shadow-inner-sm: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-inner-md: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+
+  /* Dark mode shadows */
+  --shadow-dark-sm: 0 2px 8px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.12);
+  --shadow-dark-md: 0 8px 16px rgba(0, 0, 0, 0.24), 0 4px 8px rgba(0, 0, 0, 0.16);
+  --shadow-dark-lg: 0 16px 32px rgba(0, 0, 0, 0.28), 0 8px 16px rgba(0, 0, 0, 0.2);
+
+  /* Dark mode glow - more intense for contrast */
+  --shadow-glow-dark-sm: 0 0 20px rgba(139, 92, 246, 0.2);
+  --shadow-glow-dark-md: 0 0 40px rgba(139, 92, 246, 0.3), 0 4px 12px rgba(139, 92, 246, 0.2);
+  --shadow-glow-dark-lg: 0 0 60px rgba(139, 92, 246, 0.4), 0 8px 24px rgba(139, 92, 246, 0.25);
 }
 
 /* ===== Base Styles ===== */
@@ -132,13 +157,61 @@ code {
   outline-offset: 2px;
 }
 
-/* ===== Transitions ===== */
+/* ===== Premium Transition System ===== */
 .transition-base {
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .transition-colors {
-  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-transform {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.transition-shadow {
+  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-all-premium {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Transition timing variants */
+.transition-instant {
+  transition-duration: 100ms;
+}
+
+.transition-fast {
+  transition-duration: 150ms;
+}
+
+.transition-normal {
+  transition-duration: 200ms;
+}
+
+.transition-slow {
+  transition-duration: 300ms;
+}
+
+.transition-slower {
+  transition-duration: 500ms;
+}
+
+/* Easing variants */
+.ease-premium {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ease-bounce-premium {
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ease-smooth {
+  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* ===== Scrollbar ===== */
@@ -172,6 +245,7 @@ code {
 *:focus-visible {
   outline: 2px solid var(--color-accent-500);
   outline-offset: 2px;
+  border-radius: 2px;
 }
 
 /* ===== Selection ===== */
@@ -185,16 +259,16 @@ code {
   color: var(--color-neutral-900);
 }
 
-/* ===== Animations ===== */
+/* ===== Premium Animation Keyframes ===== */
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes slide-up {
+@keyframes fade-in-up {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -202,21 +276,211 @@ code {
   }
 }
 
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scale-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-.animate-fade-in {
-  animation: fade-in 0.15s ease-out;
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }
 
-.animate-slide-up {
-  animation: slide-up 0.2s ease-out;
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.2);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+/* FilterBar custom animations */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-25%);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ===== Animation Utility Classes ===== */
+.animate-fade-in {
+  animation: fade-in 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-fade-in-scale {
+  animation: fade-in-scale 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-scale-out {
+  animation: scale-out 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .animate-spin {
   animation: spin 1s linear infinite;
 }
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-shake {
+  animation: shake 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Duration modifiers */
+.duration-150 { animation-duration: 150ms; }
+.duration-200 { animation-duration: 200ms; }
+.duration-300 { animation-duration: 300ms; }
+.duration-500 { animation-duration: 500ms; }
 
 /* ===== Component Utilities ===== */
 .btn-primary {
@@ -228,17 +492,27 @@ code {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
   background: var(--color-neutral-800);
   border-color: var(--color-neutral-800);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .dark .btn-primary {
@@ -260,11 +534,16 @@ code {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-ghost:hover {
   background: var(--color-neutral-100);
+  transform: translateY(-1px);
+}
+
+.btn-ghost:active {
+  transform: translateY(0);
 }
 
 .dark .btn-ghost {
@@ -284,12 +563,17 @@ code {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-outline:hover {
   background: var(--color-neutral-50);
   border-color: var(--color-neutral-300);
+  transform: translateY(-1px);
+}
+
+.btn-outline:active {
+  transform: translateY(0);
 }
 
 .dark .btn-outline {
@@ -306,11 +590,22 @@ code {
   background: white;
   border: 1px solid var(--color-neutral-200);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .dark .card {
   background: var(--color-neutral-900);
   border-color: var(--color-neutral-800);
+  box-shadow: var(--shadow-dark-sm);
+}
+
+.dark .card:hover {
+  box-shadow: var(--shadow-dark-md);
 }
 
 .input-base {
@@ -319,13 +614,17 @@ code {
   border-radius: var(--radius-md);
   padding: var(--spacing-2) var(--spacing-3);
   font-size: 14px;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .input-base:focus {
   outline: none;
-  border-color: var(--color-neutral-400);
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.04);
+  border-color: var(--color-accent-500);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.input-base:hover:not(:focus) {
+  border-color: var(--color-neutral-300);
 }
 
 .dark .input-base {
@@ -334,17 +633,98 @@ code {
 }
 
 .dark .input-base:focus {
-  border-color: var(--color-neutral-500);
+  border-color: var(--color-accent-400);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+}
+
+.dark .input-base:hover:not(:focus) {
+  border-color: var(--color-neutral-600);
 }
 
 /* ===== Utility Classes for Component Migration ===== */
 .glass-header {
   background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-neutral-200);
 }
 
 .dark .glass-header {
-  background: rgba(10, 10, 10, 0.8);
+  background: rgba(9, 9, 11, 0.8);
   border-color: var(--color-neutral-800);
+}
+
+/* Enhanced glass header with stronger blur and subtle gradient */
+.glass-header-enhanced {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(228, 228, 231, 0.6);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.dark .glass-header-enhanced {
+  background: rgba(9, 9, 11, 0.85);
+  border-bottom: 1px solid rgba(39, 39, 42, 0.6);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Smooth scale hover animation for buttons */
+.hover-scale {
+  transition: transform 0.15s ease-out, background-color 0.15s ease-out;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.hover-scale:active {
+  transform: scale(0.98);
+}
+
+/* ===== Glow Effect Utilities ===== */
+.glow-sm {
+  box-shadow: var(--shadow-glow-sm);
+}
+
+.glow-md {
+  box-shadow: var(--shadow-glow-md);
+}
+
+.glow-lg {
+  box-shadow: var(--shadow-glow-lg);
+}
+
+.dark .glow-sm {
+  box-shadow: var(--shadow-glow-dark-sm);
+}
+
+.dark .glow-md {
+  box-shadow: var(--shadow-glow-dark-md);
+}
+
+.dark .glow-lg {
+  box-shadow: var(--shadow-glow-dark-lg);
+}
+
+/* Interactive glow states */
+.hover-glow-sm:hover {
+  box-shadow: var(--shadow-interactive-sm);
+}
+
+.hover-glow-md:hover {
+  box-shadow: var(--shadow-interactive-md);
+}
+
+.hover-glow-lg:hover {
+  box-shadow: var(--shadow-interactive-lg);
+}
+
+/* ===== Inner Shadow Utilities ===== */
+.shadow-inner-sm {
+  box-shadow: var(--shadow-inner-sm);
+}
+
+.shadow-inner-md {
+  box-shadow: var(--shadow-inner-md);
 }

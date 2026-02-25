@@ -81,8 +81,10 @@ export function parseMessage(message: GmailMessage): Email {
 
   // Extract body
   let body = '';
+  let bodyIsHtml = false;
   if (message.payload?.body?.data) {
     body = base64UrlDecode(message.payload.body.data);
+    bodyIsHtml = message.payload.mimeType === 'text/html';
   } else if (message.payload?.parts) {
     // Prefer text/plain over text/html
     const textPart = message.payload.parts.find(
@@ -92,9 +94,12 @@ export function parseMessage(message: GmailMessage): Email {
     );
     if (textPart?.body?.data) {
       body = base64UrlDecode(textPart.body.data);
+      bodyIsHtml = textPart.mimeType === 'text/html';
     } else {
       // Recursively search for body
-      body = extractBodyFromParts(message.payload.parts);
+      const { body: extractedBody, isHtml } = extractBodyFromParts(message.payload.parts);
+      body = extractedBody;
+      bodyIsHtml = isHtml;
     }
   }
 
@@ -108,6 +113,7 @@ export function parseMessage(message: GmailMessage): Email {
     cc: cc.length > 0 ? cc : undefined,
     date,
     body,
+    bodyIsHtml,
     isUnread: message.labelIds?.includes('UNREAD') || false,
     labels: message.labelIds || [],
   };
@@ -116,43 +122,45 @@ export function parseMessage(message: GmailMessage): Email {
 /**
  * Extract body from nested parts
  * Prefers text/plain over text/html
+ * @returns Object with body content and whether it's HTML
  */
-export function extractBodyFromParts(parts: GmailMessagePayload[]): string {
+export function extractBodyFromParts(parts: GmailMessagePayload[]): { body: string; isHtml: boolean } {
   // First pass: look for text/plain
   for (const part of parts) {
     if (part.body?.data && part.mimeType === 'text/plain') {
-      return base64UrlDecode(part.body.data);
+      return { body: base64UrlDecode(part.body.data), isHtml: false };
     }
     if (part.parts) {
-      const body = extractBodyFromParts(part.parts);
-      if (body) return body;
+      const result = extractBodyFromParts(part.parts);
+      if (result.body) return result;
     }
   }
   // Second pass: look for text/html
   for (const part of parts) {
     if (part.body?.data && part.mimeType === 'text/html') {
-      return base64UrlDecode(part.body.data);
+      return { body: base64UrlDecode(part.body.data), isHtml: true };
     }
     if (part.parts) {
-      const body = extractBodyFromPartsNestedHtml(part.parts);
-      if (body) return body;
+      const result = extractBodyFromPartsNestedHtml(part.parts);
+      if (result.body) return result;
     }
   }
-  return '';
+  return { body: '', isHtml: false };
 }
 
 /**
  * Extract HTML body from nested parts (second pass helper)
+ * @returns Object with body content and whether it's HTML
  */
-function extractBodyFromPartsNestedHtml(parts: GmailMessagePayload[]): string {
+function extractBodyFromPartsNestedHtml(parts: GmailMessagePayload[]): { body: string; isHtml: boolean } {
   for (const part of parts) {
     if (part.body?.data && part.mimeType === 'text/html') {
-      return base64UrlDecode(part.body.data);
+      return { body: base64UrlDecode(part.body.data), isHtml: true };
     }
     if (part.parts) {
-      const body = extractBodyFromPartsNestedHtml(part.parts);
-      if (body) return body;
+      const result = extractBodyFromPartsNestedHtml(part.parts);
+      if (result.body) return result;
     }
   }
-  return '';
+  return { body: '', isHtml: false };
 }

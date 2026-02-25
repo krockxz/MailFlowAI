@@ -18,6 +18,7 @@ export interface Email {
   to: EmailAddress[];
   date: Date;
   body: string;
+  bodyIsHtml?: boolean; // True if body contains HTML that should be rendered
   isUnread: boolean;
   labels: string[];
   cc?: EmailAddress[];
