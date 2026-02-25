@@ -2,7 +2,6 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { CopilotKit } from '@copilotkit/react-core'
-import { GoogleOAuthProvider } from '@react-oauth/google'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { AuthCallback } from '@/components/AuthCallback'
 import './index.css'
@@ -12,9 +11,6 @@ import App from './App.tsx'
 // Get your free public API key from https://cloud.copilotkit.ai
 const COPILOT_API_KEY = import.meta.env.VITE_COPILOT_API_KEY
 const COPILOT_ENDPOINT = import.meta.env.VITE_COPILOT_ENDPOINT
-
-// Google OAuth configuration
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GMAIL_CLIENT_ID
 
 // Warn if CopilotKit is not configured
 if (!COPILOT_API_KEY) {
@@ -48,16 +44,14 @@ createRoot(document.getElementById('root')!).render(
       onError={handleAppError}
     >
       <BrowserRouter>
-        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-          <CopilotKit publicApiKey={COPILOT_API_KEY} {...(COPILOT_ENDPOINT && { runtimeUrl: COPILOT_ENDPOINT })}>
-            <Routes>
-              {/* OAuth callback route */}
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              {/* Main app route - acts as catchall */}
-              <Route path="*" element={<App />} />
-            </Routes>
-          </CopilotKit>
-        </GoogleOAuthProvider>
+        <CopilotKit publicApiKey={COPILOT_API_KEY} {...(COPILOT_ENDPOINT && { runtimeUrl: COPILOT_ENDPOINT })}>
+          <Routes>
+            {/* OAuth callback route */}
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            {/* Main app route - acts as catchall */}
+            <Route path="*" element={<App />} />
+          </Routes>
+        </CopilotKit>
       </BrowserRouter>
     </ErrorBoundary>
   </StrictMode>,

@@ -35,9 +35,10 @@ export function Sidebar({
   return (
     <aside className="w-60 bg-white dark:bg-neutral-950 border-r border-neutral-200 dark:border-neutral-800 flex flex-col h-screen shrink-0">
       {/* Header */}
-      <div className="p-4">
-        <h1 className="text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
-          Mail
+      <div className="p-4 flex items-center gap-2">
+        <img src="/brand/logo.png" alt="MailFlowAI Logo" className="w-8 h-8 rounded-md object-cover" />
+        <h1 className="text-sm font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
+          MailFlowAI
         </h1>
       </div>
 

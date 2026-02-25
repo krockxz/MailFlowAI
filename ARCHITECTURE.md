@@ -1,8 +1,8 @@
-# Architecture Documentation
+# MailFlowAI System Architecture
 
 ## System Overview
 
-The AI Mail Assistant is a single-page application built with React that integrates Gmail API with an AI-powered assistant via CopilotKit. The architecture follows a clear separation of concerns with distinct layers for UI, state, business logic, and API integration.
+MailFlowAI is a single-page application built with React that integrates Gmail API with an AI-powered assistant via CopilotKit. The architecture follows a clear separation of concerns with distinct layers for UI, state, business logic, and API integration.
 
 ```mermaid
 graph TD
@@ -103,7 +103,7 @@ export const useAppStore = create<AppStore>()(
     (set, get) => ({
       // ... implementation
     }),
-    { name: 'ai-mail-storage' }
+    { name: 'mailflow-ai-storage' }
   )
 )
 ```

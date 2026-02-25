@@ -20,28 +20,6 @@
                     "value": "cross-origin"
                 }
             ]
-        },
-        {
-            "source": "/api/sse/(.*)",
-            "headers": [
-                {
-                    "key": "Cache-Control",
-                    "value": "no-cache, no-transform"
-                },
-                {
-                    "key": "X-Accel-Buffering",
-                    "value": "no"
-                }
-            ]
-        },
-        {
-            "source": "/api/webhook/(.*)",
-            "headers": [
-                {
-                    "key": "Cache-Control",
-                    "value": "no-cache, no-store"
-                }
-            ]
         }
     ]
 }

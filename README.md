@@ -1,6 +1,6 @@
-# AI Mail Assistant
+# MailFlowAI
 
-An AI-powered email application with Gmail integration and CopilotKit AI assistant for natural language control.
+The next generation AI-powered email assistant with Gmail integration and CopilotKit AI assistant for natural language control.
 
 ## Demo
 
@@ -19,14 +19,6 @@ graph TD
         UI -->|Styling| TW[Tailwind CSS v4]
         AI -->|Reads Context| Store
         AI -->|Executes Actions| Store
-        UI -->|SSE| SSE[EventSource Client]
-    end
-
-    subgraph "Vercel Edge Runtime"
-        Webhook[api/webhook/gmail.ts]
-        SSEEP[api/sse/gmail-events.ts]
-        Webhook -->|Stores| Redis[(Upstash Redis)]
-        SSEEP -->|Polls| Redis
     end
 
     subgraph Services
@@ -34,8 +26,6 @@ graph TD
         Store -->|Auth| Auth[Google OAuth 2.0]
     end
 
-    SSE <-->|SSE Stream| SSEEP
-    Webhook <-->|Webhook| GmailPubSub[Gmail Pub/Sub]
     API <-->|REST| Gmail[Google Gmail Servers]
 ```
 
@@ -46,7 +36,6 @@ graph TD
 - Node.js 20+
 - Google Cloud Project with Gmail API enabled
 - OAuth 2.0 credentials
-- Upstash Redis account (for Vercel deployment)
 
 ### Installation
 
@@ -57,18 +46,13 @@ graph TD
    - Set authorized origin: `http://localhost:3000`
    - Set redirect URI: `http://localhost:3000/auth/callback`
 
-2. **Configure Upstash Redis** (for real-time sync)
-
-   - Create a free Redis database at https://upstash.com/
-   - Get your REST API URL and token from the dashboard
-
-3. **Install Dependencies**
+2. **Install Dependencies**
 
    ```bash
    npm install
    ```
 
-4. **Configure Environment**
+3. **Configure Environment**
 
    ```bash
    cp .env.example .env
@@ -82,15 +66,12 @@ graph TD
    VITE_GMAIL_CLIENT_SECRET=your-client-secret
    VITE_GMAIL_REDIRECT_URI=http://localhost:3000/auth/callback
 
-   # Upstash Redis (for SSE)
-   KV_REST_API_URL=https://your-redis.upstash.io
-   KV_REST_API_TOKEN=your-redis-token
-
-   # Gmail Pub/Sub Verification (optional, for webhook security)
-   GOOGLE_PUBSUB_VERIFICATION_TOKEN=your-secret-token
+   # CopilotKit AI Assistant (optional)
+   VITE_COPILOT_API_KEY=
+   VITE_COPILOT_ENDPOINT=
    ```
 
-5. **Run the Application**
+4. **Run the Application**
 
    ```bash
    npm run dev
@@ -100,24 +81,23 @@ graph TD
 
 ### Vercel Deployment
 
-This application is configured for Vercel Edge Runtime:
+This application is a static React app that can be deployed to Vercel:
 
 1. Push your code to GitHub
 2. Import project in Vercel
 3. Add environment variables in Vercel dashboard
-4. Deploy - Edge functions automatically handle SSE endpoints
+4. Deploy
 
 ## Architecture Decisions & Trade-offs
 
-### 1. Server-Sent Events (SSE) for Real-time Sync
+### 1. Polling for Email Sync
 
-**Decision:** Migrated from Socket.IO (WebSocket) to SSE with Vercel Edge Runtime.
+**Decision:** Use periodic polling (30-second interval) for email updates.
 **Rationale:**
-- Vercel serverless functions don't support WebSocket connections
-- SSE provides one-way push from server to client, sufficient for email notifications
-- Edge Runtime enables global low-latency responses
-- Upstash Redis provides shared state across edge function instances
-**Trade-off:** SSE is unidirectional (server→client). Client actions use standard REST API calls.
+- Simple implementation with no server-side infrastructure required
+- Works reliably in all environments without external dependencies
+- Sufficient for personal email client use cases
+**Trade-off:** Not instant like push notifications, but 30-second delay is acceptable for most use cases.
 
 ### 2. CopilotKit for AI Integration
 
@@ -131,40 +111,26 @@ This application is configured for Vercel Edge Runtime:
 **Rationale:** Offers minimal boilerplate, better performance than Context API (avoiding unnecessary re-renders), and built-in persistence via middleware.
 **Trade-off:** Smaller ecosystem than Redux, but simpler and sufficient for this application's complexity.
 
-### 4. Upstash Redis for Event Storage
-
-**Decision:** Use Upstash Redis instead of Vercel KV for shared event storage.
-**Rationale:** Vercel KV was deprecated; Upstash provides a free tier with REST API compatible with Edge Runtime. Stores events for 5 minutes with automatic expiration.
-**Trade-off:** 5-minute TTL means events older than 5 minutes are lost if clients are disconnected.
-
-### 5. React 19 & Tailwind CSS v4
+### 4. React 19 & Tailwind CSS v4
 
 **Decision:** Adopted latest versions (React 19, Tailwind v4).
 **Rationale:** React 19 offers improved compiler optimizations and Suspense support. Tailwind v4 provides a significantly faster engine and CSS-first configuration.
 **Trade-off:** Newer tools may have fewer community resources or edge-case documentation, but offer better long-term maintainability.
 
-## Real-time Email Sync Architecture
+## Email Sync Architecture
 
-The application uses a hybrid approach for real-time email updates:
+The application uses periodic polling for email updates:
 
-### Primary: SSE (Server-Sent Events)
+1. Client polls Gmail API every 30 seconds for new emails
+2. When authenticated, initial fetch happens immediately
+3. Manual refresh button available for on-demand sync
+4. Polling automatically pauses when user is not authenticated
 
-1. Gmail sends Pub/Sub push notification to `/api/webhook/gmail`
-2. Webhook stores event in Upstash Redis (LPUSH)
-3. SSE endpoint `/api/sse/gmail-events` polls Redis every second
-4. New events are pushed to connected clients via EventSource
-5. Client receives `email:new` event and triggers immediate sync
-
-### Fallback: Polling
-
-- 30-second polling interval runs in parallel
-- Ensures updates even if SSE connection fails
-- Automatic reconnection with exponential backoff (1s → 30s max)
-
-### Browser Notifications
-
-- Requests permission on first connection
-- Shows "New Email Received" notification on `email:new` event
+This approach ensures:
+- No server-side infrastructure required
+- Works in any deployment environment
+- Consistent behavior across all platforms
+- Simple debugging and maintenance
 
 ## What I'd Improve With More Time
 
@@ -175,4 +141,4 @@ The application uses a hybrid approach for real-time email updates:
 5. **Advanced Search UI**: Create a visual interface for complex queries (date pickers, sender autocomplete)
 6. **Draft Management**: Allow saving and resuming draft emails
 7. **E2E Tests**: Integrate Playwright for full user flow testing
-8. **Webhook Security**: Implement HMAC signature verification for production webhooks
+8. **Push Notifications**: Implement service workers for background notifications

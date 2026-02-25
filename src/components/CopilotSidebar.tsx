@@ -84,7 +84,7 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
         }}
         role="dialog"
         aria-modal="true"
-        aria-label="AI Assistant"
+        aria-label="MailFlowAI Assistant"
       >
         {/* Resize handle */}
         <div
@@ -113,14 +113,14 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
               </AvatarFallback>
             </Avatar>
             <h2 className="text-sm font-semibold text-neutral-900 dark:text-white">
-              AI Assistant
+              MailFlowAI Assistant
             </h2>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            aria-label="Close AI Assistant"
+            aria-label="Close MailFlowAI Assistant"
           >
             <X className="w-4 h-4" />
           </Button>

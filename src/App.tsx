@@ -1,7 +1,6 @@
 import { useEffect, useCallback, useState, useMemo } from 'react';
 import { useAppStore } from '@/store';
 import { useEmails } from '@/hooks/useEmails';
-import { useRealtimeEmailSync } from '@/hooks/useRealtimeEmailSync';
 import { useAppContext, useCopilotEmailActions } from '@/hooks/useCopilotActions';
 import { useBootstrapAuthAndInbox } from '@/hooks/useBootstrapAuthAndInbox';
 import { useViewSync } from '@/hooks/useViewSync';
@@ -57,11 +56,44 @@ function AppContent() {
   useAppContext();
   const { compose: aiCompose } = useCopilotEmailActions();
 
-  // Set up real-time sync (polling every 30 seconds)
-  const { sync } = useRealtimeEmailSync({
-    pollingInterval: 30000,
-    enabled: isAuthenticated || undefined,
-  });
+  // Memoize compose initial data (must be before any early returns)
+  const composeInitialData = useMemo(() => ({
+    to: compose.to,
+    subject: compose.subject,
+    body: compose.body,
+    cc: compose.cc,
+    bcc: compose.bcc,
+    isSending: compose.isSending,
+    isAIComposed: compose.isAIComposed,
+  }), [compose.to, compose.subject, compose.body, compose.cc, compose.bcc, compose.isSending, compose.isAIComposed]);
+
+  // Set up polling for email sync (every 30 seconds)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    // Initial sync
+    fetchInbox();
+
+    // Poll every 30 seconds
+    const interval = setInterval(() => {
+      if (currentView === 'inbox') {
+        fetchInbox();
+      } else if (currentView === 'sent') {
+        fetchSent();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, currentView, fetchInbox, fetchSent]);
+
+  // Manual sync function
+  const sync = useCallback(async () => {
+    if (currentView === 'inbox') {
+      await fetchInbox();
+    } else if (currentView === 'sent') {
+      await fetchSent();
+    }
+  }, [currentView, fetchInbox, fetchSent]);
 
   // Bootstrap auth and initial inbox fetch (extracted hook)
   const { isInitializing, hasError, error: bootstrapError, retry: retryBootstrap } = useBootstrapAuthAndInbox();
@@ -102,7 +134,7 @@ function AppContent() {
     }
 
     const emailList = currentView === 'inbox' ? emails.inbox :
-                      currentView === 'sent' ? emails.sent : [];
+      currentView === 'sent' ? emails.sent : [];
 
     // Apply filters if any are set
     if (!currentFilters || Object.keys(currentFilters).length === 0) {
@@ -116,7 +148,7 @@ function AppContent() {
         const subjectMatch = email.subject.toLowerCase().includes(query);
         const bodyMatch = email.body.toLowerCase().includes(query);
         const fromMatch = email.from.email.toLowerCase().includes(query) ||
-                         (email.from.name && email.from.name.toLowerCase().includes(query));
+          (email.from.name && email.from.name.toLowerCase().includes(query));
         if (!subjectMatch && !bodyMatch && !fromMatch) {
           return false;
         }
@@ -285,6 +317,7 @@ function AppContent() {
   // Get unread count
   const unreadCount = emails.inbox.filter((e: Email) => e.isUnread).length;
 
+
   // Show loading state during bootstrap (initial auth check)
   if (isInitializing && !isAuthenticated) {
     return (
@@ -349,120 +382,112 @@ function AppContent() {
       </a>
 
       <div className="flex h-screen overflow-hidden bg-neutral-50 dark:bg-neutral-950">
-      {/* Sidebar */}
-      <Sidebar
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        onCompose={handleCompose}
-        unreadCount={unreadCount}
-        isLoading={isLoading}
-        onRefresh={currentView === 'inbox' ? fetchInbox : fetchSent}
-        isAuthenticated={isAuthenticated}
-      />
-
-      {/* Main content */}
-      <div id="main-content" className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Header with filters and actions */}
-        <header className="glass-header border-b border-neutral-200 dark:border-neutral-800">
-          <div className="flex items-center px-5 py-3">
-            {/* Filters */}
-            <div className="flex-1">
-              <FilterBar
-                filters={currentFilters}
-                onFiltersChange={useAppStore.getState().setFilters}
-              />
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex items-center gap-1 pr-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={sync}
-                aria-label="Sync emails"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsCopilotOpen(!isCopilotOpen)}
-                aria-label={isCopilotOpen ? 'Close AI Assistant' : 'Open AI Assistant'}
-                className={isCopilotOpen ? 'bg-neutral-200 dark:bg-neutral-800' : ''}
-              >
-                <Sparkles className="w-4 h-4" />
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleDarkMode}
-                aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        {/* Content area */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Email list/detail with error boundary */}
-          <InlineErrorBoundary componentName="EmailDetail">
-            {selectedEmail ? (
-              <EmailDetail
-                email={selectedEmail}
-                onBack={() => setSelectedEmailId(null)}
-                onReply={handleReply}
-                onForward={handleForward}
-              />
-            ) : (
-              <EmailList
-                emails={getCurrentEmails()}
-                selectedId={selectedEmailId}
-                onSelectEmail={handleSelectEmail}
-                pagination={getCurrentPagination()}
-                onLoadMore={handleLoadMore}
-              />
-            )}
-          </InlineErrorBoundary>
-        </div>
-      </div>
-
-      {/* AI Assistant Sidebar */}
-      <InlineErrorBoundary componentName="CopilotSidebar">
-        <CopilotSidebar
-          isOpen={isCopilotOpen}
-          onClose={() => setIsCopilotOpen(false)}
+        {/* Sidebar */}
+        <Sidebar
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          onCompose={handleCompose}
+          unreadCount={unreadCount}
+          isLoading={isLoading}
+          onRefresh={currentView === 'inbox' ? fetchInbox : fetchSent}
+          isAuthenticated={isAuthenticated}
         />
-      </InlineErrorBoundary>
 
-      {/* Compose modal - uses store state */}
-      <Compose
-        isOpen={compose.isOpen}
-        onClose={handleCloseCompose}
-        onSend={handleSendEmail}
-        initialData={useMemo(() => ({
-          to: compose.to,
-          subject: compose.subject,
-          body: compose.body,
-          cc: compose.cc,
-          bcc: compose.bcc,
-          isSending: compose.isSending,
-          isAIComposed: compose.isAIComposed,
-        }), [compose.to, compose.subject, compose.body, compose.cc, compose.bcc, compose.isSending, compose.isAIComposed])}
-      />
+        {/* Main content */}
+        <div id="main-content" className="flex-1 flex flex-col overflow-hidden relative">
+          {/* Header with filters and actions */}
+          <header className="glass-header border-b border-neutral-200 dark:border-neutral-800">
+            <div className="flex items-center px-5 py-3">
+              {/* Filters */}
+              <div className="flex-1">
+                <FilterBar
+                  filters={currentFilters}
+                  onFiltersChange={useAppStore.getState().setFilters}
+                />
+              </div>
 
-      {/* Send Confirmation Dialog */}
-      <SendConfirmDialog
-        isOpen={showSendConfirm}
-        emailData={pendingEmail || { to: '', subject: '', body: '' }}
-        onConfirm={handleConfirmSend}
-        onCancel={handleCancelSend}
-        isSending={compose.isSending}
-      />
-    </div>
+              {/* Action buttons */}
+              <div className="flex items-center gap-1 pr-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={sync}
+                  aria-label="Sync emails"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsCopilotOpen(!isCopilotOpen)}
+                  aria-label={isCopilotOpen ? 'Close AI Assistant' : 'Open AI Assistant'}
+                  className={isCopilotOpen ? 'bg-neutral-200 dark:bg-neutral-800' : ''}
+                >
+                  <Sparkles className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleDarkMode}
+                  aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                >
+                  {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+          </header>
+
+          {/* Content area */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Email list/detail with error boundary */}
+            <InlineErrorBoundary componentName="EmailDetail">
+              {selectedEmail ? (
+                <EmailDetail
+                  email={selectedEmail}
+                  onBack={() => setSelectedEmailId(null)}
+                  onReply={handleReply}
+                  onForward={handleForward}
+                />
+              ) : (
+                <EmailList
+                  emails={getCurrentEmails()}
+                  selectedId={selectedEmailId}
+                  onSelectEmail={handleSelectEmail}
+                  pagination={getCurrentPagination()}
+                  onLoadMore={handleLoadMore}
+                />
+              )}
+            </InlineErrorBoundary>
+          </div>
+        </div>
+
+        {/* AI Assistant Sidebar */}
+        <InlineErrorBoundary componentName="CopilotSidebar">
+          <CopilotSidebar
+            isOpen={isCopilotOpen}
+            onClose={() => setIsCopilotOpen(false)}
+          />
+        </InlineErrorBoundary>
+
+        {/* Compose modal - uses store state */}
+        <Compose
+          isOpen={compose.isOpen}
+          onClose={handleCloseCompose}
+          onSend={handleSendEmail}
+          initialData={composeInitialData}
+        />
+
+        {/* Send Confirmation Dialog */}
+        <SendConfirmDialog
+          isOpen={showSendConfirm}
+          emailData={pendingEmail || { to: '', subject: '', body: '' }}
+          onConfirm={handleConfirmSend}
+          onCancel={handleCancelSend}
+          isSending={compose.isSending}
+        />
+      </div>
     </>
   );
 }

@@ -49,6 +49,9 @@ export const Compose = memo(function Compose({
   // Track user edits to preserve AI badge until user types
   const [userHasEdited, setUserHasEdited] = useState(false);
 
+  // Track previous initial data to detect actual changes
+  const prevInitialDataRef = useRef<typeof initialData>(null);
+
   // Use external isSending state if provided (from AI), otherwise use form state
   const externalIsSending = initialData?.isSending;
   const isAIComposed = initialData?.isAIComposed && !userHasEdited;
@@ -67,9 +70,23 @@ export const Compose = memo(function Compose({
   // Track user edits - monitor ALL form fields
   const watchedValues = watch();
 
-  // Sync initial data when it changes (parent memoizes initialData, so this is stable)
+  // Sync initial data when content actually changes (not just reference)
+  // Only reset when the dialog opens with new data, not on every render
   useEffect(() => {
-    if (initialData && !userHasEdited) {
+    if (!initialData) return;
+
+    const prev = prevInitialDataRef.current;
+
+    // Check if content actually changed (not just object reference)
+    const contentChanged =
+      !prev ||
+      initialData.to !== prev.to ||
+      initialData.subject !== prev.subject ||
+      initialData.body !== prev.body ||
+      initialData.cc !== prev.cc ||
+      initialData.bcc !== prev.bcc;
+
+    if (contentChanged && !userHasEdited) {
       reset({
         to: initialData.to || '',
         subject: initialData.subject || '',
@@ -80,6 +97,8 @@ export const Compose = memo(function Compose({
       setShowCc(!!initialData.cc);
       setShowBcc(!!initialData.bcc);
     }
+
+    prevInitialDataRef.current = initialData;
   }, [initialData, reset, userHasEdited]);
 
   // Focus body on open
