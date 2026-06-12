@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, memo } from 'react';
-import { Send, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { Send, Loader2, Mail, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAIChat } from '@/hooks/useAIChat';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,13 @@ interface VercelChatProps {
   placeholder?: string;
   className?: string;
 }
+
+const suggestions = [
+  '"Find emails from yesterday"',
+  '"Show unread emails"',
+  '"Search for invoices"',
+  '"Compose to team@company.com"',
+];
 
 export const VercelChat = memo(function VercelChatInternal({
   placeholder = 'Ask to compose, search, or manage emails...',
@@ -27,6 +34,8 @@ export const VercelChat = memo(function VercelChatInternal({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(true);
+  const inputRef = useRef(input);
+  inputRef.current = input;
 
   const scrollToBottom = useCallback((smooth = true) => {
     messagesEndRef.current?.scrollIntoView({
@@ -35,58 +44,56 @@ export const VercelChat = memo(function VercelChatInternal({
   }, []);
 
   useEffect(() => {
-    if (isScrolledToBottom) {
-      scrollToBottom();
-    }
+    if (isScrolledToBottom) scrollToBottom();
   }, [messages, isScrolledToBottom, scrollToBottom]);
 
   useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
+    const el = scrollRef.current;
+    if (!el) return;
 
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
-      const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
-      setIsScrolledToBottom(isAtBottom);
+    const onScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      setIsScrolledToBottom(scrollHeight - scrollTop - clientHeight < 80);
     };
 
-    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
   }, []);
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const target = e.target;
-    setInput(target.value);
-    target.style.height = 'auto';
-    const newHeight = Math.min(120, Math.max(36, target.scrollHeight));
-    target.style.height = `${newHeight}px`;
-  }, []);
+  const doSend = useCallback(async (text: string) => {
+    setInput('');
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+    setSendError(null);
+
+    try {
+      await sendMessage(text);
+    } catch (error) {
+      setSendError(error instanceof Error ? error.message : 'Failed to send message');
+      setInput(text);
+    }
+  }, [sendMessage]);
+
+  const handleSend = useCallback(() => {
+    const trimmed = inputRef.current.trim();
+    if (!trimmed || isLoading) return;
+    doSend(trimmed);
+  }, [isLoading, doSend]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      const trimmed = inputRef.current.trim();
+      if (!trimmed || isLoading) return;
+      doSend(trimmed);
     }
+  }, [isLoading, doSend]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const { value } = e.target;
+    setInput(value);
+    e.target.style.height = 'auto';
+    e.target.style.height = `${Math.min(120, Math.max(36, e.target.scrollHeight))}px`;
   }, []);
-
-  const handleSend = useCallback(async () => {
-    const trimmed = input.trim();
-    if (!trimmed || isLoading) return;
-
-    setInput('');
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
-
-    setSendError(null);
-
-    try {
-      await sendMessage(trimmed);
-    } catch (error) {
-      setSendError(error instanceof Error ? error.message : 'Failed to send message');
-      setInput(trimmed);
-    }
-  }, [input, isLoading, sendMessage]);
 
   const showWelcome = messages.length === 0;
 
@@ -105,16 +112,16 @@ export const VercelChat = memo(function VercelChatInternal({
   };
 
   const BotAvatar = () => (
-    <Avatar className="w-7 h-7 shrink-0">
-      <AvatarFallback className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs">
-        <Sparkles className="w-3.5 h-3.5" />
+    <Avatar className="w-6 h-6 shrink-0 ring-1 ring-neutral-200 dark:ring-neutral-800">
+      <AvatarFallback className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900">
+        <Mail className="w-3 h-3" />
       </AvatarFallback>
     </Avatar>
   );
 
   const UserAvatar = () => (
-    <Avatar className="w-7 h-7 shrink-0">
-      <AvatarFallback className="bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 text-xs font-semibold">
+    <Avatar className="w-6 h-6 shrink-0 ring-1 ring-neutral-200 dark:ring-neutral-800">
+      <AvatarFallback className="bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 text-[10px] font-semibold">
         Y
       </AvatarFallback>
     </Avatar>
@@ -123,20 +130,37 @@ export const VercelChat = memo(function VercelChatInternal({
   return (
     <div className={cn('flex flex-col h-full bg-white dark:bg-neutral-950', className)}>
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        <div className="px-4 py-4 space-y-4">
+        <div className="px-4 py-4 space-y-5">
           {showWelcome && (
-            <div className="flex gap-3">
-              <BotAvatar />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-2">
-                  How can I help with your email?
-                </p>
-                <div className="text-xs text-neutral-500 dark:text-neutral-500 space-y-1.5">
-                  <p>&quot;Send an email to john@example.com&quot;</p>
-                  <p>&quot;Show emails from Sarah&quot;</p>
-                  <p>&quot;Find emails about the project&quot;</p>
-                  <p>&quot;Reply saying I&apos;ll be there&quot;</p>
+            <div>
+              <div className="flex gap-2.5 mb-4">
+                <BotAvatar />
+                <div>
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    How can I help with your email?
+                  </p>
                 </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {suggestions.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => {
+                      const text = s.slice(1, -1);
+                      if (text.trim() && !isLoading) doSend(text);
+                    }}
+                    disabled={isLoading}
+                    className={cn(
+                      'text-xs px-3 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-800',
+                      'text-neutral-600 dark:text-neutral-400',
+                      'hover:bg-neutral-100 dark:hover:bg-neutral-900',
+                      'hover:border-neutral-300 dark:hover:border-neutral-700',
+                      'transition-colors disabled:opacity-50'
+                    )}
+                  >
+                    {s}
+                  </button>
+                ))}
               </div>
             </div>
           )}
@@ -148,9 +172,14 @@ export const VercelChat = memo(function VercelChatInternal({
             const isUser = msg.role === 'user';
 
             return (
-              <div key={msg.id} className="flex gap-3">
-                {isUser ? <UserAvatar /> : <BotAvatar />}
-                <div className="flex-1 min-w-0 text-sm leading-relaxed">
+              <div key={msg.id} className={cn('flex gap-2.5', isUser && 'justify-end')}>
+                {!isUser && <BotAvatar />}
+                <div
+                  className={cn(
+                    'max-w-[85%] min-w-0 text-sm leading-relaxed',
+                    isUser && 'bg-neutral-100 dark:bg-neutral-900 rounded-2xl rounded-br-md px-3.5 py-2'
+                  )}
+                >
                   {isUser ? (
                     <div className="text-neutral-900 dark:text-neutral-100 whitespace-pre-wrap break-words">
                       {content}
@@ -161,30 +190,31 @@ export const VercelChat = memo(function VercelChatInternal({
                     </div>
                   )}
                 </div>
+                {isUser && <UserAvatar />}
               </div>
             );
           })}
 
           {(sendError || chatError) && (
-            <div className="flex gap-3">
-              <Avatar className="w-7 h-7 shrink-0">
-                <AvatarFallback className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs">
-                  <AlertCircle className="w-3.5 h-3.5" />
+            <div className="flex gap-2.5">
+              <Avatar className="w-6 h-6 shrink-0">
+                <AvatarFallback className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+                  <AlertCircle className="w-3 h-3" />
                 </AvatarFallback>
               </Avatar>
-              <div className="text-sm text-red-600 dark:text-red-400 py-1">
+              <div className="text-xs text-red-600 dark:text-red-400 py-0.5">
                 {sendError || 'Failed to send message. Please try again.'}
               </div>
             </div>
           )}
 
           {isLoading && (
-            <div className="flex gap-3">
+            <div className="flex gap-2.5">
               <BotAvatar />
-              <div className="flex items-center gap-1.5 py-2">
-                <span className="w-1.5 h-1.5 bg-neutral-400 dark:bg-neutral-600 rounded-full animate-pulse" />
-                <span className="w-1.5 h-1.5 bg-neutral-400 dark:bg-neutral-600 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
-                <span className="w-1.5 h-1.5 bg-neutral-400 dark:bg-neutral-600 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
+              <div className="flex items-center gap-1 py-1.5">
+                <span className="w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-600 rounded-full animate-bounce [animation-duration:0.8s]" />
+                <span className="w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-600 rounded-full animate-bounce [animation-duration:0.8s]" style={{ animationDelay: '0.15s' }} />
+                <span className="w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-600 rounded-full animate-bounce [animation-duration:0.8s]" style={{ animationDelay: '0.3s' }} />
               </div>
             </div>
           )}
@@ -193,7 +223,7 @@ export const VercelChat = memo(function VercelChatInternal({
         </div>
       </div>
 
-      <div className="border-t border-neutral-200 dark:border-neutral-800 p-3">
+      <div className="border-t border-neutral-200 dark:border-neutral-800 p-3 space-y-2">
         <div className="flex items-end gap-2">
           <Textarea
             ref={textareaRef as any}
@@ -219,14 +249,9 @@ export const VercelChat = memo(function VercelChatInternal({
           </Button>
         </div>
 
-        {messages.length > 0 && (
-          <button
-            onClick={() => chat.setMessages([])}
-            className="mt-2 text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-400 transition-colors"
-          >
-            Clear chat
-          </button>
-        )}
+        <span className="text-[10px] text-neutral-400 select-none">
+          ↵ to send &middot; Shift + ↵ for newline
+        </span>
       </div>
     </div>
   );

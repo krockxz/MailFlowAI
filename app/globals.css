@@ -101,6 +101,17 @@
   --shadow-glow-dark-lg: 0 0 60px rgba(139, 92, 246, 0.4), 0 8px 24px rgba(139, 92, 246, 0.25);
 }
 
+/* ===== Smooth Theme Transitions ===== */
+:root {
+  --theme-transition-duration: 0.2s;
+  --theme-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html {
+  transition: background-color var(--theme-transition-duration) var(--theme-transition-easing),
+              color var(--theme-transition-duration) var(--theme-transition-easing);
+}
+
 /* ===== Base Styles ===== */
 * {
   box-sizing: border-box;
@@ -128,33 +139,6 @@ body {
 
 code {
   font-family: var(--font-mono);
-}
-
-/* ===== Skip Link (Accessibility) ===== */
-.skip-to-main {
-  position: absolute;
-  left: -9999px;
-  top: auto;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  z-index: -999;
-}
-
-.skip-to-main:focus,
-.skip-to-main:focus-within {
-  position: fixed;
-  left: var(--spacing-4);
-  top: var(--spacing-4);
-  width: auto;
-  height: auto;
-  padding: var(--spacing-3) var(--spacing-5);
-  background: var(--color-neutral-900);
-  color: white;
-  border-radius: var(--radius-md);
-  z-index: 9999;
-  outline: 2px solid var(--color-accent-500);
-  outline-offset: 2px;
 }
 
 /* ===== Premium Transition System ===== */

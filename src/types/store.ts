@@ -34,8 +34,6 @@ export interface AppState {
 
   lastSyncTime: Date | null;
 
-  darkMode: boolean;
-
   compose: {
     isOpen: boolean;
     to: string;
@@ -72,8 +70,6 @@ export interface AppActions {
   setIsSending: (sending: boolean) => void;
 
   setLastSyncTime: (time: Date) => void;
-
-  toggleDarkMode: () => void;
 
   setCompose: (compose: {
     isOpen: boolean;

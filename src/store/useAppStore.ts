@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { AppStore } from '@/types/store';
 import type { FilterState } from '@/types/email';
-import { getTheme, setTheme } from '@/components/theme-provider';
 
 const createInitialPaginationState = () => ({
   pageToken: null as string | null,
@@ -26,8 +25,6 @@ const initialComposeState: AppStore['compose'] = {
 export const useAppStore = create<AppStore>()(
   persist(
     (set) => {
-      const initialDarkMode = getTheme() === 'dark';
-
       return {
         user: null,
         isAuthenticated: false,
@@ -64,8 +61,6 @@ export const useAppStore = create<AppStore>()(
         compose: initialComposeState,
 
         lastSyncTime: null,
-
-        darkMode: initialDarkMode,
 
         setUser: (user: AppStore['user']) => set({ user, isAuthenticated: !!user }),
         setAccessToken: (token: string | null) => set({ accessToken: token }),
@@ -174,13 +169,6 @@ export const useAppStore = create<AppStore>()(
 
         setLastSyncTime: (time: Date) => set({ lastSyncTime: time }),
 
-        toggleDarkMode: () => {
-          const currentState = getTheme() === 'dark'
-          const newTheme = currentState ? 'light' : 'dark'
-          setTheme(newTheme)
-          set({ darkMode: !currentState })
-        },
-
         setCompose: (compose: AppStore['compose']) => set({ compose }),
         resetCompose: () => set({ compose: initialComposeState }),
 
@@ -206,7 +194,6 @@ export const useAppStore = create<AppStore>()(
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
-        darkMode: state.darkMode,
       }),
     }
   )

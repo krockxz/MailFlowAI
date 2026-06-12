@@ -20,14 +20,14 @@ interface EmailDetailHeaderProps {
 
 export function EmailDetailHeader({ email, isThread, displayEmails, onBack, onReply, onForward }: EmailDetailHeaderProps) {
   return (
-    <header className="border-b border-neutral-200/60 dark:border-neutral-800/60 px-6 py-4 shrink-0 backdrop-blur-xl bg-white/80 dark:bg-neutral-950/80 sticky top-0 z-10">
+    <header className="border-b border-neutral-200 dark:border-neutral-800 px-6 py-4 shrink-0 bg-white dark:bg-neutral-950 sticky top-0 z-10">
       <div className="flex items-center justify-between mb-4">
         <Button
           variant="ghost"
           onClick={onBack}
-          className="h-9 px-3 gap-2 text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all duration-200 rounded-lg"
+          className="h-9 px-3 gap-2 text-neutral-500 hover:text-white hover:bg-neutral-900 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-100 rounded-lg transition-colors"
         >
-          <ArrowLeft className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+          <ArrowLeft className="w-4 h-4" />
           <span className="text-sm font-medium">Back</span>
         </Button>
 
@@ -36,7 +36,7 @@ export function EmailDetailHeader({ email, isThread, displayEmails, onBack, onRe
             variant="ghost"
             size="icon"
             onClick={() => onReply?.(email.id)}
-            className="h-9 w-9 text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all duration-200 rounded-lg"
+            className="h-9 w-9 text-neutral-500 hover:text-white hover:bg-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-900 dark:hover:bg-neutral-200 rounded-lg transition-colors"
             title="Reply"
           >
             <Reply className="w-4 h-4" />
@@ -45,7 +45,7 @@ export function EmailDetailHeader({ email, isThread, displayEmails, onBack, onRe
             variant="ghost"
             size="icon"
             onClick={() => onForward?.(email.id)}
-            className="h-9 w-9 text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all duration-200 rounded-lg"
+            className="h-9 w-9 text-neutral-500 hover:text-white hover:bg-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-900 dark:hover:bg-neutral-200 rounded-lg transition-colors"
             title="Forward"
           >
             <Forward className="w-4 h-4" />
@@ -58,7 +58,7 @@ export function EmailDetailHeader({ email, isThread, displayEmails, onBack, onRe
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all duration-200 rounded-lg"
+                className="h-9 w-9 text-neutral-500 hover:text-white hover:bg-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-900 dark:hover:bg-neutral-200 rounded-lg transition-colors"
               >
                 <MoreVertical className="w-4 h-4" />
               </Button>

@@ -24,8 +24,6 @@ function AppContent() {
     currentView,
     selectedEmailId,
     emails,
-    darkMode,
-    toggleDarkMode,
     setCurrentView,
     setSelectedEmailId,
     compose,
@@ -54,6 +52,7 @@ function AppContent() {
   } = useEmailHandlers();
 
   const [isCopilotOpen, setIsCopilotOpen] = useState(true);
+  const [copilotWidth, setCopilotWidth] = useState(340);
   const [isSyncing, setIsSyncing] = useState(false);
 
   const [showSendConfirm, setShowSendConfirm] = useState(false);
@@ -241,11 +240,7 @@ function AppContent() {
 
   return (
     <>
-      <a href="#main-content" className="skip-to-main">
-        Skip to main content
-      </a>
-
-      <div className="flex h-screen overflow-hidden bg-gradient-to-br from-neutral-50 via-neutral-50 to-neutral-100 dark:from-neutral-950 dark:via-neutral-950 dark:to-neutral-900">
+      <div className="flex h-screen overflow-hidden bg-neutral-50 dark:bg-neutral-950">
         <Sidebar
           currentView={currentView}
           onViewChange={setCurrentView}
@@ -259,17 +254,16 @@ function AppContent() {
         <main
           id="main-content"
           className={cn(
-            "flex-1 flex flex-col overflow-hidden relative transition-all duration-300 ease-in-out",
-            isCopilotOpen && 'lg:mr-[340px]'
+            "flex-1 flex flex-col overflow-hidden relative",
+            isCopilotOpen && 'lg:mr-[var(--copilot-width)]'
           )}
+          style={{ '--copilot-width': `${copilotWidth}px` } as React.CSSProperties}
         >
           <AppHeader
             currentView={currentView}
             isCopilotOpen={isCopilotOpen}
             isSyncing={isSyncing}
-            darkMode={darkMode}
             onToggleCopilot={() => setIsCopilotOpen(!isCopilotOpen)}
-            onToggleDarkMode={toggleDarkMode}
             onSync={sync}
             filters={currentFilters}
             onFiltersChange={useAppStore.getState().setFilters}
@@ -310,6 +304,8 @@ function AppContent() {
           <CopilotSidebar
             isOpen={isCopilotOpen}
             onClose={() => setIsCopilotOpen(false)}
+            width={copilotWidth}
+            onWidthChange={setCopilotWidth}
           />
         </InlineErrorBoundary>
 
