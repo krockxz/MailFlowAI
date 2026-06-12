@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ===== Dark Mode Configuration ===== */
-@custom-variant dark (&:where(.dark, .dark *))
+@variant dark (&:where(.dark, .dark *));
 
 /* ===== Typography - Vercel-Style Font Stack ===== */
 @import "@fontsource/instrument-sans/400.css";
