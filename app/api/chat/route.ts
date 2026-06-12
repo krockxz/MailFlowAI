@@ -1,4 +1,4 @@
-import { streamText, convertToModelMessages, UIMessage } from 'ai';
+import { streamText } from 'ai';
 import { createGroq } from '@ai-sdk/groq';
 
 const groq = createGroq({
@@ -30,16 +30,35 @@ Always reference specific emails by their subject and sender when possible.`;
 
 export async function POST(req: Request) {
   try {
-    const { messages, context }: { messages: UIMessage[]; context?: Record<string, unknown> } = await req.json();
+    const body = await req.json();
+
+    const { messages } = body;
+    const context = body.context;
+
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return Response.json(
+        { error: 'Missing or empty messages array' },
+        { status: 400 }
+      );
+    }
 
     const systemMessage = context
       ? `${DEFAULT_SYSTEM}\n\nCurrent app context:\n${JSON.stringify(context, null, 2)}`
       : DEFAULT_SYSTEM;
 
+    console.warn('Chat request received', {
+      messageCount: messages.length,
+      hasContext: !!context,
+      lastMessage: messages[messages.length - 1],
+    });
+
     const result = streamText({
       model: groq('llama-3.3-70b-versatile'),
       system: systemMessage,
-      messages: await convertToModelMessages(messages),
+      messages: messages.map((m: { role: string; content: string; parts?: Array<{ type: string; text?: string }> }) => ({
+        role: m.role as 'user' | 'assistant' | 'system',
+        content: m.content || m.parts?.map((p) => p.text || '').join(' ') || '',
+      })),
       temperature: 0.7,
     });
 

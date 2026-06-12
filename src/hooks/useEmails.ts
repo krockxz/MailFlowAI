@@ -95,7 +95,6 @@ export function useEmails() {
       });
       logError(appError);
       setPagination('inbox', { status: 'error' });
-      throw appError;
     } finally {
       setIsLoading(false);
     }
@@ -175,7 +174,6 @@ export function useEmails() {
       });
       logError(appError);
       setPagination('sent', { status: 'error' });
-      throw appError;
     } finally {
       setIsLoading(false);
     }
@@ -249,7 +247,6 @@ export function useEmails() {
       });
       logError(appError);
       setPagination(type, { status: 'error' });
-      throw appError;
     }
   }, [pagination, emails, setEmails, setLastSyncTime, setPagination]);
 
@@ -284,7 +281,6 @@ export function useEmails() {
           originalError: error instanceof Error ? error : undefined,
         });
         logError(appError);
-        throw appError;
       } finally {
         setIsSending(false);
       }
@@ -333,7 +329,7 @@ export function useEmails() {
           originalError: error instanceof Error ? error : undefined,
         });
         logError(appError);
-        throw appError;
+        return null;
       }
     },
     [emails, fetchSent]
@@ -362,7 +358,6 @@ export function useEmails() {
         originalError: error instanceof Error ? error : undefined,
       });
       logError(appError);
-      throw appError;
     }
   }, []);
 
@@ -418,7 +413,7 @@ export function useEmails() {
         originalError: error instanceof Error ? error : undefined,
       });
       logError(appError);
-      throw appError;
+      return [];
     } finally {
       setIsLoading(false);
     }
@@ -427,7 +422,7 @@ export function useEmails() {
   /**
    * Fetch a single email
    */
-  const fetchEmail = useCallback(async (emailId: string): Promise<Email> => {
+  const fetchEmail = useCallback(async (emailId: string): Promise<Email | null> => {
     try {
       const token = await getValidAccessToken();
       const gmail = createGmailService(token);
@@ -441,7 +436,7 @@ export function useEmails() {
         originalError: error instanceof Error ? error : undefined,
       });
       logError(appError);
-      throw appError;
+      return null;
     }
   }, []);
 
@@ -466,7 +461,7 @@ export function useEmails() {
         originalError: error instanceof Error ? error : undefined,
       });
       logError(appError);
-      throw appError;
+      return [];
     }
   }, []);
 

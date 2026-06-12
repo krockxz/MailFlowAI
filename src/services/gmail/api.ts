@@ -142,8 +142,10 @@ export function createApiMethods(getToken: () => string | null): ApiMethods {
      * Get multiple messages in batch
      */
     async getBatchMessages(ids: string[]): Promise<GmailMessage[]> {
-      const promises = ids.map((id) => this.getMessage(id));
-      return Promise.all(promises);
+      const results = await Promise.allSettled(ids.map((id) => this.getMessage(id)));
+      return results
+        .filter((r): r is PromiseFulfilledResult<GmailMessage> => r.status === 'fulfilled')
+        .map((r) => r.value);
     },
 
     /**
