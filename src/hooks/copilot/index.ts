@@ -202,7 +202,4 @@ export function useCopilotEmailActions() {
   }
 }
 
-/**
- * Backward compatible alias
- */
-export const useCopilotActions = useCopilotEmailActions;
+

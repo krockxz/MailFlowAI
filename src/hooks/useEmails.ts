@@ -2,25 +2,12 @@ import { useCallback } from 'react';
 import { useAppStore } from '@/store';
 import { createGmailService } from '@/services/gmail';
 import { getValidAccessToken } from '@/services/auth';
+import { createEmailFetchError, createEmailSendError, createGmailApiError, logError } from '@/lib/errors';
 import type { Email } from '@/types/email';
 import type { GmailMessage } from '@/types/email';
 
 const PAGE_SIZE = 30;
 
-/**
- * Custom error class for email fetch operations
- * Provides better error handling with retry capability tracking
- */
-export class EmailFetchError extends Error {
-  constructor(message: string, public isRetryable = true) {
-    super(message);
-    this.name = 'EmailFetchError';
-  }
-}
-
-/**
- * Hook for fetching and managing emails
- */
 export function useEmails() {
   const {
     emails,
@@ -101,12 +88,14 @@ export function useEmails() {
 
       setLastSyncTime(new Date());
     } catch (error) {
-      console.error('Failed to fetch inbox:', error);
+      const appError = createEmailFetchError({
+        userMessage: 'Failed to fetch inbox emails.',
+        technicalMessage: error instanceof Error ? error.message : 'Failed to fetch inbox emails',
+        originalError: error instanceof Error ? error : undefined,
+      });
+      logError(appError);
       setPagination('inbox', { status: 'error' });
-      throw new EmailFetchError(
-        error instanceof Error ? error.message : 'Failed to fetch inbox emails',
-        true
-      );
+      throw appError;
     } finally {
       setIsLoading(false);
     }
@@ -179,12 +168,14 @@ export function useEmails() {
 
       setLastSyncTime(new Date());
     } catch (error) {
-      console.error('Failed to fetch sent:', error);
+      const appError = createEmailFetchError({
+        userMessage: 'Failed to fetch sent emails.',
+        technicalMessage: error instanceof Error ? error.message : 'Failed to fetch sent emails',
+        originalError: error instanceof Error ? error : undefined,
+      });
+      logError(appError);
       setPagination('sent', { status: 'error' });
-      throw new EmailFetchError(
-        error instanceof Error ? error.message : 'Failed to fetch sent emails',
-        true
-      );
+      throw appError;
     } finally {
       setIsLoading(false);
     }
@@ -251,10 +242,14 @@ export function useEmails() {
 
       setLastSyncTime(new Date());
     } catch (error) {
-      console.error(`Failed to load more ${type} emails:`, error);
-      // Reset loading state on error
+      const appError = createEmailFetchError({
+        userMessage: `Failed to load more ${type} emails.`,
+        technicalMessage: error instanceof Error ? error.message : `Failed to load more ${type} emails`,
+        originalError: error instanceof Error ? error : undefined,
+      });
+      logError(appError);
       setPagination(type, { status: 'error' });
-      throw error;
+      throw appError;
     }
   }, [pagination, emails, setEmails, setLastSyncTime, setPagination]);
 
@@ -283,8 +278,13 @@ export function useEmails() {
 
         return result;
       } catch (error) {
-        console.error('Failed to send email:', error);
-        throw error;
+        const appError = createEmailSendError({
+          userMessage: 'Failed to send email.',
+          technicalMessage: error instanceof Error ? error.message : 'Failed to send email',
+          originalError: error instanceof Error ? error : undefined,
+        });
+        logError(appError);
+        throw appError;
       } finally {
         setIsSending(false);
       }
@@ -327,8 +327,13 @@ export function useEmails() {
 
         return result;
       } catch (error) {
-        console.error('Failed to reply:', error);
-        throw error;
+        const appError = createEmailSendError({
+          userMessage: 'Failed to reply to email.',
+          technicalMessage: error instanceof Error ? error.message : 'Failed to reply to email',
+          originalError: error instanceof Error ? error : undefined,
+        });
+        logError(appError);
+        throw appError;
       }
     },
     [emails, fetchSent]
@@ -351,8 +356,13 @@ export function useEmails() {
       // Update local state
       useAppStore.getState().updateEmail(emailId, { isUnread: !isRead });
     } catch (error) {
-      console.error('Failed to mark email:', error);
-      throw error;
+      const appError = createGmailApiError({
+        userMessage: 'Failed to update email status.',
+        technicalMessage: error instanceof Error ? error.message : 'Failed to update email status',
+        originalError: error instanceof Error ? error : undefined,
+      });
+      logError(appError);
+      throw appError;
     }
   }, []);
 
@@ -402,8 +412,13 @@ export function useEmails() {
 
       return results;
     } catch (error) {
-      console.error('Failed to search emails:', error);
-      throw error;
+      const appError = createEmailFetchError({
+        userMessage: 'Failed to search emails.',
+        technicalMessage: error instanceof Error ? error.message : 'Failed to search emails',
+        originalError: error instanceof Error ? error : undefined,
+      });
+      logError(appError);
+      throw appError;
     } finally {
       setIsLoading(false);
     }
@@ -420,8 +435,13 @@ export function useEmails() {
       const message = await gmail.getMessage(emailId);
       return gmail.parseMessage(message);
     } catch (error) {
-      console.error('Failed to fetch email:', error);
-      throw error;
+      const appError = createEmailFetchError({
+        userMessage: 'Failed to fetch email.',
+        technicalMessage: error instanceof Error ? error.message : 'Failed to fetch email',
+        originalError: error instanceof Error ? error : undefined,
+      });
+      logError(appError);
+      throw appError;
     }
   }, []);
 
@@ -440,8 +460,13 @@ export function useEmails() {
 
       return thread;
     } catch (error) {
-      console.error('Failed to fetch thread:', error);
-      throw error;
+      const appError = createEmailFetchError({
+        userMessage: 'Failed to fetch thread.',
+        technicalMessage: error instanceof Error ? error.message : 'Failed to fetch thread',
+        originalError: error instanceof Error ? error : undefined,
+      });
+      logError(appError);
+      throw appError;
     }
   }, []);
 

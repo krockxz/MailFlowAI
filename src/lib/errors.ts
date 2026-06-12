@@ -265,84 +265,6 @@ export function createUiRenderError(options: {
 }
 
 /**
- * Normalize any error into AppError
- */
-export function normalizeError(error: unknown, defaultDomain: ErrorDomain = ErrorDomain.UNKNOWN): AppError {
-  if (error instanceof AppError) {
-    return error;
-  }
-
-  if (error instanceof Error) {
-    const message = error.message.toLowerCase();
-
-    // Network errors
-    if (
-      message.includes('network') ||
-      message.includes('fetch') ||
-      message.includes('timeout') ||
-      message.includes('ECONNREFUSED') ||
-      message.includes('ENOTFOUND')
-    ) {
-      return createNetworkError({
-        userMessage: 'Network connection failed. Please check your internet connection.',
-        technicalMessage: error.message,
-        originalError: error,
-      });
-    }
-
-    // Auth errors
-    if (
-      message.includes('unauthorized') ||
-      message.includes('401') ||
-      message.includes('authentication')
-    ) {
-      return createAuthError({
-        userMessage: 'You need to sign in to perform this action.',
-        technicalMessage: error.message,
-        originalError: error,
-      });
-    }
-
-    // Validation errors
-    if (message.includes('invalid') || message.includes('validation')) {
-      return createValidationError({
-        userMessage: 'Invalid input. Please check your request and try again.',
-        technicalMessage: error.message,
-        originalError: error,
-      });
-    }
-
-    return new AppError({
-      domain: defaultDomain,
-      severity: ErrorSeverity.MEDIUM,
-      recovery: RecoveryStrategy.RETRY,
-      userMessage: 'An unexpected error occurred. Please try again.',
-      technicalMessage: error.message,
-      originalError: error,
-    });
-  }
-
-  if (typeof error === 'string') {
-    return new AppError({
-      domain: defaultDomain,
-      severity: ErrorSeverity.MEDIUM,
-      recovery: RecoveryStrategy.RETRY,
-      userMessage: error,
-      technicalMessage: error,
-    });
-  }
-
-  return new AppError({
-    domain: ErrorDomain.UNKNOWN,
-    severity: ErrorSeverity.MEDIUM,
-    recovery: RecoveryStrategy.RETRY,
-    userMessage: 'An unexpected error occurred. Please try again.',
-    technicalMessage: 'Unknown error type',
-    context: { error },
-  });
-}
-
-/**
  * Log error to console with structured formatting
  */
 export function logError(error: AppError | Error): void {
@@ -368,20 +290,4 @@ export function logError(error: AppError | Error): void {
   } else {
     console.error(error);
   }
-}
-
-/**
- * Extract recovery action for user display
- */
-export function getRecoveryAction(error: AppError): string {
-  const actions: Record<RecoveryStrategy, string> = {
-    [RecoveryStrategy.RETRY]: 'Please try again.',
-    [RecoveryStrategy.REAUTHENTICATE]: 'Please sign in again.',
-    [RecoveryStrategy.REFRESH]: 'Please refresh the page.',
-    [RecoveryStrategy.CONTACT_SUPPORT]: 'If this problem persists, please contact support.',
-    [RecoveryStrategy.RETRY_AUTOMATIC]: 'The system will retry automatically.',
-    [RecoveryStrategy.FALLBACK]: 'Using alternative method.',
-    [RecoveryStrategy.IGNORE]: 'You can continue using the app.',
-  };
-  return actions[error.recovery] || 'Please try again.';
 }

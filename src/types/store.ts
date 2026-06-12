@@ -1,58 +1,41 @@
 import type { Email, FilterState, ViewType, UserProfile, PaginationState } from './email';
 
-/**
- * Search state for caching search results
- */
 export interface SearchState {
   results: Email[];
   query: string;
-  timestamp: number | null; // When the search was performed (for cache expiration)
+  timestamp: number | null;
   isSearchMode: boolean;
 }
 
-/**
- * Main application state
- */
 export interface AppState {
-  // User authentication
   user: UserProfile | null;
   isAuthenticated: boolean;
   accessToken: string | null;
 
-  // UI state
   currentView: ViewType;
   selectedEmailId: string | null;
   activeThread: Email[] | null;
 
-  // Email data
   emails: {
     inbox: Email[];
     sent: Email[];
   };
-  // Per-view filters - each view maintains its own filter state
   filters: {
     inbox: FilterState;
     sent: FilterState;
   };
 
-  // Pagination state
   pagination: PaginationState;
 
-  // Search state
   search: SearchState;
 
-  // Loading states
   isLoading: boolean;
   isSending: boolean;
 
-  // Sync state
   lastSyncTime: Date | null;
-  hasNewEmails: boolean;
 
-  // Theme
   darkMode: boolean;
 
-  // Compose state (single source of truth)
   compose: {
     isOpen: boolean;
     to: string;
@@ -65,52 +48,33 @@ export interface AppState {
   };
 }
 
-/**
- * Store actions
- */
 export interface AppActions {
-  // Authentication
   setUser: (user: UserProfile | null) => void;
   setAccessToken: (token: string | null) => void;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
   logout: () => void;
 
-  // UI actions
   setCurrentView: (view: ViewType) => void;
   setSelectedEmailId: (id: string | null) => void;
   setActiveThread: (thread: Email[] | null) => void;
 
-  // Email actions
   setEmails: (type: 'inbox' | 'sent', emails: Email[]) => void;
-  addEmail: (type: 'inbox' | 'sent', email: Email) => void;
   updateEmail: (id: string, updates: Partial<Email>) => void;
-  deleteEmail: (id: string) => void;
 
-  // Filter actions - set filters for the current view
   setFilters: (filters: FilterState) => void;
-  setFiltersForView: (view: ViewType, filters: FilterState) => void;
   clearFilters: () => void;
-  // Get the current view's filters
   getCurrentFilters: () => FilterState;
 
-  // Search actions
   setSearchResults: (results: Email[], query: string) => void;
   clearSearch: () => void;
-  exitSearchMode: () => void;
 
-  // Loading actions
   setIsLoading: (loading: boolean) => void;
   setIsSending: (sending: boolean) => void;
 
-  // Sync actions
   setLastSyncTime: (time: Date) => void;
-  setHasNewEmails: (hasNew: boolean) => void;
 
-  // Theme actions
   toggleDarkMode: () => void;
-  setDarkMode: (dark: boolean) => void;
 
-  // Compose actions (single source of truth)
   setCompose: (compose: {
     isOpen: boolean;
     to: string;
@@ -123,13 +87,8 @@ export interface AppActions {
   }) => void;
   resetCompose: () => void;
 
-  // Pagination actions
   setPagination: (type: 'inbox' | 'sent', updates: Partial<import('./email').FolderPaginationState>) => void;
-  resetPagination: (type: 'inbox' | 'sent') => void;
   resetAllPagination: () => void;
 }
 
-/**
- * Combined store interface
- */
 export interface AppStore extends AppState, AppActions { }

@@ -4,6 +4,7 @@ import { exchangeCodeForToken } from '@/services/gmail/oauth';
 import { getOAuthConfig } from '@/services/auth';
 import { storeToken, setTimestamp } from '@/lib/token-storage';
 import { useAppStore } from '@/store';
+import { createAuthError, logError } from '@/lib/errors';
 
 type CallbackStatus = 'loading' | 'success' | 'error';
 
@@ -144,7 +145,12 @@ export function AuthCallback() {
         }, 500);
 
       } catch (err) {
-        console.error('OAuth callback error:', err);
+        logError(createAuthError({
+          userMessage: err instanceof Error
+            ? err.message
+            : 'Failed to exchange authorization code for tokens.',
+          originalError: err instanceof Error ? err : undefined,
+        }));
         setError({
           code: 'exchange_failed',
           message: err instanceof Error

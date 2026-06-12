@@ -282,27 +282,7 @@ const [error, setError] = useState<string | null>(null)
 
 ## Testing Strategy
 
-```mermaid
-graph TD
-    subgraph Unit [Unit Tests Vitest]
-        Utils
-        Helpers
-        Logic[Business Logic]
-    end
-
-    subgraph Integration [Integration Tests Future]
-        Hooks[Hook Testing]
-        Service[Service Mocking]
-        Store[Store Interactions]
-    end
-
-    subgraph E2E [E2E Tests Future]
-        Auth[User Auth Flow]
-        Compose[Email Composition]
-        AI[AI Commands]
-        Filter[Filter Application]
-    end
-```
+The project currently does not have an automated test suite. Manual testing is performed during development.
 
 ## Deployment Considerations
 

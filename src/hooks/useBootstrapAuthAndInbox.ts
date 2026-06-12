@@ -17,6 +17,7 @@ import {
   isAuthenticated as checkIsAuthenticated,
   setTokenTimestamp,
 } from '@/services/auth';
+import { createAuthError, createEmailFetchError, logError } from '@/lib/errors';
 import type { AppStore } from '@/types/store';
 
 export interface BootstrapState {
@@ -124,7 +125,11 @@ export function useBootstrapAuthAndInbox(): BootstrapResult {
         setUser({ emailAddress: profile.emailAddress });
         setIsAuthenticated(true);
       } catch (error) {
-        console.error('Failed to fetch user profile:', error);
+        logError(createAuthError({
+          userMessage: 'Failed to fetch user profile.',
+          technicalMessage: error instanceof Error ? error.message : 'Failed to fetch user profile',
+          originalError: error instanceof Error ? error : undefined,
+        }));
         // Clear invalid tokens
         setIsAuthenticated(false);
         setUser(null);
@@ -147,7 +152,11 @@ export function useBootstrapAuthAndInbox(): BootstrapResult {
       try {
         await fetchInbox();
       } catch (error) {
-        console.error('Failed to fetch inbox:', error);
+        logError(createEmailFetchError({
+          userMessage: 'Failed to fetch inbox during initialization.',
+          technicalMessage: error instanceof Error ? error.message : 'Failed to fetch inbox',
+          originalError: error instanceof Error ? error : undefined,
+        }));
         // Don't fail completely - user can retry manually
         setState({
           isInitializing: false,

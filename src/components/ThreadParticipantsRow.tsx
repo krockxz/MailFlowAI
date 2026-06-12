@@ -1,4 +1,4 @@
-import { EmailAddress } from '@/types/email';
+import type { EmailAddress } from '@/types/email';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { getInitials } from '@/lib/utils';
 

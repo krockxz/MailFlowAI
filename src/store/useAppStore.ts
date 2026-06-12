@@ -26,12 +26,10 @@ const initialComposeState: AppStore['compose'] = {
 export const useAppStore = create<AppStore>()(
   persist(
     (set) => {
-      // Initialize dark mode from stored theme
       const initialDarkMode = getTheme() === 'dark';
 
       return {
-        // Initial state - using 'as' to satisfy type checker
-        user: null as AppStore['user'],
+        user: null,
         isAuthenticated: false,
         accessToken: null,
 
@@ -43,36 +41,32 @@ export const useAppStore = create<AppStore>()(
           inbox: [],
           sent: [],
         },
-        // Per-view filters - each view maintains its own filter state
         filters: {
-          inbox: {} as FilterState,
-          sent: {} as FilterState,
-        } as AppStore['filters'],
+          inbox: {},
+          sent: {},
+        },
 
         pagination: {
           inbox: createInitialPaginationState(),
           sent: createInitialPaginationState(),
-        } as AppStore['pagination'],
+        },
 
         search: {
           results: [],
           query: '',
           timestamp: null,
           isSearchMode: false,
-        } as AppStore['search'],
+        },
 
         isLoading: false,
         isSending: false,
 
-        // Compose state (single source of truth)
         compose: initialComposeState,
 
-        lastSyncTime: null as AppStore['lastSyncTime'],
-        hasNewEmails: false,
+        lastSyncTime: null,
 
         darkMode: initialDarkMode,
 
-        // Actions
         setUser: (user: AppStore['user']) => set({ user, isAuthenticated: !!user }),
         setAccessToken: (token: string | null) => set({ accessToken: token }),
         setIsAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
@@ -93,21 +87,11 @@ export const useAppStore = create<AppStore>()(
             emails: { ...state.emails, [type]: emails },
           })),
 
-        addEmail: (type: 'inbox' | 'sent', email: AppStore['emails']['inbox'][0]) =>
-          set((state) => ({
-            emails: {
-              ...state.emails,
-              [type]: [email, ...state.emails[type]],
-            },
-          })),
-
         updateEmail: (id: string, updates: Partial<AppStore['emails']['inbox'][0]>) =>
           set((state) => {
-            // Find which folder contains the email
             const inboxEmail = state.emails.inbox.find((e) => e.id === id);
             const sentEmail = state.emails.sent.find((e) => e.id === id);
 
-            // Only update the folder that contains the email
             if (inboxEmail) {
               return {
                 emails: {
@@ -130,19 +114,9 @@ export const useAppStore = create<AppStore>()(
               };
             }
 
-            // Email not found in either folder, return state unchanged
             return state;
           }),
 
-        deleteEmail: (id: string) =>
-          set((state) => ({
-            emails: {
-              inbox: state.emails.inbox.filter((e) => e.id !== id),
-              sent: state.emails.sent.filter((e) => e.id !== id),
-            },
-          })),
-
-        // Get the current view's filters
         getCurrentFilters: (): FilterState => {
           const state = useAppStore.getState();
           const view = state.currentView;
@@ -151,7 +125,6 @@ export const useAppStore = create<AppStore>()(
           return {};
         },
 
-        // Set filters for the current view
         setFilters: (filters: FilterState) =>
           set((state) => {
             const view = state.currentView;
@@ -162,18 +135,6 @@ export const useAppStore = create<AppStore>()(
               return { filters: { ...state.filters, sent: filters } };
             }
             return { filters: state.filters };
-          }),
-
-        // Set filters for a specific view
-        setFiltersForView: (view: AppStore['currentView'], filters: FilterState) =>
-          set((state) => {
-            if (view === 'inbox') {
-              return { filters: { ...state.filters, inbox: filters } };
-            }
-            if (view === 'sent') {
-              return { filters: { ...state.filters, sent: filters } };
-            }
-            return state;
           }),
 
         clearFilters: () =>
@@ -188,7 +149,6 @@ export const useAppStore = create<AppStore>()(
             return state;
           }),
 
-        // Search actions
         setSearchResults: (results: AppStore['emails']['inbox'], query: string) =>
           set({
             search: {
@@ -209,19 +169,10 @@ export const useAppStore = create<AppStore>()(
             },
           }),
 
-        exitSearchMode: () =>
-          set((state) => ({
-            search: {
-              ...state.search,
-              isSearchMode: false,
-            },
-          })),
-
         setIsLoading: (loading: boolean) => set({ isLoading: loading }),
         setIsSending: (sending: boolean) => set({ isSending: sending }),
 
         setLastSyncTime: (time: Date) => set({ lastSyncTime: time }),
-        setHasNewEmails: (hasNew: boolean) => set({ hasNewEmails: hasNew }),
 
         toggleDarkMode: () => {
           const currentState = getTheme() === 'dark'
@@ -229,29 +180,15 @@ export const useAppStore = create<AppStore>()(
           setTheme(newTheme)
           set({ darkMode: !currentState })
         },
-        setDarkMode: (dark: boolean) => {
-          setTheme(dark ? 'dark' : 'light')
-          set({ darkMode: dark })
-        },
 
-        // Compose actions
         setCompose: (compose: AppStore['compose']) => set({ compose }),
         resetCompose: () => set({ compose: initialComposeState }),
 
-        // Pagination actions
         setPagination: (type: 'inbox' | 'sent', updates: Partial<AppStore['pagination']['inbox']>) =>
           set((state) => ({
             pagination: {
               ...state.pagination,
               [type]: { ...state.pagination[type], ...updates },
-            },
-          })),
-
-        resetPagination: (type: 'inbox' | 'sent') =>
-          set((state) => ({
-            pagination: {
-              ...state.pagination,
-              [type]: createInitialPaginationState(),
             },
           })),
 

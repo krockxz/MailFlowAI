@@ -1,4 +1,3 @@
-
 interface EmailListSkeletonProps {
   count?: number;
 }

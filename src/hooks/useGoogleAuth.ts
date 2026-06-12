@@ -18,6 +18,7 @@ import { useCallback, useMemo } from 'react';
 import { useAppStore } from '@/store';
 import { clearAllTokens } from '@/lib/token-storage';
 import { initiateOAuth, getOAuthConfig } from '@/services/auth';
+import { createAuthError, logError } from '@/lib/errors';
 
 /**
  * Hook for Google OAuth authentication
@@ -47,7 +48,9 @@ export function useGoogleAuth() {
    */
   const login = useCallback(() => {
     if (!isConfigured) {
-      console.error('[useGoogleAuth] OAuth not configured. Missing VITE_GMAIL_CLIENT_ID or VITE_GMAIL_CLIENT_SECRET.');
+      logError(createAuthError({
+        userMessage: 'OAuth is not configured. Missing VITE_GMAIL_CLIENT_ID or VITE_GMAIL_CLIENT_SECRET.',
+      }));
       alert('OAuth is not configured. Please check your environment variables.');
       return;
     }
@@ -55,7 +58,10 @@ export function useGoogleAuth() {
     try {
       initiateOAuth();
     } catch (error) {
-      console.error('[useGoogleAuth] Failed to initiate OAuth:', error);
+      logError(createAuthError({
+        userMessage: 'Failed to initiate login. Please try again.',
+        originalError: error instanceof Error ? error : undefined,
+      }));
       alert('Failed to initiate login. Please try again.');
     }
   }, [isConfigured]);

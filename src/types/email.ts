@@ -41,43 +41,12 @@ export interface FilterState {
  */
 export type ViewType = 'inbox' | 'sent' | 'compose' | 'detail' | 'drafts';
 
-/**
- * Draft email model
- */
-export interface Draft {
-  id: string;
-  to: string;
-  subject: string;
-  body: string;
-  cc: string;
-  bcc: string;
-  timestamp: number;
-  preview: string;
-}
-
-/**
- * User profile
- */
 export interface UserProfile {
   emailAddress: string;
   name?: string;
   picture?: string;
 }
 
-/**
- * Compose email form data
- */
-export interface ComposeFormData {
-  to: string;
-  subject: string;
-  body: string;
-  cc?: string;
-  bcc?: string;
-}
-
-/**
- * Gmail API message format
- */
 export interface GmailMessage {
   id: string;
   threadId: string;

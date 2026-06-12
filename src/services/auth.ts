@@ -4,7 +4,6 @@ import {
   getToken,
   getTimestamp,
   setTimestamp,
-  clearAllTokens,
 } from '@/lib/token-storage';
 
 /**
@@ -145,15 +144,4 @@ export function isAuthenticated(): boolean {
   return !!getStoredAccessToken() && !isTokenExpired();
 }
 
-/**
- * Clear stored tokens (logout)
- * Also syncs with Zustand store to keep authentication state in sync
- */
-export function clearTokens(): void {
-  clearAllTokens();
 
-  // Sync with store - set isAuthenticated to false when tokens are cleared
-  import('@/store/useAppStore').then(({ useAppStore }) => {
-    useAppStore.getState().setIsAuthenticated(false);
-  });
-}
