@@ -1,5 +1,6 @@
 import { ArrowLeft, Reply, Forward, MoreVertical, Star, Archive, Trash2 } from 'lucide-react';
 import type { Email } from '@/types/email';
+import { useEmails } from '@/hooks/useEmails';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -8,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ThreadParticipantsRow } from '@/components/ThreadParticipantsRow';
+import { cn } from '@/lib/utils';
 
 interface EmailDetailHeaderProps {
   email: Email;
@@ -19,6 +21,8 @@ interface EmailDetailHeaderProps {
 }
 
 export function EmailDetailHeader({ email, isThread, displayEmails, onBack, onReply, onForward }: EmailDetailHeaderProps) {
+  const { starEmail, archiveEmail, deleteEmail } = useEmails();
+  const isStarred = email.labels?.includes('STARRED');
   return (
     <header className="border-b border-neutral-200 dark:border-neutral-800 px-6 py-4 shrink-0 bg-white dark:bg-neutral-950 sticky top-0 z-10">
       <div className="flex items-center justify-between mb-4">
@@ -64,15 +68,15 @@ export function EmailDetailHeader({ email, isThread, displayEmails, onBack, onRe
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem className="gap-2 cursor-pointer">
-                <Star className="w-4 h-4 text-neutral-500" />
-                <span>Star</span>
+              <DropdownMenuItem onClick={() => starEmail(email.id)} className="gap-2 cursor-pointer">
+                <Star className={cn('w-4 h-4', isStarred ? 'fill-amber-400 text-amber-400' : 'text-neutral-500')} />
+                <span>{isStarred ? 'Unstar' : 'Star'}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2 cursor-pointer">
+              <DropdownMenuItem onClick={() => archiveEmail(email.id)} className="gap-2 cursor-pointer">
                 <Archive className="w-4 h-4 text-neutral-500" />
                 <span>Archive</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2 cursor-pointer text-error">
+              <DropdownMenuItem onClick={() => deleteEmail(email.id)} className="gap-2 cursor-pointer text-error">
                 <Trash2 className="w-4 h-4" />
                 <span>Delete</span>
               </DropdownMenuItem>

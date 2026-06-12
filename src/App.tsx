@@ -5,6 +5,7 @@ import { useBootstrapAuthAndInbox } from '@/hooks/useBootstrapAuthAndInbox';
 import { useViewSync } from '@/hooks/useViewSync';
 import { useFilterPaginationReset } from '@/hooks/useFilterPaginationReset';
 import { useEmailHandlers } from '@/hooks/useEmailHandlers';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import type { Email } from '@/types/email';
 import { Sidebar } from '@/components/Sidebar';
 import { EmailList } from '@/components/EmailList';
@@ -31,12 +32,17 @@ function AppContent() {
     getCurrentFilters,
     isAuthenticated,
     search,
+    sortOrder,
+    setSortOrder,
   } = useAppStore();
 
   const {
     fetchInbox,
     fetchSent,
     sendEmail,
+    starEmail,
+    archiveEmail,
+    deleteEmail,
     isLoading,
     pagination,
     loadMore,
@@ -170,6 +176,30 @@ function AppContent() {
     });
   }, [currentView, emails, currentFilters, search.isSearchMode, search.results]);
 
+  const sortedEmailList = useMemo(() => {
+    const list = [...currentEmailList];
+    switch (sortOrder) {
+      case 'oldest':
+        return list.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      case 'sender-asc':
+        return list.sort((a, b) => (a.from.name || a.from.email).localeCompare(b.from.name || b.from.email));
+      case 'subject-asc':
+        return list.sort((a, b) => a.subject.localeCompare(b.subject));
+      case 'newest':
+      default:
+        return list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }
+  }, [currentEmailList, sortOrder]);
+
+  useKeyboardShortcuts({
+    emails: sortedEmailList,
+    selectedEmailId,
+    onSelectEmail: handleSelectEmail,
+    onStar: starEmail,
+    onArchive: archiveEmail,
+    onDelete: deleteEmail,
+  });
+
   const getCurrentPagination = useCallback(() => {
     if (currentView === 'inbox') return pagination.inbox;
     if (currentView === 'sent') return pagination.sent;
@@ -184,7 +214,7 @@ function AppContent() {
     }
   }, [currentView, loadMore]);
 
-  const selectedEmail = currentEmailList.find((e: Email) => e.id === selectedEmailId) || null;
+  const selectedEmail = sortedEmailList.find((e: Email) => e.id === selectedEmailId) || null;
 
   const handleConfirmSend = useCallback(async () => {
     if (!pendingEmail) return;
@@ -267,6 +297,8 @@ function AppContent() {
             onSync={sync}
             filters={currentFilters}
             onFiltersChange={useAppStore.getState().setFilters}
+            sortOrder={sortOrder}
+            onSortChange={setSortOrder}
           />
 
           <div className="flex-1 flex overflow-hidden relative">
@@ -287,7 +319,7 @@ function AppContent() {
                 ) : (
                   <div className="h-full animate-fade-in">
                     <EmailList
-                      emails={currentEmailList}
+                      emails={sortedEmailList}
                       selectedId={selectedEmailId}
                       onSelectEmail={handleSelectEmail}
                       pagination={getCurrentPagination()}

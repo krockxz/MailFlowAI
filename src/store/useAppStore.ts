@@ -62,6 +62,8 @@ export const useAppStore = create<AppStore>()(
 
         lastSyncTime: null,
 
+        sortOrder: 'newest',
+
         setUser: (user: AppStore['user']) => set({ user, isAuthenticated: !!user }),
         setAccessToken: (token: string | null) => set({ accessToken: token }),
         setIsAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
@@ -169,6 +171,8 @@ export const useAppStore = create<AppStore>()(
 
         setLastSyncTime: (time: Date) => set({ lastSyncTime: time }),
 
+        setSortOrder: (order: AppStore['sortOrder']) => set({ sortOrder: order }),
+
         setCompose: (compose: AppStore['compose']) => set({ compose }),
         resetCompose: () => set({ compose: initialComposeState }),
 
@@ -195,6 +199,7 @@ export const useAppStore = create<AppStore>()(
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
+      skipHydration: true,
     }
   )
 );

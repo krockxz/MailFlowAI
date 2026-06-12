@@ -1,4 +1,4 @@
-import type { Email, FilterState, ViewType, UserProfile, PaginationState } from './email';
+import type { Email, FilterState, ViewType, UserProfile, PaginationState, SortOrder } from './email';
 
 export interface SearchState {
   results: Email[];
@@ -33,6 +33,8 @@ export interface AppState {
   isSending: boolean;
 
   lastSyncTime: Date | null;
+
+  sortOrder: SortOrder;
 
   compose: {
     isOpen: boolean;
@@ -70,6 +72,8 @@ export interface AppActions {
   setIsSending: (sending: boolean) => void;
 
   setLastSyncTime: (time: Date) => void;
+
+  setSortOrder: (order: SortOrder) => void;
 
   setCompose: (compose: {
     isOpen: boolean;

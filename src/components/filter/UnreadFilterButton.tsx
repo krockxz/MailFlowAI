@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -22,7 +22,7 @@ export function UnreadFilterButton({ isUnread, onToggle }: UnreadFilterButtonPro
       {isUnread && (
         <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_2.5s_infinite]" />
       )}
-      <Sparkles className={cn(
+      <Mail className={cn(
         "w-3.5 h-3.5 mr-1.5 transition-all duration-500 ease-out relative z-10",
         isUnread ? "rotate-12 scale-110" : "rotate-0 scale-100"
       )} />

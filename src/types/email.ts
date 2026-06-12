@@ -96,3 +96,5 @@ export interface PaginationState {
   inbox: FolderPaginationState;
   sent: FolderPaginationState;
 }
+
+export type SortOrder = 'newest' | 'oldest' | 'sender-asc' | 'subject-asc';

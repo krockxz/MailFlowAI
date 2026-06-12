@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import { useCallback } from 'react';
 import { useAppStore } from '@/store';
 import { createGmailService } from '@/services/gmail';
@@ -465,6 +466,51 @@ export function useEmails() {
     }
   }, []);
 
+  const starEmail = useCallback(async (emailId: string) => {
+    try {
+      const token = await getValidAccessToken();
+      const gmail = createGmailService(token);
+      const state = useAppStore.getState();
+      const email = [...state.emails.inbox, ...state.emails.sent].find((e) => e.id === emailId);
+      const isStarred = email?.labels?.includes('STARRED');
+      if (isStarred) {
+        await gmail.modifyMessage(emailId, [], ['STARRED']);
+        state.updateEmail(emailId, { labels: (email?.labels || []).filter((l) => l !== 'STARRED') });
+        toast.success('Star removed');
+      } else {
+        await gmail.modifyMessage(emailId, ['STARRED'], []);
+        state.updateEmail(emailId, { labels: [...(email?.labels || []), 'STARRED'] });
+        toast.success('Starred');
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update star');
+    }
+  }, []);
+
+  const archiveEmail = useCallback(async (emailId: string) => {
+    try {
+      const token = await getValidAccessToken();
+      const gmail = createGmailService(token);
+      await gmail.modifyMessage(emailId, [], ['INBOX']);
+      useAppStore.getState().updateEmail(emailId, { labels: [] });
+      toast.success('Archived');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to archive email');
+    }
+  }, []);
+
+  const deleteEmail = useCallback(async (emailId: string) => {
+    try {
+      const token = await getValidAccessToken();
+      const gmail = createGmailService(token);
+      await gmail.modifyMessage(emailId, ['TRASH'], []);
+      useAppStore.getState().setSelectedEmailId(null);
+      toast.success('Moved to trash');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete email');
+    }
+  }, []);
+
   return {
     emails,
     isLoading,
@@ -476,6 +522,9 @@ export function useEmails() {
     sendEmail,
     replyToEmail,
     markAsRead,
+    starEmail,
+    archiveEmail,
+    deleteEmail,
     searchEmails,
     fetchEmail,
     fetchThread,

@@ -1,8 +1,7 @@
-import { Moon, Sun, RefreshCw, Sparkles } from 'lucide-react';
+import { Moon, Sun, RefreshCw, Mail } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
-import type { ViewType } from '@/types/email';
-import type { FilterState } from '@/types/email';
+import type { ViewType, FilterState, SortOrder } from '@/types/email';
 import { Button } from '@/components/ui/button';
 import { FilterBar } from '@/components/FilterBar';
 
@@ -14,6 +13,8 @@ interface AppHeaderProps {
   onSync: () => void;
   filters: FilterState;
   onFiltersChange: (filters: FilterState) => void;
+  sortOrder: SortOrder;
+  onSortChange: (order: SortOrder) => void;
 }
 
 export function AppHeader({
@@ -23,6 +24,8 @@ export function AppHeader({
   onSync,
   filters,
   onFiltersChange,
+  sortOrder,
+  onSortChange,
 }: AppHeaderProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
@@ -33,6 +36,8 @@ export function AppHeader({
           <FilterBar
             filters={filters}
             onFiltersChange={onFiltersChange}
+            sortOrder={sortOrder}
+            onSortChange={onSortChange}
           />
         </div>
 
@@ -60,7 +65,7 @@ export function AppHeader({
             aria-label="Toggle AI Assistant"
             className="h-8 w-8 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-900"
           >
-            <Sparkles className="w-4 h-4" />
+            <Mail className="w-4 h-4" />
           </Button>
 
           <Button

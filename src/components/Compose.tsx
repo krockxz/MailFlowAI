@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback, memo } from 'react';
-import { X, Send, Loader2, Sparkles } from 'lucide-react';
+import { X, Send, Loader2, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -208,7 +208,7 @@ export const Compose = memo(function Compose({
           <span className="text-sm font-semibold text-neutral-900 dark:text-white tracking-tight">New Message</span>
           {isAIComposed && (
             <span className="inline-flex items-center gap-1.5 ml-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-accent-500/10 to-accent-600/10 text-accent-600 dark:text-accent-400 border border-accent-500/20 shadow-[0_0_20px_rgba(139,92,246,0.15)] dark:shadow-[0_0_30px_rgba(139,92,246,0.3)] animate-pulse">
-              <Sparkles className="w-3 h-3" />
+              <Mail className="w-3 h-3" />
               AI Composed
             </span>
           )}
