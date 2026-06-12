@@ -49,7 +49,7 @@ export function useGoogleAuth() {
   const login = useCallback(() => {
     if (!isConfigured) {
       logError(createAuthError({
-        userMessage: 'OAuth is not configured. Missing VITE_GMAIL_CLIENT_ID or VITE_GMAIL_CLIENT_SECRET.',
+        userMessage: 'OAuth is not configured. Missing NEXT_PUBLIC_GMAIL_CLIENT_ID or NEXT_PUBLIC_GMAIL_CLIENT_SECRET.',
       }));
       alert('OAuth is not configured. Please check your environment variables.');
       return;

@@ -1,7 +1,6 @@
 import { useEffect, useCallback, useState, useMemo } from 'react';
 import { useAppStore } from '@/store';
 import { useEmails } from '@/hooks/useEmails';
-import { useAppContext, useCopilotEmailActions } from '@/hooks/useCopilotActions';
 import { useBootstrapAuthAndInbox } from '@/hooks/useBootstrapAuthAndInbox';
 import { useViewSync } from '@/hooks/useViewSync';
 import { useFilterPaginationReset } from '@/hooks/useFilterPaginationReset';
@@ -62,9 +61,6 @@ function AppContent() {
 
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  useAppContext();
-  const { compose: aiCompose } = useCopilotEmailActions();
-
   const composeInitialData = useMemo(() => ({
     to: compose.to,
     subject: compose.subject,
@@ -112,19 +108,19 @@ function AppContent() {
   useFilterPaginationReset();
 
   useEffect(() => {
-    if (aiCompose.isSending && aiCompose.to && !showSendConfirm) {
+    if (compose.isSending && compose.to && !showSendConfirm) {
       setPendingEmail({
-        to: aiCompose.to,
-        subject: aiCompose.subject,
-        body: aiCompose.body,
-        cc: aiCompose.cc,
-        bcc: aiCompose.bcc,
+        to: compose.to,
+        subject: compose.subject,
+        body: compose.body,
+        cc: compose.cc,
+        bcc: compose.bcc,
       });
       setShowSendConfirm(true);
 
-      setCompose({ ...aiCompose, isSending: false });
+      setCompose({ ...compose, isSending: false });
     }
-  }, [compose.isOpen, aiCompose.isSending, aiCompose.to, aiCompose.subject, aiCompose.body, aiCompose.cc, aiCompose.bcc, showSendConfirm, setCompose]);
+  }, [compose.isSending, compose.to, compose.subject, compose.body, compose.cc, compose.bcc, showSendConfirm, setCompose]);
 
   const currentFilters = getCurrentFilters();
 

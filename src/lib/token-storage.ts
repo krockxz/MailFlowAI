@@ -108,7 +108,7 @@ export function migrateToken(): void {
 
 export const storage = new SessionStorageTokenStorage();
 
-if (hasLegacyToken()) {
+if (typeof window !== 'undefined' && hasLegacyToken()) {
   migrateToken();
 }
 

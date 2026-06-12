@@ -1,51 +1,22 @@
 import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Send, Loader2, X, Sparkles, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useCopilotChatHeadless_c as useCopilotChatHeadless } from '@copilotkit/react-core';
-import { Streamdown } from 'streamdown';
-import { streamdownComponents } from '@/components/ui/chat-markdown-components';
+import { useAIChat } from '@/hooks/useAIChat';
+import ReactMarkdown from 'react-markdown';
 
 interface VercelChatProps {
-  instructions?: string;
   placeholder?: string;
   className?: string;
 }
 
-const DEFAULT_INSTRUCTIONS = `You are an AI email assistant integrated into a mail client. Help users manage emails through natural language.
-
-Be concise and helpful. Never use emojis in responses.`;
-
 export const VercelChat = memo(function VercelChatInternal({
-  instructions = DEFAULT_INSTRUCTIONS,
   placeholder = 'Ask to compose, search, or manage emails...',
   className,
 }: VercelChatProps) {
-  let copilotHook;
-  try {
-    copilotHook = useCopilotChatHeadless({
-      makeSystemMessage: () => instructions,
-    });
-  } catch (error) {
-    console.error('CopilotKit hook error:', error);
-    return (
-      <div className="flex flex-col h-full bg-white dark:bg-neutral-950 p-6">
-        <div className="flex flex-col items-center justify-center h-full text-center">
-          <div className="relative mb-5">
-            <div className="absolute inset-0 bg-red-500/10 rounded-2xl blur-xl" />
-            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-red-100 to-red-50 dark:from-red-900/30 dark:to-red-950 flex items-center justify-center border border-red-200/50 dark:border-red-800/50">
-              <AlertCircle className="w-7 h-7 text-red-600 dark:text-red-400" />
-            </div>
-          </div>
-          <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-2">AI Assistant unavailable</h3>
-          <p className="text-xs text-neutral-500 dark:text-neutral-500 max-w-[280px] leading-relaxed">
-            The AI assistant encountered an error. Please refresh the page or try again later.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const chat = useAIChat();
+  const { messages, sendMessage, status, error: chatError } = chat;
 
-  const { messages, sendMessage, isLoading, reset } = copilotHook;
+  const isLoading = status === 'submitted' || status === 'streaming';
 
   const [input, setInput] = useState('');
   const [inputHeight, setInputHeight] = useState(40);
@@ -111,11 +82,7 @@ export const VercelChat = memo(function VercelChatInternal({
     setSendError(null);
 
     try {
-      await sendMessage({
-        id: Date.now().toString(),
-        role: 'user',
-        content: trimmed,
-      });
+      await sendMessage(trimmed);
     } catch (error) {
       console.error('Failed to send message:', error);
       setSendError(error instanceof Error ? error.message : 'Failed to send message');
@@ -127,25 +94,25 @@ export const VercelChat = memo(function VercelChatInternal({
 
   const renderMessage = useCallback((msg: any, _index: number) => {
     const role = msg.role;
+    const isUser = role === 'user';
+    const isAssistant = role === 'assistant';
 
+    if (!isUser && !isAssistant) {
+      return null;
+    }
+
+    // Extract text content from message parts
     let content = '';
-    if (typeof msg.content === 'string') {
-      content = msg.content;
-    } else if (Array.isArray(msg.content)) {
-      const textParts = msg.content.filter((part: any) => part.type === 'text');
+    if (msg.parts && Array.isArray(msg.parts)) {
+      const textParts = msg.parts.filter((part: any) => part.type === 'text');
       content = textParts.map((part: any) => part.text).join('');
+    } else if (typeof msg.content === 'string') {
+      content = msg.content;
     } else {
       content = String(msg.content ?? '');
     }
 
     if (!content) {
-      return null;
-    }
-
-    const isUser = role === 'user';
-    const isAssistant = role === 'assistant';
-
-    if (!isUser && !isAssistant) {
       return null;
     }
 
@@ -188,9 +155,9 @@ export const VercelChat = memo(function VercelChatInternal({
           {isUser ? (
             <div className="whitespace-pre-wrap break-words font-medium">{content}</div>
           ) : (
-            <Streamdown components={streamdownComponents}>
-              {content}
-            </Streamdown>
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <ReactMarkdown>{content}</ReactMarkdown>
+            </div>
           )}
         </div>
 
@@ -254,7 +221,7 @@ export const VercelChat = memo(function VercelChatInternal({
 
           {messages.map(renderMessage)}
 
-          {sendError && (
+          {(sendError || chatError) && (
             <div className="flex gap-3 justify-start mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className={cn(
                 "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
@@ -269,7 +236,7 @@ export const VercelChat = memo(function VercelChatInternal({
                 "border border-red-200/70 dark:border-red-800/60",
                 "text-red-700 dark:text-red-300"
               )}>
-                Failed to send message. Please try again.
+                {sendError || (chatError ? 'Failed to send message. Please try again.' : '')}
               </div>
             </div>
           )}
@@ -382,7 +349,7 @@ export const VercelChat = memo(function VercelChatInternal({
 
         {messages.length > 0 && (
           <button
-            onClick={reset}
+            onClick={() => chat.setMessages([])}
             className={cn(
               "mt-3 text-xs flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all duration-200",
               "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300",

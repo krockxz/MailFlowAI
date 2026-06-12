@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect } from "react"
 
 interface ThemeProviderProps {
@@ -34,6 +36,8 @@ export function ThemeProvider({
 }
 
 export function setTheme(theme: "light" | "dark" | "system", storageKey = "ai-mail-theme") {
+  if (typeof window === 'undefined') return;
+
   const root = window.document.documentElement
   root.classList.remove("light", "dark")
 
@@ -50,6 +54,8 @@ export function setTheme(theme: "light" | "dark" | "system", storageKey = "ai-ma
 }
 
 export function getTheme(storageKey = "ai-mail-theme"): "light" | "dark" | "system" {
+  if (typeof window === 'undefined') return "system";
+
   const stored = localStorage.getItem(storageKey)
   if (stored === "light" || stored === "dark" || stored === "system") {
     return stored

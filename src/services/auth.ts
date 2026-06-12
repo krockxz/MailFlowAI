@@ -21,9 +21,9 @@ export interface OAuthConfig {
  */
 export function getOAuthConfig(): OAuthConfig {
   return {
-    clientId: import.meta.env.VITE_GMAIL_CLIENT_ID || '',
-    clientSecret: import.meta.env.VITE_GMAIL_CLIENT_SECRET || '',
-    redirectUri: import.meta.env.VITE_GMAIL_REDIRECT_URI ||
+    clientId: process.env.NEXT_PUBLIC_GMAIL_CLIENT_ID || '',
+    clientSecret: process.env.NEXT_PUBLIC_GMAIL_CLIENT_SECRET || '',
+    redirectUri: process.env.NEXT_PUBLIC_GMAIL_REDIRECT_URI ||
       `${window.location.origin}/auth/callback`,
   };
 }

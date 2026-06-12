@@ -15,7 +15,7 @@ const MIN_WIDTH = 280;
 const MAX_WIDTH = 500;
 const DEFAULT_WIDTH = 340;
 
-const isCopilotConfigured = !!import.meta.env.VITE_COPILOT_API_KEY;
+const isAIEnabled = true;
 
 export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
   const storeAuthState = useAppStore((state) => state.isAuthenticated);
@@ -197,37 +197,9 @@ export function CopilotSidebar({ isOpen, onClose }: CopilotSidebarProps) {
                 Please sign in with your Google account to access the AI assistant.
               </p>
             </div>
-          ) : isCopilotConfigured ? (
+          ) : isAIEnabled ? (
             <VercelChat />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-              <div className="relative mb-5">
-                <div className="absolute inset-0 bg-violet-500/10 rounded-2xl blur-xl" />
-                <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-100 to-violet-50 dark:from-violet-900/30 dark:to-violet-950 flex items-center justify-center border border-violet-200/50 dark:border-violet-800/50">
-                  <AlertCircle className="w-7 h-7 text-violet-600 dark:text-violet-400" />
-                </div>
-              </div>
-              <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-2">AI not configured</h3>
-              <p className="text-xs text-neutral-500 dark:text-neutral-500 max-w-[280px] mb-3 leading-relaxed">
-                Add <span className="px-2 py-0.5 rounded-md bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300 text-[10px] font-mono font-medium border border-violet-200/50 dark:border-violet-800/50">VITE_COPILOT_API_KEY</span> to your .env file to enable the AI assistant.
-              </p>
-              <a
-                href="https://cloud.copilotkit.ai"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(
-                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium",
-                  "bg-violet-600 text-white hover:bg-violet-700",
-                  "transition-all duration-200",
-                  "hover:shadow-lg hover:shadow-violet-500/25",
-                  "focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
-                )}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                Get your free API key
-              </a>
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
     </>

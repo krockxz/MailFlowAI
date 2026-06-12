@@ -268,18 +268,16 @@ export function createUiRenderError(options: {
  * Log error to console with structured formatting
  */
 export function logError(error: AppError | Error): void {
-  const isDev = import.meta.env.DEV;
+  const isDev = process.env.NODE_ENV === 'development';
 
   if (error instanceof AppError) {
     if (isDev) {
-      console.group(`[${error.domain.toUpperCase()}] ${error.getTitle()}`);
-      console.error('User Message:', error.userMessage);
-      console.error('Severity:', error.severity);
-      console.error('Recovery:', error.recovery);
-      if (Object.keys(error.context).length > 0) {
-        console.error('Context:', error.context);
-      }
-      console.groupEnd();
+      console.warn(`[${error.domain.toUpperCase()}] ${error.getTitle()}`, {
+        userMessage: error.userMessage,
+        severity: error.severity,
+        recovery: error.recovery,
+        ...(Object.keys(error.context).length > 0 && { context: error.context }),
+      });
     } else {
       console.error(`[${error.domain}] ${error.userMessage}`, {
         severity: error.severity,

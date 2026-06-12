@@ -1,3 +1,5 @@
+'use client';
+
 import { Component, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,7 +43,7 @@ function DefaultErrorFallback({
   onReset: () => void;
   onGoHome: () => void;
 }) {
-  const isDevelopment = import.meta.env.MODE === 'development';
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-4">
