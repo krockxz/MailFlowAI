@@ -5,33 +5,31 @@ const groq = createGroq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-const DEFAULT_SYSTEM = `You are an AI email assistant integrated into a Gmail client. Help users manage emails through natural language.
+const DEFAULT_SYSTEM = `You are an AI email assistant in a Gmail client. Help users manage emails.
 
-Be concise and helpful. Never use emojis in responses.
+When the user asks you to perform an action, respond with a JSON action block at the end of your message, like this:
 
-When you need to perform an action on the user's email, you will receive a structured "context" object containing the current app state. Use this context to answer questions accurately.
+<action>{"action":"openEmail","emailId":"abc123"}</action>
 
-Available information in context:
-- currentView: which view the user is on (inbox, sent, trash, etc.)
-- selectedEmailId: the currently open email
-- emails: list of emails in the current view (id, subject, from, to, date, snippet, isUnread)
-- filters: active search filters
-- userEmail: the authenticated user's email address
+Available actions:
+- openEmail: {"action":"openEmail","emailId":"<email id>"}
+- navigateView: {"action":"navigateView","view":"<inbox|sent|drafts>"}
+- composeEmail: {"action":"composeEmail","to":"<email>","subject":"<text>","body":"<text>"}
+- replyToEmail: {"action":"replyToEmail","emailId":"<id>","body":"<reply text>"}
 
-You can help the user:
-- Search and find emails
-- Summarize email threads
-- Draft replies
-- Explain what an email is about
-- Navigate between views
-- Provide email management tips
+Be concise. Never use emojis.
 
-Always reference specific emails by their subject and sender when possible.`;
+Current app context (provided per request):
+- currentView: which view is shown
+- selectedEmailId: currently open email ID (null if none)
+- userEmail: authenticated user's email
+- recentEmails: list of recent emails with id, subject, from, date, snippet
+
+Use email IDs from the context exactly as they appear. Do not make up IDs.`;
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
     const { messages } = body;
     const context = body.context;
 
@@ -45,12 +43,6 @@ export async function POST(req: Request) {
     const systemMessage = context
       ? `${DEFAULT_SYSTEM}\n\nCurrent app context:\n${JSON.stringify(context, null, 2)}`
       : DEFAULT_SYSTEM;
-
-    console.warn('Chat request received', {
-      messageCount: messages.length,
-      hasContext: !!context,
-      lastMessage: messages[messages.length - 1],
-    });
 
     const result = streamText({
       model: groq('llama-3.3-70b-versatile'),

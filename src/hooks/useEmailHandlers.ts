@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useAppStore } from '@/store';
 import { useEmails } from '@/hooks/useEmails';
 import type { Email } from '@/types/email';
-import { formatReplyDate } from '@/lib/utils';
+import { formatFullDate } from '@/lib/utils';
 
 export function useEmailHandlers() {
   const emails = useAppStore((s) => s.emails);
@@ -41,7 +41,7 @@ export function useEmailHandlers() {
         subject: email.subject.startsWith('Re:')
           ? email.subject
           : `Re: ${email.subject}`,
-        body: `\n\n----------\nOn ${formatReplyDate(email.date)}, ${email.from.name || email.from.email} wrote:\n${email.body.slice(0, 200)}...`,
+        body: `\n\n----------\nOn ${formatFullDate(email.date)}, ${email.from.name || email.from.email} wrote:\n${email.body.slice(0, 200)}...`,
         cc: '',
         isSending: false,
         isAIComposed: false,

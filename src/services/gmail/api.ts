@@ -1,3 +1,4 @@
+import ky from 'ky';
 import type { GmailMessage } from '@/types/email';
 import { parseMessage } from './parsers';
 import { EmailError, GMAIL_API_BASE } from './types';
@@ -42,9 +43,6 @@ export interface ApiMethods {
   getThread(threadId: string): Promise<import('@/types/email').Email[]>;
 }
 
-/**
- * Factory function that creates API methods with access token retrieval
- */
 export function createApiMethods(getToken: () => string | null): ApiMethods {
   const ensureAuthenticated = () => {
     const token = getToken();
@@ -54,151 +52,65 @@ export function createApiMethods(getToken: () => string | null): ApiMethods {
     return token;
   };
 
+  function api(token: string) {
+    return ky.create({
+      prefix: GMAIL_API_BASE,
+      headers: { Authorization: `Bearer ${token}` },
+      throwHttpErrors: false,
+    });
+  }
+
+  const json = async <T>(res: Response): Promise<T> => {
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || res.statusText);
+    }
+    return res.json();
+  };
+
   return {
-    /**
-     * Get user profile
-     */
-    async getUserProfile(): Promise<{ emailAddress: string; messagesTotal: number }> {
+    async getUserProfile() {
       const token = ensureAuthenticated();
-
-      const response = await fetch(`${GMAIL_API_BASE}/users/me/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to get profile: ${response.statusText}`);
-      }
-
-      return response.json();
+      const res = await api(token).get('users/me/profile');
+      return json(res);
     },
 
-    /**
-     * List messages
-     */
-    async listMessages(
-      labelIds: string[] = ['INBOX'],
-      maxResults = 50,
-      pageToken?: string
-    ): Promise<{
-      messages: { id: string; threadId: string }[];
-      nextPageToken?: string;
-      resultSizeEstimate: number;
-    }> {
+    async listMessages(labelIds = ['INBOX'], maxResults = 50, pageToken?: string) {
       const token = ensureAuthenticated();
+      const searchParams: Record<string, string> = { maxResults: String(maxResults) };
+      if (labelIds.length) searchParams.labelIds = labelIds.join(',');
+      if (pageToken) searchParams.pageToken = pageToken;
 
-      const params = new URLSearchParams({
-        maxResults: maxResults.toString(),
-      });
-
-      if (labelIds.length > 0) {
-        params.append('labelIds', labelIds.join(','));
-      }
-
-      if (pageToken) {
-        params.append('pageToken', pageToken);
-      }
-
-      const response = await fetch(
-        `${GMAIL_API_BASE}/users/me/messages?${params.toString()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to list messages: ${response.statusText}`);
-      }
-
-      return response.json();
+      const res = await api(token).get('users/me/messages', { searchParams });
+      return json(res);
     },
 
-    /**
-     * Get a single message
-     */
-    async getMessage(id: string): Promise<GmailMessage> {
+    async getMessage(id: string) {
       const token = ensureAuthenticated();
-
-      const response = await fetch(
-        `${GMAIL_API_BASE}/users/me/messages/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to get message: ${response.statusText}`);
-      }
-
-      return response.json();
+      const res = await api(token).get(`users/me/messages/${id}`);
+      return json<GmailMessage>(res);
     },
 
-    /**
-     * Get multiple messages in batch
-     */
-    async getBatchMessages(ids: string[]): Promise<GmailMessage[]> {
+    async getBatchMessages(ids: string[]) {
       const results = await Promise.allSettled(ids.map((id) => this.getMessage(id)));
       return results
         .filter((r): r is PromiseFulfilledResult<GmailMessage> => r.status === 'fulfilled')
         .map((r) => r.value);
     },
 
-    /**
-     * Search messages
-     */
-    async searchMessages(
-      query: string,
-      maxResults = 50
-    ): Promise<{
-      messages: { id: string; threadId: string }[];
-      resultSizeEstimate: number;
-    }> {
+    async searchMessages(query: string, maxResults = 50) {
       const token = ensureAuthenticated();
-
-      const params = new URLSearchParams({
-        q: query,
-        maxResults: maxResults.toString(),
+      const res = await api(token).get('users/me/messages/search', {
+        searchParams: { q: query, maxResults: String(maxResults) },
       });
-
-      const response = await fetch(
-        `${GMAIL_API_BASE}/users/me/messages/search?${params.toString()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Search failed: ${response.statusText}`);
-      }
-
-      return response.json();
+      return json(res);
     },
 
-    /**
-     * Send an email
-     */
-    async sendEmail(options: {
-      to: string[];
-      subject: string;
-      body: string;
-      cc?: string[];
-      bcc?: string[];
-      threadId?: string;
-    }): Promise<{ id: string; threadId: string }> {
+    async sendEmail(options) {
       const token = ensureAuthenticated();
-
-      // Encode subject to base64 with UTF-8 support for RFC 2047
       const utf8Bytes = new TextEncoder().encode(options.subject);
       const base64Subject = btoa(String.fromCharCode(...utf8Bytes));
 
-      // Build raw email message in RFC 2822 format
       const emailLines = [
         `To: ${options.to.join(', ')}`,
         `Subject: =?utf-8?B?${base64Subject}?=`,
@@ -206,12 +118,8 @@ export function createApiMethods(getToken: () => string | null): ApiMethods {
         'MIME-Version: 1.0',
       ];
 
-      if (options.cc && options.cc.length > 0) {
-        emailLines.push(`Cc: ${options.cc.join(', ')}`);
-      }
-      if (options.bcc && options.bcc.length > 0) {
-        emailLines.push(`Bcc: ${options.bcc.join(', ')}`);
-      }
+      if (options.cc?.length) emailLines.push(`Cc: ${options.cc.join(', ')}`);
+      if (options.bcc?.length) emailLines.push(`Bcc: ${options.bcc.join(', ')}`);
       if (options.threadId) {
         emailLines.push(`References: ${options.threadId}`);
         emailLines.push(`In-Reply-To: ${options.threadId}`);
@@ -226,139 +134,57 @@ export function createApiMethods(getToken: () => string | null): ApiMethods {
         .replace(/\//g, '_')
         .replace(/=+$/, '');
 
-      const response = await fetch(`${GMAIL_API_BASE}/users/me/messages/send`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          raw: base64Raw,
-          threadId: options.threadId,
-        }),
+      const res = await api(token).post('users/me/messages/send', {
+        json: { raw: base64Raw, threadId: options.threadId },
       });
 
-      if (!response.ok) {
-        const error = await response.text();
+      if (!res.ok) {
+        const error = await res.text();
         throw new EmailError(`Failed to send email: ${error}`);
       }
-
-      return response.json();
+      return res.json();
     },
 
-    /**
-     * Modify labels (mark as read/unread, etc.)
-     */
-    async modifyMessage(
-      id: string,
-      addLabels?: string[],
-      removeLabels?: string[]
-    ): Promise<void> {
+    async modifyMessage(id, addLabels, removeLabels) {
       const token = ensureAuthenticated();
-
-      const response = await fetch(
-        `${GMAIL_API_BASE}/users/me/messages/${id}/modify`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            addLabelIds: addLabels || [],
-            removeLabelIds: removeLabels || [],
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to modify message: ${response.statusText}`);
-      }
+      const res = await api(token).post(`users/me/messages/${id}/modify`, {
+        json: { addLabelIds: addLabels || [], removeLabelIds: removeLabels || [] },
+      });
+      if (!res.ok) throw new Error(`Failed to modify message: ${res.statusText}`);
     },
 
-    /**
-     * Mark message as read
-     */
-    async markAsRead(id: string): Promise<void> {
+    async markAsRead(id: string) {
       return this.modifyMessage(id, [], ['UNREAD']);
     },
 
-    /**
-     * Mark message as unread
-     */
-    async markAsUnread(id: string): Promise<void> {
+    async markAsUnread(id: string) {
       return this.modifyMessage(id, ['UNREAD'], []);
     },
 
-    /**
-     * Set up watch for push notifications
-     */
-    async watch(topicName: string): Promise<void> {
+    async watch(topicName: string) {
       const token = ensureAuthenticated();
-
-      const response = await fetch(`${GMAIL_API_BASE}/users/me/watch`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          topicName,
-          labelIds: ['INBOX'],
-        }),
+      const res = await api(token).post('users/me/watch', {
+        json: { topicName, labelIds: ['INBOX'] },
       });
-
-      if (!response.ok) {
-        const error = await response.text();
+      if (!res.ok) {
+        const error = await res.text();
         throw new Error(`Failed to set up watch: ${error}`);
       }
     },
 
-    /**
-     * Stop watching for push notifications
-     */
-    async stop(): Promise<void> {
+    async stop() {
       const token = ensureAuthenticated();
-
-      const response = await fetch(`${GMAIL_API_BASE}/users/me/stop`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to stop watch: ${response.statusText}`);
-      }
+      const res = await api(token).post('users/me/stop');
+      if (!res.ok) throw new Error(`Failed to stop watch: ${res.statusText}`);
     },
 
-    /**
-     * Get a full thread with all messages
-     */
-    async getThread(threadId: string): Promise<import('@/types/email').Email[]> {
+    async getThread(threadId: string) {
       const token = ensureAuthenticated();
-
-      const response = await fetch(
-        `${GMAIL_API_BASE}/users/me/threads/${threadId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to get thread: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      if (!data.messages) {
-        return [];
-      }
-
-      // Parse all messages in the thread
-      return data.messages.map((msg: GmailMessage) => parseMessage(msg));
+      const res = await api(token).get(`users/me/threads/${threadId}`);
+      if (!res.ok) throw new Error(`Failed to get thread: ${res.statusText}`);
+      const data = await res.json() as { messages?: GmailMessage[] };
+      if (!data.messages) return [];
+      return data.messages.map((msg) => parseMessage(msg));
     },
   };
 }

@@ -92,10 +92,6 @@ export function isWithinRange(date: Date, start?: Date, end?: Date): boolean {
   return true;
 }
 
-export function formatReplyDate(date: Date): string {
-  return dayjs(date).format('MMMM D, YYYY [at] h:mm A');
-}
-
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number

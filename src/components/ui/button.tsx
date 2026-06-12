@@ -9,14 +9,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-r from-primary-600 to-primary-500 text-white hover:from-primary-700 hover:to-primary-600 shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/40 border border-transparent",
+        default: "bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200 border border-transparent",
         destructive:
-          "bg-error text-white hover:bg-error/90 border border-transparent shadow-lg shadow-error/25 hover:shadow-xl hover:shadow-error/40",
+          "bg-red-600 text-white hover:bg-red-700 border border-transparent dark:bg-red-600 dark:hover:bg-red-700",
         outline:
-          "border border-neutral-300 bg-transparent hover:bg-neutral-50 hover:border-neutral-400 text-neutral-700 transition-all",
+          "border border-neutral-300 bg-transparent hover:bg-neutral-50 hover:border-neutral-400 dark:border-neutral-700 dark:hover:bg-neutral-800 dark:text-neutral-300 text-neutral-700",
         secondary:
-          "bg-neutral-100 text-neutral-900 hover:bg-neutral-200 border border-transparent shadow-md hover:shadow-lg",
-        ghost: "hover:bg-neutral-100 text-neutral-600 border-transparent",
+          "bg-neutral-100 text-neutral-900 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700 border border-transparent",
+        ghost: "hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400",
         link: "text-neutral-900 underline-offset-4 hover:underline",
       },
       size: {
